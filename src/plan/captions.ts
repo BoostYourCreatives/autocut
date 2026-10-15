@@ -312,7 +312,8 @@ export function buildCaptions(inp: CaptionInput): { captions: Caption[]; issues:
   }
   for (const c of caps) {
     c.start_s = q(c.start_s);
-    c.end_s = q(Math.min(c.end_s, totalOut));
+    // auf Frames runden, aber nie über das Videoende hinaus (die Länge selbst ist nicht immer frame-genau)
+    c.end_s = Math.min(q(Math.min(c.end_s, totalOut)), totalOut);
     if (c.end_s <= c.start_s) c.end_s = round3(c.start_s + frame);
   }
   // keine Überlappung von Einzelzeilen in derselben Ebene

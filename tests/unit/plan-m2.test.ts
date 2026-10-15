@@ -185,3 +185,20 @@ test("Entwurfsschema → API-Schema: nur erlaubte Schlüsselwörter, additionalP
   assert.ok(s.includes('"additionalProperties":false'));
   assert.ok(PlanDraft.safeParse(draftReel53).success);
 });
+
+test("Regression (echtes Reel_53_kurz): Schnitt-Ein liegt am Ende der Stille, nicht am (zu späten) Whisper-Wortanfang", () => {
+  // Whisper meldet "Besonders" bei 4,32 s, hörbar beginnt es mit dem Ende der Stille bei 4,196 s
+  const { f, r } = run53();
+  void r;
+  const words = f.transcript.words.map((w) => ({ ...w }));
+  const a = words[13]!;
+  const b = words[14]!;
+  a.end_s = 3.887;
+  b.start_s = 4.32;
+  const transcript = { ...f.transcript, words };
+  const analysis = { ...f.analysis, silences: [{ start_s: 3.887, end_s: 4.013, duration_s: 0.126 }, { start_s: 4.051, end_s: 4.196, duration_s: 0.145 }] };
+  const out = finalize({ draft: draftReel53, transcript, analysis, meta: f.meta, params: f.params, sfxIndex: f.sfxIndex, style: "thorsten", video: "x" });
+  const seg1 = out.plan!.cut_segments[1]!;
+  assert.ok(seg1.raw_in_s <= 4.196, `Schnitt-Ein ${seg1.raw_in_s} liegt im Wort (Sprache beginnt bei 4,196)`);
+  assert.ok(Math.abs(out.plan!.cut_segments[0]!.raw_out_s - 3.907) < 0.04);
+});

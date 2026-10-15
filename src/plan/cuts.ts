@@ -81,22 +81,22 @@ export function buildCuts(inp: CutInput): CutResult {
     let lo = a.end_s;
     let hi = b.start_s;
 
+    // Schnittgrenzen an den echten Stillen ausrichten, nicht an den (oft ungenauen) Wortzeiten:
+    // Whisper meldet Wortanfänge teils 0,1 s zu spät, ein Schnitt dort läge mitten im Wort.
+    const near = silences.filter((s) => s.end_s > a.end_s - 0.06 && s.start_s < b.start_s + 0.06);
+    const firstSil = [...near].sort((x, y) => x.start_s - y.start_s)[0];
+    const lastSil = [...near].sort((x, y) => y.end_s - x.end_s)[0];
+    if (firstSil) lo = Math.max(a.end_s, firstSil.start_s);
+    if (lastSil) hi = Math.min(b.start_s, lastSil.end_s);
+    if (hi <= lo) {
+      lo = a.end_s;
+      hi = b.start_s;
+    }
+    const silentSpan = firstSil && lastSil ? hi - lo : 0;
+
     if (isHookCut) kind = "hook";
     else if (hasRemoval) kind = "removal";
-    else if (!precut && !inHook) {
-      // Pausenschnitt nur, wenn eine erkannte Stille >= min_pause_s in der Lücke liegt
-      let best = 0;
-      for (const s of silences) {
-        const s0 = Math.max(s.start_s, a.end_s);
-        const s1 = Math.min(s.end_s, b.start_s);
-        if (s1 - s0 > best) {
-          best = s1 - s0;
-          lo = s0;
-          hi = s1;
-        }
-      }
-      if (best >= S.min_pause_s - 1e-9) kind = "pause";
-    }
+    else if (!precut && !inHook && silentSpan >= S.min_pause_s - 1e-9) kind = "pause";
     if (kind === null) continue;
 
     if (precut) {
