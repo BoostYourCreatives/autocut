@@ -234,7 +234,6 @@ async function renderCommand(cfg: ReturnType<typeof loadConfig>, style: ReturnTy
     return;
   }
   const d = await deliver(cfg, style, planFile, { selfcheck: o.selfcheck });
-  for (const w of d.render.warnings) log.warn(w);
   console.log(`\nVideo:      ${d.render.videoFile}\nHinschauen: ${d.attentionFile}${d.selfcheck?.result ? `\nSelfcheck:  ${d.selfcheck.result.urteil}, ${d.selfcheck.result.befunde.length} Befund(e)` : ""}`);
 }
 

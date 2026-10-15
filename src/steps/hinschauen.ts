@@ -54,11 +54,12 @@ export function attentionItems(plan: Plan, validation: ValidationResult | null, 
   }
   for (const s of plan.sfx) if (low(s.confidence)) add(Math.max(0, s.at_s), `Soundeffekt ${s.file}: ${s.reason}`, W[s.confidence]);
 
+  // Mengen-Abweichungen (zu wenig Gold, Zooms, ...) in EINER Zeile bündeln, damit die Liste kurz bleibt
+  const mengen = ["gold_anzahl", "zoom_anzahl", "broll_anzahl", "fuwa_stark_anzahl", "fuwa_leise_anzahl", "money_anzahl"];
+  const abw = (validation?.warnings ?? []).filter((w) => mengen.includes(w.code));
+  if (abw.length) add(0, `Weicht von den üblichen Mengen ab: ${abw.map((w) => w.message.replace(/\s*\(.*\)\s*$/, "").trim()).join("; ")}`, 0.9, "validator");
   for (const w of validation?.warnings ?? []) {
-    if (["broll_quelle_offen", "gold_anzahl", "zoom_anzahl", "broll_anzahl", "fuwa_stark_anzahl", "fuwa_leise_anzahl", "money_anzahl"].includes(w.code)) {
-      if (w.code !== "broll_quelle_offen") add(0, `Abweichung von der Regel: ${w.message}`, 0.8, "validator");
-      continue;
-    }
+    if (mengen.includes(w.code) || w.code === "broll_quelle_offen") continue;
     add(w.t_s ?? 0, w.message, 0.8, "validator");
   }
   for (const b of selfcheck?.result?.befunde ?? []) add(b.t_s, `Selfcheck (${b.art.replace("_", " ")}): ${b.beschreibung}`, b.schwere === "fehler" ? -2 : 0.2, "selfcheck");
