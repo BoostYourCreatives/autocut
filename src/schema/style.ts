@@ -27,6 +27,10 @@ export const StyleParams = z.object({
     min_wortdauer_s: z.number().positive(),
     vokabel_hinweis: z.array(z.string()),
   }),
+  hook_uebergang: z.object({
+    modus_standard: z.enum(["auto", "blitz_riser", "hart"]),
+    erlaubt: z.array(z.enum(["blitz_riser", "hart"])),
+  }),
   schnitt: z.object({
     min_pause_s: z.number().positive(),
     luft_rand_s: z.number().nonnegative(),

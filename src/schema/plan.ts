@@ -54,6 +54,12 @@ export const Hook = z.object({
   /** Hook-Box: genau 2 Zeilen, wird im Render in Versalien gesetzt */
   lines: z.tuple([z.string().min(1), z.string().min(1)]),
   text_origin: z.enum(["user", "generated"]),
+  /**
+   * Übergang am Hook-Ende. "blitz_riser" = Gold-Blitz + Camera Shutter + Riser,
+   * "hart" = harter Schnitt ohne Blitz/Shutter/Riser. Hook-Box und KI-Hinweis enden
+   * in beiden Fällen am Hook-Ende.
+   */
+  transition: z.enum(["blitz_riser", "hart"]),
   /** Kamera-Push über die Hook-Dauer (false bei vorgeschnittenem Material) */
   push: z.boolean(),
   ...decisionFields,

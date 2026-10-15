@@ -9,7 +9,7 @@ const base = () => ({
   style: "thorsten",
   source: { clip: "reel", file: "x.mp4", fps: 30, width: 1080, height: 1920, duration_s: 10 },
   precut: false,
-  hook: { end_raw_s: 3, lines: ["ZEILE EINS", "ZEILE ZWEI"], text_origin: "generated", push: true, reason: "Erster Satz endet bei 3 s", confidence: "hoch" },
+  hook: { end_raw_s: 3, lines: ["ZEILE EINS", "ZEILE ZWEI"], text_origin: "generated", transition: "hart", push: true, reason: "Erster Satz endet bei 3 s", confidence: "hoch" },
   cut_segments: [
     { id: 0, raw_in_s: 0.3, raw_out_s: 3, reason: "Hook, ungeschnitten", confidence: "hoch" },
     { id: 1, raw_in_s: 3.2, raw_out_s: 9, reason: "Body", confidence: "hoch" },
@@ -24,6 +24,16 @@ const base = () => ({
 
 test("gültiger Plan wird akzeptiert", () => {
   assert.ok(Plan.safeParse(base()).success);
+});
+
+test("Hook-Übergang ist Pflichtfeld und nur blitz_riser oder hart", () => {
+  const p: any = base();
+  p.hook.transition = "riser";
+  assert.ok(!Plan.safeParse(p).success);
+  delete p.hook.transition;
+  assert.ok(!Plan.safeParse(p).success);
+  p.hook.transition = "blitz_riser";
+  assert.ok(Plan.safeParse(p).success);
 });
 
 test("reason und confidence sind Pflicht", () => {
