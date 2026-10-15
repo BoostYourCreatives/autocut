@@ -1,10 +1,10 @@
 # autocut
 
 Prototyp einer KI-gestützten Video-Editing-Pipeline. Rohmaterial rein, geschnittenes Video raus, ohne Freigabeschritt.
-Aktuell nur für **Thorsten Wittmann** (Meta-Ads / Reels). Alle kundenspezifischen Werte liegen in `style/<kunde>/`.
+Aktuell nur für **Thorsten Wittmann**, Fokus: **Reels** (ein Rohvideo rein, ein Reel raus). Ads mit mehreren Hooks + Body (`variants`) sind vorerst ausgeklammert. Alle kundenspezifischen Werte liegen in `style/<kunde>/`.
 
 ```
-ingest → transcribe → analyze → plan → validate (≤3 Retries) → render → selfcheck   (+ variants)
+ingest → transcribe → analyze → plan → validate (≤3 Retries) → render → selfcheck   
  M1      M1           M1        M2     M2                      M3       M3            M4
 ```
 
@@ -18,14 +18,12 @@ cp .env.example .env            # OPENAI_API_KEY für transcribe (provider "open
 
 # Einzelnes Reel
 npx tsx src/cli.ts run reel53 --reel /pfad/Reel_53_raw.mp4
-# Ads: mehrere Hooks + gemeinsamer Body
-npx tsx src/cli.ts ingest ad1 --hook hookA.mp4 --hook hookB.mp4 --body body.mp4
-npx tsx src/cli.ts transcribe ad1
-npx tsx src/cli.ts analyze ad1
-# Jeder Schritt einzeln wiederholbar, optional pro Clip
-npx tsx src/cli.ts transcribe ad1 --clip body --provider faster-whisper
+# Jeder Schritt einzeln wiederholbar
+npx tsx src/cli.ts transcribe reel53 --provider faster-whisper
+npx tsx src/cli.ts analyze reel53
 
-npx tsx src/cli.ts status ad1   # Dateien + Dauer/Kosten je Schritt
+# (--hook/--body für Ads ist eingebaut, aber ungenutzt und ungetestet für die weitere Pipeline)
+npx tsx src/cli.ts status reel53   # Dateien + Dauer/Kosten je Schritt
 npx tsx src/cli.ts todos        # offene Platzhalter
 npm test                        # Unit- und M1-Integrationstests (synthetisches Material)
 ```
