@@ -11,6 +11,8 @@ import { validatePlanFile } from "./steps/check.ts";
 import { measureChin } from "./steps/chin.ts";
 import { renderPlan } from "./steps/render.ts";
 import { deliver } from "./steps/deliver.ts";
+import { startServer } from "./ui/server.ts";
+import { formatRunReport, summarizeRun, writeRunReport } from "./steps/report.ts";
 import { buildSfxIndex } from "./lib/sfxIndex.ts";
 import { mmss } from "./util/fmt.ts";
 import { loadManifest, runPaths } from "./util/run.ts";
@@ -205,6 +207,28 @@ program
   .command("status <run>")
   .description("Zeigt Clips, vorhandene Dateien und das Schritt-Log eines Runs")
   .action((runName: string) => printStatus(runName));
+
+program
+  .command("log <run>")
+  .description("Dauer je Schritt, Claude-Tokens und geschätzte Kosten pro Video")
+  .action((runName: string) => {
+    const cfg = loadConfig();
+    const run = runPaths(cfg, runName);
+    const s = summarizeRun(run.dir);
+    if (!s) throw new Error(`Kein Log für Run "${runName}"`);
+    writeRunReport(run.dir);
+    console.log(formatRunReport(runName, s));
+  });
+
+program
+  .command("ui")
+  .description("Web-Oberfläche zum Testen starten (läuft lokal auf diesem Rechner)")
+  .option("--port <n>", "Port", "3000")
+  .action(async (o) => {
+    const cfg = loadConfig();
+    const { url } = await startServer({ cfg, style: loadStyle(cfg), port: parseInt(o.port, 10) });
+    console.log(`\nautocut läuft: ${url}\nZum Beenden: Strg+C`);
+  });
 
 program
   .command("todos")

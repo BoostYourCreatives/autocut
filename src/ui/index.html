@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>autocut</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e3e1db;
+    --gold: #fab926; --ok: #1f7a4d; --warn: #b26a00; --bad: #b3261e; --run: #2457c5;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151514; --panel: #1f1f1d; --ink: #f1efe9; --muted: #a09e97; --line: #323230; --ok: #58c28c; --warn: #f0a63a; --bad: #ff8a80; --run: #7fa6ff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
+  header .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--gold); }
+  header .sub { color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: 340px 1fr; gap: 20px; padding: 20px; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input[type=text], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  textarea { font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; min-height: 320px; }
+  input[type=file] { width: 100%; font-size: 13px; }
+  .row { display: flex; gap: 8px; } .row > * { flex: 1; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--ink); }
+  .check input { width: auto; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 8px 14px; border-radius: 8px; }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; width: 100%; margin-top: 14px; padding: 11px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+  .runs button { display: flex; width: 100%; justify-content: space-between; align-items: center; margin-bottom: 6px; text-align: left; }
+  .runs button.sel { border-color: var(--gold); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 35%, transparent); }
+  .badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); white-space: nowrap; }
+  .b-ok { color: var(--ok); border-color: var(--ok); } .b-bad { color: var(--bad); border-color: var(--bad); }
+  .b-run { color: var(--run); border-color: var(--run); } .b-warn { color: var(--warn); border-color: var(--warn); }
+  .health li { list-style: none; display: flex; gap: 8px; padding: 4px 0; font-size: 13px; }
+  .health ul { margin: 0; padding: 0; }
+  .health .i { width: 18px; text-align: center; } .health .d { color: var(--muted); }
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .step { flex: 1; min-width: 110px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .step .n { font-weight: 600; } .step .s { color: var(--muted); font-size: 12px; }
+  .step.ok { border-color: var(--ok); } .step.error { border-color: var(--bad); } .step.running { border-color: var(--run); background: color-mix(in srgb, var(--run) 8%, transparent); }
+  .result { display: grid; grid-template-columns: 270px 1fr; gap: 20px; }
+  @media (max-width: 700px) { .result { grid-template-columns: 1fr; } }
+  video { width: 100%; max-width: 270px; aspect-ratio: 9/16; background: #000; border-radius: 12px; display: block; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .links a { font-size: 13px; color: var(--ink); border: 1px solid var(--line); padding: 5px 10px; border-radius: 8px; text-decoration: none; }
+  .list { margin: 0; padding: 0; list-style: none; }
+  .list li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .list li:last-child { border: 0; }
+  .t { font: 12px ui-monospace, Menlo, monospace; color: var(--run); cursor: pointer; background: none; border: 0; padding: 0; min-width: 38px; text-align: left; }
+  .err { border: 1px solid var(--bad); background: color-mix(in srgb, var(--bad) 8%, transparent); border-radius: 8px; padding: 10px 12px; font-size: 14px; margin-bottom: 12px; }
+  .err ul { margin: 6px 0 0 18px; padding: 0; font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { text-align: left; padding: 5px 8px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  .log { font: 12px/1.5 ui-monospace, Menlo, monospace; max-height: 220px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 10px; white-space: pre-wrap; }
+  .log .warn { color: var(--warn); } .log .error { color: var(--bad); }
+  details { margin-top: 4px; } summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  .conf-hoch { color: var(--ok); } .conf-mittel { color: var(--warn); } .conf-niedrig { color: var(--bad); }
+  .muted { color: var(--muted); } .empty { color: var(--muted); padding: 30px 10px; text-align: center; }
+</style>
+</head>
+<body>
+<header><span class="dot"></span><h1>autocut</h1><span class="sub">Rohvideo rein, fertig geschnittenes Reel raus (Thorsten Wittmann)</span></header>
+<main>
+  <aside>
+    <section class="card">
+      <h2>Neues Reel</h2>
+      <input type="file" id="file" accept="video/*">
+      <label>Name (optional)</label>
+      <input type="text" id="name" placeholder="z. B. 53">
+      <label>Hook-Text (optional, 2 Zeilen)</label>
+      <div class="row"><input type="text" id="hook1" placeholder="Zeile 1"><input type="text" id="hook2" placeholder="Zeile 2"></div>
+      <div class="hint">Leer lassen: Claude formuliert den Hook-Text.</div>
+      <label>Übergang am Hook-Ende</label>
+      <select id="transition"><option value="auto">Claude entscheidet nach Inhalt</option><option value="blitz">Immer Blitz + Riser</option><option value="hart">Immer harter Schnitt</option></select>
+      <label>Material</label>
+      <select id="precut"><option value="auto">automatisch erkennen</option><option value="ja">schon vorgeschnitten und gezoomt</option><option value="nein">roh, ungeschnitten</option></select>
+      <label class="check"><input type="checkbox" id="selfcheck" checked> Nach dem Rendern von Claude prüfen lassen</label>
+      <button class="primary" id="start" disabled>Starten</button>
+      <div class="hint" id="startHint"></div>
+    </section>
+    <section class="card runs"><h2>Läufe</h2><div id="runs"><div class="muted">Noch keine.</div></div></section>
+    <section class="card health"><h2>System-Check</h2><ul id="health"></ul></section>
+  </aside>
+
+  <section id="detail"><div class="card empty">Links ein Reel hochladen oder einen Lauf auswählen.</div></section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const c of kids) if (c != null) e.append(c.nodeType ? c : document.createTextNode(c));
+  return e;
+};
+const mmss = (t) => { t = Math.max(0, Math.round(t)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+const money = (x) => `$${(x || 0).toFixed(2)}`;
+let current = null, es = null, pollTimer = null, logLines = [];
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok && !(body && 'ok' in body)) throw new Error(body.error || `Fehler ${r.status}`);
+  return body;
+}
+
+// ---------- System-Check ----------
+async function loadHealth() {
+  const { items, busy } = await api('/api/health');
+  const ul = $('health'); ul.replaceChildren();
+  for (const i of items) {
+    ul.append(el('li', {}, el('span', { class: 'i', text: i.ok ? '✓' : (i.optional ? '!' : '✗'), style: `color:var(--${i.ok ? 'ok' : i.optional ? 'warn' : 'bad'})` }),
+      el('span', {}, el('b', { text: i.label }), el('div', { class: 'd', text: i.detail }))));
+  }
+  const blockers = items.filter((i) => !i.ok && !i.optional);
+  $('start').disabled = !$('file').files[0] || !!busy;
+  $('startHint').textContent = busy ? `Es läuft gerade ein Lauf (${busy}).` : blockers.length ? `Achtung: ${blockers.map((b) => b.label).join(', ')} fehlt, der Lauf wird voraussichtlich scheitern (siehe System-Check).` : '';
+}
+
+// ---------- Läufe ----------
+async function loadRuns() {
+  const runs = await api('/api/runs');
+  const box = $('runs'); box.replaceChildren();
+  if (!runs.length) box.append(el('div', { class: 'muted', text: 'Noch keine.' }));
+  for (const r of runs) {
+    const label = { running: ['läuft', 'b-run'], done: ['fertig', 'b-ok'], error: ['Fehler', 'b-bad'], idle: ['offen', ''] }[r.status];
+    box.append(el('button', { class: r.name === current ? 'sel' : '', onclick: () => select(r.name) }, el('span', { text: r.name }), el('span', { class: `badge ${label[1]}`, text: label[0] })));
+  }
+}
+
+// ---------- Hochladen ----------
+$('file').addEventListener('change', () => { $('start').disabled = !$('file').files[0]; });
+$('start').addEventListener('click', async () => {
+  const f = $('file').files[0]; if (!f) return;
+  $('start').disabled = true; $('startHint').textContent = `Lade ${(f.size / 1e6).toFixed(1)} MB hoch …`;
+  const o = {
+    name: $('name').value.trim() || undefined,
+    transition: $('transition').value,
+    precut: { auto: 'auto', ja: true, nein: false }[$('precut').value],
+    selfcheck: $('selfcheck').checked,
+    hook1: $('hook1').value.trim() || undefined, hook2: $('hook2').value.trim() || undefined,
+  };
+  try {
+    const r = await api(`/api/upload?filename=${encodeURIComponent(f.name)}&o=${encodeURIComponent(JSON.stringify(o))}`, { method: 'POST', body: f });
+    $('startHint').textContent = '';
+    await select(r.name); await loadRuns();
+  } catch (e) { $('startHint').textContent = e.message; $('start').disabled = false; }
+});
+
+// ---------- Detail ----------
+async function select(name) {
+  current = name; logLines = [];
+  if (es) es.close();
+  es = new EventSource(`/api/runs/${name}/events`);
+  es.onmessage = (m) => {
+    const e = JSON.parse(m.data);
+    if (e.type === 'log') { logLines.push(e); paintLog(); }
+    else { refresh(); loadRuns(); loadHealth(); }
+  };
+  await refresh(); await loadRuns();
+}
+function paintLog() {
+  const box = document.getElementById('log'); if (!box) return;
+  box.replaceChildren(...logLines.slice(-200).map((l) => el('div', { class: l.level, text: l.msg })));
+  box.scrollTop = box.scrollHeight;
+}
+async function refresh() {
+  if (!current) return;
+  let d; try { d = await api(`/api/runs/${current}`); } catch (e) { return; }
+  render(d);
+  clearTimeout(pollTimer);
+  if (d.job && d.job.status === 'running') pollTimer = setTimeout(refresh, 2500);
+}
+
+function conf(c) { return el('span', { class: `conf-${c}`, text: c }); }
+
+function render(d) {
+  const root = $('detail');
+  const keepOpen = new Set([...root.querySelectorAll('details[open]')].map((x) => x.dataset.k));
+  const running = d.job && d.job.status === 'running';
+  const kids = [];
+
+  kids.push(el('section', { class: 'card' },
+    el('div', { class: 'row', style: 'align-items:center' },
+      el('h2', { style: 'margin:0;flex:3', text: `Lauf ${d.name}` }),
+      el('div', { style: 'text-align:right;flex:2' },
+        d.summary ? el('span', { class: 'muted', text: `${Math.round(d.summary.total_seconds)} s, geschätzt ${money(d.summary.cost_usd)}` }) : '',
+        ' ', el('span', { class: `badge ${running ? 'b-run' : d.job && d.job.status === 'error' ? 'b-bad' : d.files ? 'b-ok' : ''}`, text: running ? 'läuft' : d.job && d.job.status === 'error' ? 'Fehler' : d.files ? 'fertig' : 'offen' }))),
+    el('div', { class: 'steps', style: 'margin-top:12px' }, ...d.steps.map((s) => el('div', { class: `step ${s.status}` },
+      el('div', { class: 'n', text: `${{ ok: '✓', error: '✗', running: '…', pending: '·' }[s.status]} ${s.label}` }),
+      el('div', { class: 's', text: s.status === 'pending' ? 'wartet' : s.status === 'running' ? 'läuft' : `${s.seconds} s` }))))));
+
+  if (d.job && d.job.error) {
+    const att = d.attempts && d.attempts.length ? el('ul', {}, ...d.attempts.flatMap((a) => a.lines.slice(0, 3).map((l) => el('li', { text: `Versuch ${a.attempt}: ${l}` })))) : null;
+    kids.push(el('div', { class: 'err' }, el('b', { text: 'Das hat nicht geklappt: ' }), d.job.error, att));
+  }
+
+  if (d.files) {
+    const hook = d.hook;
+    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Ergebnis' }),
+      el('div', { class: 'result' },
+        el('div', {}, el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' }),
+          el('div', { class: 'links' }, el('a', { href: d.files.video, download: '', text: 'Video (mp4)' }), el('a', { href: d.files.plan, text: 'Plan (json)' }), el('a', { href: d.files.hinschauen, target: '_blank', text: 'Hinweise (md)' }), el('a', { href: d.files.bericht, target: '_blank', text: 'Laufbericht' }))),
+        el('div', {},
+          hook ? el('div', { style: 'margin-bottom:12px' }, el('div', { class: 'muted', style: 'font-size:12px', text: `Hook-Text${hook.origin === 'generated' ? ' (von Claude)' : ' (von dir)'}` }), el('div', { style: 'font-weight:700', text: hook.lines.join(' / ') }),
+            el('div', { class: 'muted', style: 'font-size:13px', text: `Übergang: ${hook.transition === 'blitz_riser' ? 'Blitz + Riser' : 'harter Schnitt'}. ` }), el('div', { style: 'font-size:13px' }, hook.reason, ' (', conf(hook.confidence), ')')) : null,
+          el('h2', { text: 'Hier genauer hinschauen' }),
+          d.hinschauen && d.hinschauen.length
+            ? el('ul', { class: 'list' }, ...d.hinschauen.slice(0, 30).map((i) => el('li', {}, el('button', { class: 't', onclick: () => { const v = $('vid'); v.currentTime = i.t_s; v.play(); }, text: mmss(i.t_s) }), el('span', { text: i.text }))))
+            : el('div', { class: 'muted', text: 'Nichts Auffälliges.' })))));
+  } else if (!running && !(d.job && d.job.error) && d.planError) {
+    kids.push(el('div', { class: 'err', text: `Plan nicht lesbar: ${d.planError}` }));
+  }
+
+  if (d.selfcheck) {
+    const sc = d.selfcheck;
+    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Selfcheck (Claude schaut sich das fertige Video an)' }),
+      sc.skipped ? el('div', { class: 'muted', text: `Übersprungen: ${sc.skipped}` })
+        : el('div', {}, el('div', { text: sc.result.zusammenfassung }),
+          sc.result.befunde.length ? el('ul', { class: 'list', style: 'margin-top:8px' }, ...sc.result.befunde.map((b) => el('li', {}, el('button', { class: 't', onclick: () => { const v = $('vid'); if (v) { v.currentTime = b.t_s; v.play(); } }, text: mmss(b.t_s) }), el('span', {}, el('b', { class: b.schwere === 'fehler' ? 'conf-niedrig' : 'conf-mittel', text: b.schwere === 'fehler' ? 'Fehler: ' : 'Hinweis: ' }), `${b.art.replace('_', ' ')}: ${b.beschreibung}`)))) : null)));
+  }
+
+  if (d.validation) {
+    const v = d.validation;
+    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Prüfung des Plans (Validator, ohne KI)' }),
+      el('div', {}, el('span', { class: `badge ${v.ok ? 'b-ok' : 'b-bad'}`, text: v.ok ? 'bestanden' : 'nicht bestanden' }), ` ${v.errors.length} Fehler, ${v.warnings.length} Warnung(en); Länge ${v.stats.out_duration_s.toFixed(1)} s (${Math.round(v.stats.length_ratio * 100)} % der Quelle)`),
+      v.errors.length ? el('ul', { class: 'list' }, ...v.errors.map((e) => el('li', { class: 'conf-niedrig', text: e.message }))) : null,
+      v.warnings.length ? el('details', { 'data-k': 'warn' }, el('summary', { text: `${v.warnings.length} Warnung(en)` }), el('ul', { class: 'list' }, ...v.warnings.map((w) => el('li', { class: 'muted', text: w.message })))) : null,
+      v.notChecked.length ? el('div', { class: 'hint', text: `Nicht geprüft: ${v.notChecked.join('; ')}` }) : null));
+  }
+
+  if (d.decisions && d.decisions.length) {
+    kids.push(el('section', { class: 'card' }, el('details', { 'data-k': 'dec' }, el('summary', { text: `Entscheidungen von Claude (${d.decisions.length})` }),
+      el('table', {}, el('tr', {}, el('th', { text: 'Zeit' }), el('th', { text: 'Art' }), el('th', { text: 'Was' }), el('th', { text: 'Begründung' }), el('th', { text: 'Sicher?' })),
+        ...d.decisions.map((x) => el('tr', {}, el('td', { text: mmss(x.t_s) }), el('td', { text: x.typ }), el('td', { text: x.text }), el('td', { text: x.reason }), el('td', {}, conf(x.confidence))))))));
+  }
+
+  if (d.summary) {
+    const s = d.summary, q = s.quality;
+    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Dauer, Kosten, Qualität' }),
+      el('table', {}, el('tr', {}, el('th', { text: 'Schritt' }), el('th', { text: 'Dauer' }), el('th', { text: 'Kosten' })),
+        ...s.steps.map((x) => el('tr', {}, el('td', { text: x.label }), el('td', { text: `${x.seconds.toFixed(1)} s` }), el('td', { text: x.cost_usd ? money(x.cost_usd) : '–' }))),
+        el('tr', {}, el('td', {}, el('b', { text: 'Summe' })), el('td', { text: `${s.total_seconds.toFixed(1)} s` }), el('td', {}, el('b', { text: money(s.cost_usd) })))),
+      el('div', { class: 'hint', text: `Claude-Tokens: ${s.tokens.input} ein, ${s.tokens.output} aus, ${s.tokens.cache_read} aus dem Cache. Kosten sind Schätzungen aus den Preisen in der Config.` }),
+      q ? el('div', { style: 'margin-top:10px;font-size:14px' }, `Plan: ${q.attempts} Versuch(e), Validator-Fehler je Versuch [${q.validator_errors_per_attempt.join(', ')}]. Entfernt: ${q.removed.total_s.toFixed(1)} s. ${q.counts.captions} Untertitel, ${q.counts.gold} Gold, ${q.counts.zooms} Zooms, ${q.counts.broll} B-Roll-Slots, ${q.counts.sfx} Sounds.`) : null));
+  }
+
+  if (d.files || d.validation) {
+    const ta = el('textarea', { id: 'planText', spellcheck: 'false' });
+    const msg = el('div', { id: 'planMsg', class: 'hint' });
+    const sc = el('input', { type: 'checkbox', id: 'sc2' }); sc.checked = true;
+    const body = el('div', {},
+      el('div', { class: 'hint', text: 'Hier kannst du den Plan von Hand ändern (z. B. Zeiten, Texte, Entscheidungen). „Prüfen“ nutzt dieselben Regeln wie die Pipeline. „Speichern und neu rendern“ baut das Video neu, ohne die KI-Schritte zu wiederholen.' }), ta,
+      el('div', { class: 'row', style: 'margin-top:8px' },
+        el('button', { text: 'Prüfen', onclick: () => planCall('check') }),
+        el('button', { class: 'primary', style: 'margin:0', text: 'Speichern und neu rendern', onclick: () => planCall('save') }),
+        el('button', { text: 'Neu planen lassen (Claude)', onclick: replan })),
+      el('label', { class: 'check' }, sc, ' danach Selfcheck'), msg);
+    const det = el('details', { 'data-k': 'plan' }, el('summary', { text: 'Plan bearbeiten und neu rendern' }), body);
+    det.addEventListener('toggle', async () => { if (det.open && !ta.value) { ta.value = JSON.stringify(await (await fetch(`/api/runs/${current}/plan`)).json(), null, 2); } });
+    kids.push(el('section', { class: 'card' }, det));
+  }
+
+  kids.push(el('section', { class: 'card' }, el('h2', { text: 'Protokoll' }), el('div', { id: 'log', class: 'log' })));
+  root.replaceChildren(...kids);
+  for (const k of keepOpen) { const x = root.querySelector(`details[data-k="${k}"]`); if (x) x.open = true; }
+  paintLog();
+}
+
+async function planCall(kind) {
+  const msg = $('planMsg'); msg.textContent = 'Prüfe …';
+  const sc = $('sc2').checked ? '1' : '0';
+  try {
+    const r = await api(`/api/runs/${current}/plan/${kind}?selfcheck=${sc}`, { method: 'POST', body: $('planText').value });
+    if (kind === 'save' && r.started) { msg.textContent = 'Gespeichert, Video wird neu gebaut.'; await select(current); return; }
+    msg.textContent = r.ok ? `Plan ist in Ordnung (${r.warnings.length} Warnung(en)).` : `Nicht in Ordnung: ${r.errors.map((e) => e.message).slice(0, 5).join(' | ')}`;
+  } catch (e) { msg.textContent = e.message; }
+}
+async function replan() {
+  if (!confirm('Claude erstellt den Plan neu und das Video wird neu gebaut. Deine Änderungen im Plan gehen verloren. Fortfahren?')) return;
+  try { await api(`/api/runs/${current}/replan`, { method: 'POST', body: JSON.stringify({ selfcheck: $('sc2').checked }) }); await select(current); } catch (e) { $('planMsg').textContent = e.message; }
+}
+
+loadHealth(); loadRuns(); setInterval(() => { loadRuns(); loadHealth(); }, 8000);
+</script>
+</body>
+</html>

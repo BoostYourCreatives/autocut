@@ -8,10 +8,10 @@ ingest → transcribe → analyze → plan → validate (≤3 Retries) → rende
  M1      M1           M1        M2     M2                      M3       M3            M4
 ```
 
-## Stand: M3
+## Stand: M4 (Prototyp komplett für Reels)
 
-Fertig: Projektstruktur, zod-Schemas, `ingest`, `transcribe`, `analyze`, `chin`, `plan` (Claude) + `validate` mit Retry-Schleife, `render` (Remotion + ffmpeg), `selfcheck`, „Hier genauer hinschauen“-Liste, `rerender`.
-Noch offen (M4): Kosten-Gesamtlog, Testbefehl `tests/` für 2–3 Beispielvideos.
+Fertig: Projektstruktur, zod-Schemas, `ingest`, `transcribe`, `analyze`, `chin`, `plan` (Claude) + `validate` mit Retry-Schleife, `render` (Remotion + ffmpeg), `selfcheck`, „Hier genauer hinschauen“-Liste, `rerender`, Laufbericht mit Dauer/Tokens/Kosten, Web-Oberfläche zum Testen, E2E-Testbefehl.
+Nicht gebaut (bewusst): `variants` für Ads (Hooks + Body), B-Roll-Upload und -Datenbank.
 
 ```bash
 npm install
@@ -40,6 +40,30 @@ npm test                        # Unit- und M1-Integrationstests (synthetisches 
 ```
 
 Vorgeschnittenes Material (Zooms/Schnitte schon vom User): `--precut ja`. Standard `auto` erkennt es an harten Szenenwechseln.
+
+## Web-Oberfläche zum Testen
+
+```bash
+npm run ui          # öffnet nichts automatisch, Adresse steht in der Konsole: http://127.0.0.1:3000
+```
+
+Video hochladen, Optionen wählen (Hook-Text, Übergang, vorgeschnitten ja/nein), Starten. Die Seite zeigt den Fortschritt je Schritt und ein Live-Protokoll,
+danach Video zum Abspielen, „Hier genauer hinschauen“ (Klick auf die Zeit springt im Video dorthin), Selfcheck, Prüfung des Plans, alle Entscheidungen von Claude mit Begründung,
+Dauer/Kosten sowie einen **Plan-Editor** (Prüfen, Speichern und neu rendern, oder Claude neu planen lassen). Der System-Check links zeigt, was auf dem Rechner noch fehlt.
+Die Oberfläche läuft lokal (nur 127.0.0.1) und ruft dieselben Schritte auf wie die CLI. Es läuft immer nur ein Lauf gleichzeitig.
+
+Warum nicht auf Vercel: Das Video-Rendern braucht ffmpeg, Chromium und mehrere Minuten Rechenzeit pro Reel, das passt nicht in Vercels Serverless-Funktionen.
+Eine gehostete Version wäre: Oberfläche auf Vercel + ein eigener Render-Rechner (Docker auf einem Server) + Dateispeicher. Das ist ein eigener Ausbauschritt.
+
+## Testbefehl für den kompletten Durchlauf
+
+```bash
+npm test                        # Unit- und Integrationstests (ohne API-Schlüssel, ca. 2 Minuten)
+npm run test:e2e                # kompletter Durchlauf auf allen Videos in tests/videos/ (2–3 Beispielvideos ablegen)
+npm run test:e2e -- --dry       # nur Vorverarbeitung ohne Claude und ohne Render
+```
+
+Ergebnis: Tabelle in der Konsole und `tests/e2e/report.md` (Ergebnis, Versuche, Validator-Fehler, Länge, Selfcheck, Hinweise, Dauer, Kosten). `autocut log <run>` zeigt den Bericht eines Runs, er liegt auch als `runs/<run>/laufbericht.md`.
 
 ## Projektordner eines Runs
 

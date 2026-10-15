@@ -1,0 +1,285 @@
+import fs from "node:fs";
+import http from "node:http";
+import path from "node:path";
+import { ROOT, type Config, type Style } from "../config.ts";
+import type { LlmClient } from "../llm/client.ts";
+import { Plan } from "../schema/plan.ts";
+import { validatePlanFile } from "../steps/check.ts";
+import { planPaths } from "../steps/plan.ts";
+import { summarizeRun } from "../steps/report.ts";
+import { readRunLog } from "../util/runlog.ts";
+import { runPaths } from "../util/run.ts";
+import { health } from "./health.ts";
+import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
+
+const STEP_LABEL: Record<string, string> = {
+  ingest: "Einlesen",
+  transcribe: "Transkription",
+  analyze: "Analyse",
+  chin: "Kinn-Messung",
+  plan: "Schnittplan",
+  render: "Video bauen",
+};
+
+const slug = (s: string) => s.toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "reel";
+const json = (res: http.ServerResponse, code: number, body: unknown) => {
+  res.writeHead(code, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+  res.end(JSON.stringify(body));
+};
+const readBody = (req: http.IncomingMessage, max = 8e6): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let n = 0;
+    req.on("data", (c: Buffer) => {
+      n += c.length;
+      if (n > max) reject(new Error("Anfrage zu groß"));
+      else chunks.push(c);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
+
+export interface ServerOptions {
+  cfg: Config;
+  style: Style;
+  port?: number;
+  host?: string;
+  llm?: LlmClient;
+}
+
+export function startServer(o: ServerOptions): Promise<{ server: http.Server; url: string; jobs: JobRunner }> {
+  const { cfg, style } = o;
+  const jobs = new JobRunner(cfg, style, o.llm);
+  const runDir = (name: string) => runPaths(cfg, name).dir;
+  const validName = (n: string) => /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(n);
+
+  const listRuns = () => {
+    if (!fs.existsSync(cfg.runsPath)) return [];
+    return fs
+      .readdirSync(cfg.runsPath, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && fs.existsSync(path.join(cfg.runsPath, d.name, "run.json")))
+      .map((d) => {
+        const dir = path.join(cfg.runsPath, d.name);
+        const job = jobs.jobs.get(d.name);
+        const hasVideo = fs.existsSync(path.join(dir, "out")) && fs.readdirSync(path.join(dir, "out")).some((f) => f.endsWith(".mp4"));
+        const status = job?.status === "running" ? "running" : job?.status === "error" ? "error" : hasVideo ? "done" : fs.existsSync(path.join(dir, "fehlerbericht.md")) ? "error" : "idle";
+        return { name: d.name, status, mtime: fs.statSync(path.join(dir, "run.json")).mtimeMs };
+      })
+      .sort((a, b) => b.mtime - a.mtime);
+  };
+
+  const detail = (name: string) => {
+    const dir = runDir(name);
+    if (!fs.existsSync(path.join(dir, "run.json"))) return null;
+    const job = jobs.jobs.get(name);
+    const log = readRunLog(runPaths(cfg, name));
+    const uiStep = (s: string) => (s.startsWith("render") || s === "selfcheck" ? "render" : s);
+    const steps = STEP_ORDER.map((key) => {
+      const entries = log.steps.filter((s) => uiStep(s.step) === key);
+      const last = entries[entries.length - 1];
+      const secs = entries.reduce((a, e) => a + e.duration_ms / 1000, 0);
+      const status = job?.status === "running" && job.current === key ? "running" : last ? (last.status === "error" ? "error" : "ok") : "pending";
+      return { key, label: STEP_LABEL[key], status, seconds: Math.round(secs * 10) / 10 };
+    });
+    const out: Record<string, unknown> = { name, steps, job: job ? { status: job.status, current: job.current, error: job.error, kind: job.kind } : null };
+
+    const planFile = planPaths(runPaths(cfg, name)).plan;
+    if (fs.existsSync(planFile)) {
+      try {
+        const plan = Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8")));
+        const v = validatePlanFile(cfg, style, planFile).result;
+        out.validation = { ok: v.ok, errors: v.errors, warnings: v.warnings, notChecked: v.notChecked, stats: v.stats };
+        out.video = plan.video;
+        out.hook = plan.hook ? { lines: plan.hook.lines, transition: plan.hook.transition, reason: plan.hook.reason, confidence: plan.hook.confidence, origin: plan.hook.text_origin } : null;
+        const dec: { t_s: number; typ: string; text: string; reason: string; confidence: string }[] = [];
+        const tlOut = (raw: number) => {
+          let t = 0;
+          for (const s of plan.cut_segments) {
+            if (raw <= s.raw_out_s) return t;
+            t += s.raw_out_s - s.raw_in_s;
+          }
+          return t;
+        };
+        for (const r of plan.removed) if (!["pause", "leerlauf_anfang", "leerlauf_ende"].includes(r.kind)) dec.push({ t_s: tlOut(r.raw_from_s), typ: r.kind, text: `${r.raw_from_s.toFixed(1)}–${r.raw_to_s.toFixed(1)} s Rohzeit entfernt`, reason: r.reason, confidence: r.confidence });
+        for (const c of plan.captions) if (c.kind !== "weiss" && c.layout !== "stack_oben" && c.layout !== "stack_unten" && c.layout !== "liste_kopf") dec.push({ t_s: c.start_s, typ: c.kind === "gold" ? "Gold" : c.kind === "cta" ? "CTA" : "Zitat", text: c.text, reason: c.reason, confidence: c.confidence });
+        for (const z of plan.zooms) dec.push({ t_s: z.start_s, typ: "Zoom", text: `auf ${z.to_scale}`, reason: z.reason, confidence: z.confidence });
+        for (const b of plan.broll) dec.push({ t_s: b.start_s, typ: "B-Roll", text: b.motif + (b.source.kind === "offen" ? " (Quelle offen)" : ""), reason: b.reason, confidence: b.confidence });
+        for (const s of plan.sfx) if (!["riser", "shutter"].includes(s.role)) dec.push({ t_s: Math.max(0, s.at_s), typ: "Sound", text: s.file, reason: s.reason, confidence: s.confidence });
+        out.decisions = dec.sort((a, b) => a.t_s - b.t_s);
+        const outDir = path.join(runDir(name), "out");
+        const j = (f: string) => (fs.existsSync(path.join(outDir, f)) ? JSON.parse(fs.readFileSync(path.join(outDir, f), "utf8")) : null);
+        out.hinschauen = j(`${plan.video}.hinschauen.json`);
+        out.selfcheck = j(`${plan.video}.selfcheck.json`);
+        const mp4 = `${plan.video}.mp4`;
+        if (fs.existsSync(path.join(outDir, mp4))) out.files = { video: `/media/${name}/${mp4}`, hinschauen: `/media/${name}/${plan.video}.hinschauen.md`, plan: `/api/runs/${name}/plan`, bericht: `/api/runs/${name}/report` };
+      } catch (e) {
+        out.planError = (e as Error).message.split("\n")[0];
+      }
+    }
+    // Warum wurde der Plan abgelehnt? (letzte Versuche)
+    const attDir = path.join(dir, "plan-attempts");
+    if (fs.existsSync(attDir) && !out.validation) {
+      const files = fs.readdirSync(attDir).filter((f) => f.endsWith(".json")).sort();
+      out.attempts = files.map((f) => {
+        const a = JSON.parse(fs.readFileSync(path.join(attDir, f), "utf8"));
+        const lines: string[] = a.issues ?? (a.errors ? a.errors.map((e: { code: string; message: string }) => `[${e.code}] ${e.message}`) : a.feedback ? [a.feedback] : []);
+        return { attempt: a.attempt, stage: a.stage, lines: lines.slice(0, 8) };
+      });
+    }
+    out.summary = summarizeRun(dir);
+    return out;
+  };
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
+      const p = url.pathname;
+      const m = (re: RegExp) => p.match(re);
+
+      if (req.method === "GET" && p === "/") {
+        res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+        return res.end(fs.readFileSync(path.join(ROOT, "src", "ui", "index.html")));
+      }
+      if (req.method === "GET" && p === "/api/health") return json(res, 200, { items: await health(cfg, style), busy: jobs.busyRun });
+      if (req.method === "GET" && p === "/api/runs") return json(res, 200, listRuns());
+
+      if (req.method === "POST" && p === "/api/upload") {
+        const filename = url.searchParams.get("filename") ?? "video.mp4";
+        const opts = JSON.parse(url.searchParams.get("o") ?? "{}") as Omit<Partial<JobOptions>, "transition"> & { name?: string; hook1?: string; hook2?: string; transition?: string };
+        let name = slug(opts.name || filename);
+        for (let n = 2; fs.existsSync(runDir(name)); n++) name = `${slug(opts.name || filename)}-${n}`;
+        const inDir = path.join(runDir(name), "input");
+        fs.mkdirSync(inDir, { recursive: true });
+        const dest = path.join(inDir, filename.replace(/[^A-Za-z0-9._-]+/g, "_"));
+        await new Promise<void>((resolve, reject) => {
+          const ws = fs.createWriteStream(dest);
+          req.pipe(ws);
+          ws.on("finish", () => resolve());
+          ws.on("error", reject);
+          req.on("error", reject);
+        });
+        const jo: JobOptions = {
+          precut: opts.precut === undefined ? "auto" : opts.precut,
+          provider: opts.provider ?? "auto",
+          selfcheck: opts.selfcheck !== false,
+          transition: opts.transition === "blitz" ? "blitz_riser" : opts.transition === "hart" ? "hart" : undefined,
+          hookLines: opts.hook1 && opts.hook2 ? [opts.hook1, opts.hook2] : undefined,
+          video: `TW_Reel_${name}`,
+        };
+        try {
+          jobs.start(name, "pipeline", jo, dest);
+        } catch (e) {
+          fs.rmSync(runDir(name), { recursive: true, force: true });
+          return json(res, 409, { error: (e as Error).message });
+        }
+        return json(res, 200, { name });
+      }
+
+      let mm: RegExpMatchArray | null;
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)$/))) {
+        const d = validName(mm[1]!) ? detail(mm[1]!) : null;
+        return d ? json(res, 200, d) : json(res, 404, { error: "Run nicht gefunden" });
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/events$/))) {
+        const job = jobs.jobs.get(mm[1]!);
+        res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });
+        if (!job) return res.end();
+        const send = (e: unknown) => res.write(`data: ${JSON.stringify(e)}\n\n`);
+        job.events.forEach(send);
+        if (job.status !== "running") return res.end();
+        job.listeners.add(send);
+        req.on("close", () => job.listeners.delete(send));
+        return;
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/plan$/))) {
+        const f = planPaths(runPaths(cfg, mm[1]!)).plan;
+        if (!validName(mm[1]!) || !fs.existsSync(f)) return json(res, 404, { error: "Noch kein Plan" });
+        res.writeHead(200, { "content-type": "application/json; charset=utf-8", "content-disposition": `attachment; filename="plan.json"` });
+        return res.end(fs.readFileSync(f));
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/report$/))) {
+        const f = path.join(runDir(mm[1]!), "laufbericht.md");
+        if (!validName(mm[1]!) || !fs.existsSync(f)) return json(res, 404, { error: "Noch kein Bericht" });
+        res.writeHead(200, { "content-type": "text/markdown; charset=utf-8" });
+        return res.end(fs.readFileSync(f));
+      }
+      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/plan\/(check|save)$/))) {
+        const name = mm[1]!;
+        if (!validName(name)) return json(res, 400, { error: "Ungültiger Name" });
+        const body = await readBody(req);
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(body);
+        } catch (e) {
+          return json(res, 422, { ok: false, errors: [{ code: "json", message: `Kein gültiges JSON: ${(e as Error).message}` }], warnings: [] });
+        }
+        const tmp = path.join(runDir(name), "plan.edit.json");
+        fs.writeFileSync(tmp, JSON.stringify(parsed, null, 2));
+        let v;
+        try {
+          v = validatePlanFile(cfg, style, tmp).result;
+        } catch (e) {
+          fs.rmSync(tmp, { force: true });
+          return json(res, 422, { ok: false, errors: [{ code: "schema", message: (e as Error).message.split("\n").slice(0, 6).join(" | ") }], warnings: [] });
+        }
+        if (mm[2] === "check" || !v.ok) {
+          fs.rmSync(tmp, { force: true });
+          return json(res, v.ok ? 200 : 422, { ok: v.ok, errors: v.errors, warnings: v.warnings });
+        }
+        // speichern (Sicherung der alten Fassung) und neu rendern
+        const dest = planPaths(runPaths(cfg, name)).plan;
+        if (fs.existsSync(dest)) fs.copyFileSync(dest, path.join(runDir(name), "plan.prev.json"));
+        fs.renameSync(tmp, dest);
+        const sc = url.searchParams.get("selfcheck") !== "0";
+        try {
+          jobs.start(name, "rerender", { precut: "auto", provider: "auto", selfcheck: sc });
+        } catch (e) {
+          return json(res, 409, { error: (e as Error).message });
+        }
+        return json(res, 200, { ok: true, started: true });
+      }
+      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/replan$/))) {
+        const name = mm[1]!;
+        const o2 = JSON.parse((await readBody(req)) || "{}") as { selfcheck?: boolean; transition?: string; hook1?: string; hook2?: string };
+        try {
+          jobs.start(name, "replan", {
+            precut: "auto", provider: "auto", selfcheck: o2.selfcheck !== false, video: `TW_Reel_${name}`,
+            transition: o2.transition === "blitz" ? "blitz_riser" : o2.transition === "hart" ? "hart" : undefined,
+            hookLines: o2.hook1 && o2.hook2 ? [o2.hook1, o2.hook2] : undefined,
+          });
+        } catch (e) {
+          return json(res, 409, { error: (e as Error).message });
+        }
+        return json(res, 200, { started: true });
+      }
+
+      if (req.method === "GET" && (mm = m(/^\/media\/([^/]+)\/(.+)$/))) {
+        const base = path.join(runDir(mm[1]!), "out");
+        const file = path.normalize(path.join(base, decodeURIComponent(mm[2]!)));
+        if (!validName(mm[1]!) || !file.startsWith(base + path.sep) || !fs.existsSync(file)) return json(res, 404, { error: "Datei nicht gefunden" });
+        const size = fs.statSync(file).size;
+        const type = file.endsWith(".mp4") ? "video/mp4" : file.endsWith(".md") ? "text/markdown; charset=utf-8" : file.endsWith(".png") ? "image/png" : "application/octet-stream";
+        const range = req.headers.range?.match(/bytes=(\d*)-(\d*)/);
+        if (range) {
+          const start = range[1] ? parseInt(range[1]) : 0;
+          const end = range[2] ? Math.min(parseInt(range[2]), size - 1) : size - 1;
+          res.writeHead(206, { "content-type": type, "content-range": `bytes ${start}-${end}/${size}`, "accept-ranges": "bytes", "content-length": end - start + 1 });
+          return fs.createReadStream(file, { start, end }).pipe(res);
+        }
+        res.writeHead(200, { "content-type": type, "content-length": size, "accept-ranges": "bytes" });
+        return fs.createReadStream(file).pipe(res);
+      }
+      json(res, 404, { error: "Nicht gefunden" });
+    } catch (e) {
+      if (!res.headersSent) json(res, 500, { error: (e as Error).message });
+      else res.end();
+    }
+  });
+
+  return new Promise((resolve) => {
+    server.listen(o.port ?? 3000, o.host ?? "127.0.0.1", () => {
+      const addr = server.address() as { port: number };
+      resolve({ server, url: `http://${o.host ?? "127.0.0.1"}:${addr.port}`, jobs });
+    });
+  });
+}

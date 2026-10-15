@@ -17,6 +17,7 @@ import { de2 } from "../util/fmt.ts";
 import { log } from "../util/log.ts";
 import { loadManifest, runPaths, type RunPaths } from "../util/run.ts";
 import { timed } from "../util/runlog.ts";
+import { writeRunReport } from "./report.ts";
 import { round3 } from "../lib/intervals.ts";
 
 export interface PlanOptions {
@@ -168,6 +169,7 @@ export async function plan(cfg: Config, style: Style, runName: string, opts: Pla
   if (lastPlan) writeJson(pp.failed, lastPlan);
   const report = failureReport(runName, clip.id, errorsPerAttempt, lastFeedback, finalValidation, cfg.llm.maxPlanAttempts);
   fs.writeFileSync(pp.report, report);
+  writeRunReport(run.dir);
   throw new PlanFailedError(`Plan besteht den Validator nach ${cfg.llm.maxPlanAttempts} Versuchen nicht. Es wird nicht gerendert. Bericht: ${pp.report}`, pp.report);
 }
 

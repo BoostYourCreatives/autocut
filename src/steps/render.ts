@@ -171,7 +171,7 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
         const pct = Math.floor(progress * 10) * 10;
         if (pct !== lastPct) {
           lastPct = pct;
-          process.stderr.write(`  render ${pct} %\n`);
+          log.info(`Bild rendern: ${pct} %`);
         }
       },
     });

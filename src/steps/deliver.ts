@@ -11,6 +11,7 @@ import { renderPlan, type RenderResult } from "./render.ts";
 import { selfcheck, type SelfcheckFile } from "./selfcheck.ts";
 import { attentionItems, writeAttention } from "./hinschauen.ts";
 import type { QualitySummary } from "./plan.ts";
+import { writeRunReport } from "./report.ts";
 
 export interface DeliverOptions {
   selfcheck: boolean;
@@ -62,5 +63,6 @@ export async function deliver(cfg: Config, style: Style, planFile: string, opts:
     q.est_cost_usd = Math.round((q.est_cost_usd + (sc?.est_cost_usd ?? 0)) * 10000) / 10000;
     writeJson(qf, q);
   }
+  writeRunReport(runDir);
   return { render, selfcheck: sc, attentionFile };
 }

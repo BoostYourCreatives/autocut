@@ -13,7 +13,9 @@
   "scripts": {
     "autocut": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/unit/*.test.ts"
+    "test": "tsx --test tests/unit/*.test.ts",
+    "ui": "tsx src/cli.ts ui",
+    "test:e2e": "tsx tests/e2e/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.134.0",
