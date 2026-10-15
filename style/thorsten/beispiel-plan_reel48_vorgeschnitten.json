@@ -1,0 +1,2476 @@
+{
+ "video": "TW_Reel_48",
+ "type": "Rohvideo vom User vorgeschnitten und mit Zooms -> keine eigenen Zooms/Pausenschnitte, nur ein Schnitt fuer den Gold-Blitz",
+ "source": "Reel_48_raw.mp4",
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "total_frames": 1523,
+ "total_s": 50.767,
+ "transcript_words": [
+  {
+   "i": 0,
+   "start_s": 0.0,
+   "end_s": 0.12,
+   "word": "Wenn"
+  },
+  {
+   "i": 1,
+   "start_s": 0.12,
+   "end_s": 0.26,
+   "word": "ich"
+  },
+  {
+   "i": 2,
+   "start_s": 0.26,
+   "end_s": 0.38,
+   "word": "mein"
+  },
+  {
+   "i": 3,
+   "start_s": 0.38,
+   "end_s": 0.78,
+   "word": "Vermögen"
+  },
+  {
+   "i": 4,
+   "start_s": 0.78,
+   "end_s": 0.96,
+   "word": "auf"
+  },
+  {
+   "i": 5,
+   "start_s": 0.96,
+   "end_s": 1.08,
+   "word": "die"
+  },
+  {
+   "i": 6,
+   "start_s": 1.08,
+   "end_s": 1.4,
+   "word": "nächsten"
+  },
+  {
+   "i": 7,
+   "start_s": 1.4,
+   "end_s": 1.7,
+   "word": "10"
+  },
+  {
+   "i": 8,
+   "start_s": 1.7,
+   "end_s": 1.86,
+   "word": "oder"
+  },
+  {
+   "i": 9,
+   "start_s": 1.86,
+   "end_s": 2.24,
+   "word": "20"
+  },
+  {
+   "i": 10,
+   "start_s": 2.24,
+   "end_s": 2.48,
+   "word": "Jahre"
+  },
+  {
+   "i": 11,
+   "start_s": 2.48,
+   "end_s": 3.02,
+   "word": "vorbereiten"
+  },
+  {
+   "i": 12,
+   "start_s": 3.02,
+   "end_s": 3.48,
+   "word": "müsste,"
+  },
+  {
+   "i": 13,
+   "start_s": 3.8,
+   "end_s": 3.92,
+   "word": "würde"
+  },
+  {
+   "i": 14,
+   "start_s": 3.92,
+   "end_s": 4.0,
+   "word": "ich"
+  },
+  {
+   "i": 15,
+   "start_s": 4.0,
+   "end_s": 4.2,
+   "word": "mir"
+  },
+  {
+   "i": 16,
+   "start_s": 4.2,
+   "end_s": 4.48,
+   "word": "drei"
+  },
+  {
+   "i": 17,
+   "start_s": 4.48,
+   "end_s": 4.8,
+   "word": "Fragen"
+  },
+  {
+   "i": 18,
+   "start_s": 4.8,
+   "end_s": 5.11,
+   "word": "stellen."
+  },
+  {
+   "i": 19,
+   "start_s": 5.348,
+   "end_s": 5.802,
+   "word": "1."
+  },
+  {
+   "i": 20,
+   "start_s": 6.191,
+   "end_s": 6.36,
+   "word": "Was"
+  },
+  {
+   "i": 21,
+   "start_s": 6.36,
+   "end_s": 6.964,
+   "word": "passiert,"
+  },
+  {
+   "i": 22,
+   "start_s": 7.117,
+   "end_s": 7.2,
+   "word": "wenn"
+  },
+  {
+   "i": 23,
+   "start_s": 7.2,
+   "end_s": 7.4,
+   "word": "die"
+  },
+  {
+   "i": 24,
+   "start_s": 7.4,
+   "end_s": 7.9,
+   "word": "Inflation"
+  },
+  {
+   "i": 25,
+   "start_s": 7.9,
+   "end_s": 8.64,
+   "word": "langfristig"
+  },
+  {
+   "i": 26,
+   "start_s": 8.64,
+   "end_s": 8.86,
+   "word": "höher"
+  },
+  {
+   "i": 27,
+   "start_s": 8.86,
+   "end_s": 9.12,
+   "word": "bleibt"
+  },
+  {
+   "i": 28,
+   "start_s": 9.12,
+   "end_s": 9.32,
+   "word": "als"
+  },
+  {
+   "i": 29,
+   "start_s": 9.32,
+   "end_s": 9.733,
+   "word": "erwartet?"
+  },
+  {
+   "i": 30,
+   "start_s": 9.892,
+   "end_s": 10.16,
+   "word": "Denn"
+  },
+  {
+   "i": 31,
+   "start_s": 10.16,
+   "end_s": 10.72,
+   "word": "dann"
+  },
+  {
+   "i": 32,
+   "start_s": 10.72,
+   "end_s": 11.16,
+   "word": "verlieren"
+  },
+  {
+   "i": 33,
+   "start_s": 11.16,
+   "end_s": 11.54,
+   "word": "bestimmte"
+  },
+  {
+   "i": 34,
+   "start_s": 11.54,
+   "end_s": 12.26,
+   "word": "Geldanlagen"
+  },
+  {
+   "i": 35,
+   "start_s": 12.26,
+   "end_s": 12.8,
+   "word": "real"
+  },
+  {
+   "i": 36,
+   "start_s": 12.8,
+   "end_s": 13.06,
+   "word": "an"
+  },
+  {
+   "i": 37,
+   "start_s": 13.06,
+   "end_s": 13.503,
+   "word": "Kaufkraft."
+  },
+  {
+   "i": 38,
+   "start_s": 13.672,
+   "end_s": 14.127,
+   "word": "2."
+  },
+  {
+   "i": 39,
+   "start_s": 14.367,
+   "end_s": 14.84,
+   "word": "Was"
+  },
+  {
+   "i": 40,
+   "start_s": 14.84,
+   "end_s": 15.24,
+   "word": "passiert,"
+  },
+  {
+   "i": 41,
+   "start_s": 15.28,
+   "end_s": 15.48,
+   "word": "wenn"
+  },
+  {
+   "i": 42,
+   "start_s": 15.48,
+   "end_s": 15.94,
+   "word": "Aktien"
+  },
+  {
+   "i": 43,
+   "start_s": 15.94,
+   "end_s": 16.18,
+   "word": "oder"
+  },
+  {
+   "i": 44,
+   "start_s": 16.18,
+   "end_s": 16.78,
+   "word": "Immobilien"
+  },
+  {
+   "i": 45,
+   "start_s": 16.78,
+   "end_s": 17.419,
+   "word": "zwischenzeitlich"
+  },
+  {
+   "i": 46,
+   "start_s": 17.569,
+   "end_s": 18.02,
+   "word": "deutlich"
+  },
+  {
+   "i": 47,
+   "start_s": 18.02,
+   "end_s": 18.22,
+   "word": "an"
+  },
+  {
+   "i": 48,
+   "start_s": 18.22,
+   "end_s": 18.38,
+   "word": "Wert"
+  },
+  {
+   "i": 49,
+   "start_s": 18.38,
+   "end_s": 18.76,
+   "word": "verlieren?"
+  },
+  {
+   "i": 50,
+   "start_s": 18.88,
+   "end_s": 19.0,
+   "word": "Muss"
+  },
+  {
+   "i": 51,
+   "start_s": 19.0,
+   "end_s": 19.18,
+   "word": "ich"
+  },
+  {
+   "i": 52,
+   "start_s": 19.18,
+   "end_s": 19.4,
+   "word": "dann"
+  },
+  {
+   "i": 53,
+   "start_s": 19.4,
+   "end_s": 19.909,
+   "word": "verkaufen"
+  },
+  {
+   "i": 54,
+   "start_s": 20.118,
+   "end_s": 20.58,
+   "word": "oder"
+  },
+  {
+   "i": 55,
+   "start_s": 20.58,
+   "end_s": 20.78,
+   "word": "kann"
+  },
+  {
+   "i": 56,
+   "start_s": 20.78,
+   "end_s": 20.98,
+   "word": "ich"
+  },
+  {
+   "i": 57,
+   "start_s": 20.98,
+   "end_s": 21.14,
+   "word": "diese"
+  },
+  {
+   "i": 58,
+   "start_s": 21.14,
+   "end_s": 21.5,
+   "word": "Phase"
+  },
+  {
+   "i": 59,
+   "start_s": 21.5,
+   "end_s": 22.02,
+   "word": "finanziell"
+  },
+  {
+   "i": 60,
+   "start_s": 22.02,
+   "end_s": 22.497,
+   "word": "überstehen?"
+  },
+  {
+   "i": 61,
+   "start_s": 22.651,
+   "end_s": 23.075,
+   "word": "3."
+  },
+  {
+   "i": 62,
+   "start_s": 23.597,
+   "end_s": 23.88,
+   "word": "Was"
+  },
+  {
+   "i": 63,
+   "start_s": 23.88,
+   "end_s": 24.372,
+   "word": "passiert,"
+  },
+  {
+   "i": 64,
+   "start_s": 24.55,
+   "end_s": 24.7,
+   "word": "wenn"
+  },
+  {
+   "i": 65,
+   "start_s": 24.7,
+   "end_s": 24.92,
+   "word": "meine"
+  },
+  {
+   "i": 66,
+   "start_s": 24.92,
+   "end_s": 25.54,
+   "word": "Prognose"
+  },
+  {
+   "i": 67,
+   "start_s": 25.54,
+   "end_s": 25.78,
+   "word": "über"
+  },
+  {
+   "i": 68,
+   "start_s": 25.78,
+   "end_s": 25.96,
+   "word": "die"
+  },
+  {
+   "i": 69,
+   "start_s": 25.96,
+   "end_s": 26.5,
+   "word": "wirtschaftliche"
+  },
+  {
+   "i": 70,
+   "start_s": 26.5,
+   "end_s": 27.0,
+   "word": "Zukunft"
+  },
+  {
+   "i": 71,
+   "start_s": 27.0,
+   "end_s": 27.6,
+   "word": "komplett"
+  },
+  {
+   "i": 72,
+   "start_s": 27.6,
+   "end_s": 27.92,
+   "word": "falsch"
+  },
+  {
+   "i": 73,
+   "start_s": 27.92,
+   "end_s": 28.168,
+   "word": "ist?"
+  },
+  {
+   "i": 74,
+   "start_s": 28.343,
+   "end_s": 28.42,
+   "word": "Bin"
+  },
+  {
+   "i": 75,
+   "start_s": 28.42,
+   "end_s": 28.6,
+   "word": "ich"
+  },
+  {
+   "i": 76,
+   "start_s": 28.6,
+   "end_s": 28.76,
+   "word": "dann"
+  },
+  {
+   "i": 77,
+   "start_s": 28.76,
+   "end_s": 29.08,
+   "word": "trotzdem"
+  },
+  {
+   "i": 78,
+   "start_s": 29.08,
+   "end_s": 29.34,
+   "word": "noch"
+  },
+  {
+   "i": 79,
+   "start_s": 29.34,
+   "end_s": 29.9,
+   "word": "ausreichend"
+  },
+  {
+   "i": 80,
+   "start_s": 29.9,
+   "end_s": 30.22,
+   "word": "breit"
+  },
+  {
+   "i": 81,
+   "start_s": 30.22,
+   "end_s": 30.72,
+   "word": "aufgestellt?"
+  },
+  {
+   "i": 82,
+   "start_s": 30.87,
+   "end_s": 31.18,
+   "word": "Genau"
+  },
+  {
+   "i": 83,
+   "start_s": 31.18,
+   "end_s": 31.52,
+   "word": "diese"
+  },
+  {
+   "i": 84,
+   "start_s": 31.52,
+   "end_s": 31.76,
+   "word": "drei"
+  },
+  {
+   "i": 85,
+   "start_s": 31.76,
+   "end_s": 32.22,
+   "word": "Fragen"
+  },
+  {
+   "i": 86,
+   "start_s": 32.22,
+   "end_s": 32.6,
+   "word": "helfen"
+  },
+  {
+   "i": 87,
+   "start_s": 32.6,
+   "end_s": 33.1,
+   "word": "dir,"
+  },
+  {
+   "i": 88,
+   "start_s": 33.28,
+   "end_s": 33.84,
+   "word": "Schwachstellen"
+  },
+  {
+   "i": 89,
+   "start_s": 33.84,
+   "end_s": 34.06,
+   "word": "in"
+  },
+  {
+   "i": 90,
+   "start_s": 34.06,
+   "end_s": 34.26,
+   "word": "deiner"
+  },
+  {
+   "i": 91,
+   "start_s": 34.26,
+   "end_s": 35.185,
+   "word": "Vermögenstruktur"
+  },
+  {
+   "i": 92,
+   "start_s": 35.421,
+   "end_s": 35.64,
+   "word": "zu"
+  },
+  {
+   "i": 93,
+   "start_s": 35.64,
+   "end_s": 35.952,
+   "word": "erkennen."
+  },
+  {
+   "i": 94,
+   "start_s": 36.106,
+   "end_s": 36.2,
+   "word": "Du"
+  },
+  {
+   "i": 95,
+   "start_s": 36.2,
+   "end_s": 36.38,
+   "word": "musst"
+  },
+  {
+   "i": 96,
+   "start_s": 36.38,
+   "end_s": 36.6,
+   "word": "nicht"
+  },
+  {
+   "i": 97,
+   "start_s": 36.6,
+   "end_s": 36.9,
+   "word": "wissen,"
+  },
+  {
+   "i": 98,
+   "start_s": 37.04,
+   "end_s": 37.28,
+   "word": "welches"
+  },
+  {
+   "i": 99,
+   "start_s": 37.28,
+   "end_s": 37.84,
+   "word": "Szenario"
+  },
+  {
+   "i": 100,
+   "start_s": 37.84,
+   "end_s": 38.04,
+   "word": "in"
+  },
+  {
+   "i": 101,
+   "start_s": 38.04,
+   "end_s": 38.12,
+   "word": "den"
+  },
+  {
+   "i": 102,
+   "start_s": 38.12,
+   "end_s": 38.44,
+   "word": "nächsten"
+  },
+  {
+   "i": 103,
+   "start_s": 38.44,
+   "end_s": 38.68,
+   "word": "10"
+  },
+  {
+   "i": 104,
+   "start_s": 38.68,
+   "end_s": 39.0,
+   "word": "Jahren"
+  },
+  {
+   "i": 105,
+   "start_s": 39.0,
+   "end_s": 39.58,
+   "word": "eintreten"
+  },
+  {
+   "i": 106,
+   "start_s": 39.58,
+   "end_s": 39.8,
+   "word": "wird,"
+  },
+  {
+   "i": 107,
+   "start_s": 40.16,
+   "end_s": 40.28,
+   "word": "aber"
+  },
+  {
+   "i": 108,
+   "start_s": 40.28,
+   "end_s": 40.4,
+   "word": "du"
+  },
+  {
+   "i": 109,
+   "start_s": 40.4,
+   "end_s": 40.64,
+   "word": "solltest"
+  },
+  {
+   "i": 110,
+   "start_s": 40.64,
+   "end_s": 40.8,
+   "word": "dir"
+  },
+  {
+   "i": 111,
+   "start_s": 40.8,
+   "end_s": 41.28,
+   "word": "überlegen,"
+  },
+  {
+   "i": 112,
+   "start_s": 41.58,
+   "end_s": 41.64,
+   "word": "wie"
+  },
+  {
+   "i": 113,
+   "start_s": 41.62,
+   "end_s": 41.8,
+   "word": "dein"
+  },
+  {
+   "i": 114,
+   "start_s": 41.8,
+   "end_s": 42.3,
+   "word": "Vermögen"
+  },
+  {
+   "i": 115,
+   "start_s": 42.3,
+   "end_s": 42.56,
+   "word": "auf"
+  },
+  {
+   "i": 116,
+   "start_s": 42.56,
+   "end_s": 43.22,
+   "word": "unterschiedliche"
+  },
+  {
+   "i": 117,
+   "start_s": 43.22,
+   "end_s": 43.72,
+   "word": "Entwicklungen"
+  },
+  {
+   "i": 118,
+   "start_s": 43.72,
+   "end_s": 44.28,
+   "word": "reagieren"
+  },
+  {
+   "i": 119,
+   "start_s": 44.28,
+   "end_s": 44.52,
+   "word": "könnte."
+  },
+  {
+   "i": 120,
+   "start_s": 44.681,
+   "end_s": 45.16,
+   "word": "Kommentier"
+  },
+  {
+   "i": 121,
+   "start_s": 45.16,
+   "end_s": 45.36,
+   "word": "mit"
+  },
+  {
+   "i": 122,
+   "start_s": 45.36,
+   "end_s": 46.033,
+   "word": "Freiheitstraining"
+  },
+  {
+   "i": 123,
+   "start_s": 46.348,
+   "end_s": 46.46,
+   "word": "und"
+  },
+  {
+   "i": 124,
+   "start_s": 46.46,
+   "end_s": 46.62,
+   "word": "ich"
+  },
+  {
+   "i": 125,
+   "start_s": 46.62,
+   "end_s": 46.88,
+   "word": "zeige"
+  },
+  {
+   "i": 126,
+   "start_s": 46.88,
+   "end_s": 47.174,
+   "word": "dir,"
+  },
+  {
+   "i": 127,
+   "start_s": 47.358,
+   "end_s": 47.48,
+   "word": "wie"
+  },
+  {
+   "i": 128,
+   "start_s": 47.48,
+   "end_s": 47.66,
+   "word": "du"
+  },
+  {
+   "i": 129,
+   "start_s": 47.66,
+   "end_s": 47.78,
+   "word": "dein"
+  },
+  {
+   "i": 130,
+   "start_s": 47.78,
+   "end_s": 48.329,
+   "word": "Vermögen"
+  },
+  {
+   "i": 131,
+   "start_s": 48.491,
+   "end_s": 49.257,
+   "word": "langfristig"
+  },
+  {
+   "i": 132,
+   "start_s": 49.398,
+   "end_s": 50.02,
+   "word": "unabhängiger"
+  },
+  {
+   "i": 133,
+   "start_s": 50.02,
+   "end_s": 50.4,
+   "word": "aufstellen"
+  },
+  {
+   "i": 134,
+   "start_s": 50.4,
+   "end_s": 50.7,
+   "word": "kannst."
+  }
+ ],
+ "cut_segments": [
+  {
+   "i": 0,
+   "raw_in_s": 0.0,
+   "raw_out_s": 5.3,
+   "out_from_frame": 0,
+   "out_to_frame": 159,
+   "out_from_s": 0.0,
+   "out_to_s": 5.3
+  },
+  {
+   "i": 1,
+   "raw_in_s": 5.3,
+   "raw_out_s": 50.767,
+   "out_from_frame": 159,
+   "out_to_frame": 1523,
+   "out_from_s": 5.3,
+   "out_to_s": 50.767
+  }
+ ],
+ "flash": {
+  "center_frame": 159,
+  "half_frames": 5,
+  "center_s": 5.3
+ },
+ "zooms": [],
+ "broll": [
+  {
+   "src": "b_burn.mp4",
+   "start_frame": 296,
+   "end_frame": 410,
+   "start_s": 9.867,
+   "end_s": 13.667,
+   "src_from_s": 0.0,
+   "internal_zoom": "1.00 -> 1.06 linear over clip, origin 540/900"
+  },
+  {
+   "src": "b_down.mp4",
+   "start_frame": 526,
+   "end_frame": 566,
+   "start_s": 17.533,
+   "end_s": 18.867,
+   "src_from_s": 0.3,
+   "internal_zoom": "1.00 -> 1.06 linear over clip, origin 540/900"
+  }
+ ],
+ "overlays": [
+  {
+   "type": "hook",
+   "start_frame": 0,
+   "end_frame": 159,
+   "start_s": 0.0,
+   "end_s": 5.3,
+   "lines": [
+    "3 FRAGEN FÜR JEDEN",
+    "DER INVESTIEREN MÖCHTE"
+   ]
+  },
+  {
+   "type": "ki",
+   "start_frame": 0,
+   "end_frame": 159,
+   "start_s": 0.0,
+   "end_s": 5.3,
+   "text": "Info: Dieses Video wurde mit KI erstellt."
+  },
+  {
+   "type": "text",
+   "start_frame": 0,
+   "end_frame": 22,
+   "start_s": 0.0,
+   "end_s": 0.733,
+   "text": "Wenn ich mein Vermögen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 22,
+   "end_frame": 41,
+   "start_s": 0.733,
+   "end_s": 1.367,
+   "text": "auf die nächsten",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 41,
+   "end_frame": 73,
+   "start_s": 1.367,
+   "end_s": 2.433,
+   "text": "10 oder 20 Jahre",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1196.8,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 73,
+   "end_frame": 90,
+   "start_s": 2.433,
+   "end_s": 3.0,
+   "text": "vorbereiten",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 90,
+   "end_frame": 113,
+   "start_s": 3.0,
+   "end_s": 3.767,
+   "text": "müsste,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 113,
+   "end_frame": 125,
+   "start_s": 3.767,
+   "end_s": 4.167,
+   "text": "würde ich mir",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 125,
+   "end_frame": 143,
+   "start_s": 4.167,
+   "end_s": 4.767,
+   "text": "3 Fragen",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 90,
+   "color": "#fab926",
+   "y_center_px": 1189.8,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 143,
+   "end_frame": 159,
+   "start_s": 4.767,
+   "end_s": 5.3,
+   "text": "stellen.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 159,
+   "end_frame": 185,
+   "start_s": 5.3,
+   "end_s": 6.167,
+   "text": "Erstens,",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 96,
+   "color": "#fab926",
+   "y_center_px": 1187.5,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 185,
+   "end_frame": 273,
+   "start_s": 6.167,
+   "end_s": 9.1,
+   "text": "was passiert, wenn die",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1204.8,
+   "baseline_px": 1221.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "q1",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "was",
+     0
+    ],
+    [
+     "passiert,",
+     5
+    ],
+    [
+     "wenn",
+     28
+    ],
+    [
+     "die",
+     30
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 221,
+   "end_frame": 273,
+   "start_s": 7.367,
+   "end_s": 9.1,
+   "text": "Inflation",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 90,
+   "color": "#fab926",
+   "y_center_px": 1252.8,
+   "baseline_px": 1288.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "q1",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 236,
+   "end_frame": 273,
+   "start_s": 7.867,
+   "end_s": 9.1,
+   "text": "langfristig höher bleibt",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1325.8,
+   "baseline_px": 1342.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "q1",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "langfristig",
+     0
+    ],
+    [
+     "höher",
+     22
+    ],
+    [
+     "bleibt",
+     29
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 273,
+   "end_frame": 296,
+   "start_s": 9.1,
+   "end_s": 9.867,
+   "text": "als erwartet?",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "shade",
+   "start_frame": 296,
+   "end_frame": 410,
+   "start_s": 9.867,
+   "end_s": 13.667,
+   "center_y_px": 1280,
+   "alpha": 0.36
+  },
+  {
+   "type": "text",
+   "start_frame": 296,
+   "end_frame": 304,
+   "start_s": 9.867,
+   "end_s": 10.133,
+   "text": "Denn",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 304,
+   "end_frame": 321,
+   "start_s": 10.133,
+   "end_s": 10.7,
+   "text": "dann",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 321,
+   "end_frame": 334,
+   "start_s": 10.7,
+   "end_s": 11.133,
+   "text": "verlieren",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 334,
+   "end_frame": 409,
+   "start_s": 11.133,
+   "end_s": 13.633,
+   "text": "bestimmte Geldanlagen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1204.8,
+   "baseline_px": 1221.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "kk",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "bestimmte",
+     0
+    ],
+    [
+     "Geldanlagen",
+     11
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 367,
+   "end_frame": 409,
+   "start_s": 12.233,
+   "end_s": 13.633,
+   "text": "real an Kaufkraft.",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 84,
+   "color": "#fab926",
+   "y_center_px": 1255.2,
+   "baseline_px": 1288.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "kk",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 409,
+   "end_frame": 430,
+   "start_s": 13.633,
+   "end_s": 14.333,
+   "text": "Zweitens,",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 96,
+   "color": "#fab926",
+   "y_center_px": 1187.5,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 430,
+   "end_frame": 526,
+   "start_s": 14.333,
+   "end_s": 17.533,
+   "text": "was passiert, wenn",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1204.8,
+   "baseline_px": 1221.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "q2",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "was",
+     0
+    ],
+    [
+     "passiert,",
+     14
+    ],
+    [
+     "wenn",
+     27
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 463,
+   "end_frame": 526,
+   "start_s": 15.433,
+   "end_s": 17.533,
+   "text": "Aktien oder Immobilien",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 80,
+   "color": "#fab926",
+   "y_center_px": 1256.7,
+   "baseline_px": 1288.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "q2",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 502,
+   "end_frame": 526,
+   "start_s": 16.733,
+   "end_s": 17.533,
+   "text": "zwischenzeitlich",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1325.8,
+   "baseline_px": 1342.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "rise",
+   "group": "q2",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "shade",
+   "start_frame": 526,
+   "end_frame": 566,
+   "start_s": 17.533,
+   "end_s": 18.867,
+   "center_y_px": 1280,
+   "alpha": 0.36
+  },
+  {
+   "type": "text",
+   "start_frame": 526,
+   "end_frame": 565,
+   "start_s": 17.533,
+   "end_s": 18.833,
+   "text": "deutlich an Wert",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 84,
+   "color": "#fab926",
+   "y_center_px": 1255.2,
+   "baseline_px": 1288.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "wv",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 550,
+   "end_frame": 565,
+   "start_s": 18.333,
+   "end_s": 18.833,
+   "text": "verlieren?",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1325.8,
+   "baseline_px": 1342.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "rise",
+   "group": "wv",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 565,
+   "end_frame": 581,
+   "start_s": 18.833,
+   "end_s": 19.367,
+   "text": "Muss ich dann",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 581,
+   "end_frame": 603,
+   "start_s": 19.367,
+   "end_s": 20.1,
+   "text": "verkaufen",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1191.4,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 603,
+   "end_frame": 616,
+   "start_s": 20.1,
+   "end_s": 20.533,
+   "text": "oder",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 616,
+   "end_frame": 644,
+   "start_s": 20.533,
+   "end_s": 21.467,
+   "text": "kann ich diese Phase",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 644,
+   "end_frame": 660,
+   "start_s": 21.467,
+   "end_s": 22.0,
+   "text": "finanziell",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 660,
+   "end_frame": 679,
+   "start_s": 22.0,
+   "end_s": 22.633,
+   "text": "überstehen?",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1191.4,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 679,
+   "end_frame": 707,
+   "start_s": 22.633,
+   "end_s": 23.567,
+   "text": "Drittens,",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 96,
+   "color": "#fab926",
+   "y_center_px": 1187.5,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 707,
+   "end_frame": 809,
+   "start_s": 23.567,
+   "end_s": 26.967,
+   "text": "was passiert, wenn meine",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1204.8,
+   "baseline_px": 1221.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "q3",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "was",
+     0
+    ],
+    [
+     "passiert,",
+     8
+    ],
+    [
+     "wenn",
+     29
+    ],
+    [
+     "meine",
+     33
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 747,
+   "end_frame": 809,
+   "start_s": 24.9,
+   "end_s": 26.967,
+   "text": "Prognose",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 90,
+   "color": "#fab926",
+   "y_center_px": 1252.8,
+   "baseline_px": 1288.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "q3",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 765,
+   "end_frame": 809,
+   "start_s": 25.5,
+   "end_s": 26.967,
+   "text": "über die wirtschaftliche Zukunft",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1325.8,
+   "baseline_px": 1342.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "q3",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "über",
+     0
+    ],
+    [
+     "die",
+     7
+    ],
+    [
+     "wirtschaftliche",
+     13
+    ],
+    [
+     "Zukunft",
+     29
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 809,
+   "end_frame": 849,
+   "start_s": 26.967,
+   "end_s": 28.3,
+   "text": "komplett falsch ist?",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1196.8,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 849,
+   "end_frame": 871,
+   "start_s": 28.3,
+   "end_s": 29.033,
+   "text": "Bin ich dann trotzdem",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 871,
+   "end_frame": 879,
+   "start_s": 29.033,
+   "end_s": 29.3,
+   "text": "noch",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 879,
+   "end_frame": 896,
+   "start_s": 29.3,
+   "end_s": 29.867,
+   "text": "ausreichend",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 896,
+   "end_frame": 925,
+   "start_s": 29.867,
+   "end_s": 30.833,
+   "text": "breit aufgestellt?",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1196.8,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 925,
+   "end_frame": 934,
+   "start_s": 30.833,
+   "end_s": 31.133,
+   "text": "Genau",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 934,
+   "end_frame": 945,
+   "start_s": 31.133,
+   "end_s": 31.5,
+   "text": "diese",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 945,
+   "end_frame": 952,
+   "start_s": 31.5,
+   "end_s": 31.733,
+   "text": "3",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 952,
+   "end_frame": 966,
+   "start_s": 31.733,
+   "end_s": 32.2,
+   "text": "Fragen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 966,
+   "end_frame": 977,
+   "start_s": 32.2,
+   "end_s": 32.567,
+   "text": "helfen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 977,
+   "end_frame": 994,
+   "start_s": 32.567,
+   "end_s": 33.133,
+   "text": "dir,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 994,
+   "end_frame": 1014,
+   "start_s": 33.133,
+   "end_s": 33.8,
+   "text": "Schwachstellen",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1189.4,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "wipe",
+   "group": null,
+   "lane": "A",
+   "cta": false,
+   "wipe_frames": 9
+  },
+  {
+   "type": "text",
+   "start_frame": 1014,
+   "end_frame": 1027,
+   "start_s": 33.8,
+   "end_s": 34.233,
+   "text": "in deiner",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1027,
+   "end_frame": 1062,
+   "start_s": 34.233,
+   "end_s": 35.4,
+   "text": "Vermögensstruktur",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1062,
+   "end_frame": 1082,
+   "start_s": 35.4,
+   "end_s": 36.067,
+   "text": "zu erkennen.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1082,
+   "end_frame": 1110,
+   "start_s": 36.067,
+   "end_s": 37.0,
+   "text": "Du musst nicht wissen,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1110,
+   "end_frame": 1117,
+   "start_s": 37.0,
+   "end_s": 37.233,
+   "text": "welches",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1117,
+   "end_frame": 1134,
+   "start_s": 37.233,
+   "end_s": 37.8,
+   "text": "Szenario",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1191.4,
+   "baseline_px": 1225.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1134,
+   "end_frame": 1152,
+   "start_s": 37.8,
+   "end_s": 38.4,
+   "text": "in den nächsten",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1152,
+   "end_frame": 1159,
+   "start_s": 38.4,
+   "end_s": 38.633,
+   "text": "10",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1159,
+   "end_frame": 1169,
+   "start_s": 38.633,
+   "end_s": 38.967,
+   "text": "Jahren",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1169,
+   "end_frame": 1186,
+   "start_s": 38.967,
+   "end_s": 39.533,
+   "text": "eintreten",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1186,
+   "end_frame": 1199,
+   "start_s": 39.533,
+   "end_s": 39.967,
+   "text": "wird,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1204,
+   "end_frame": 1218,
+   "start_s": 40.133,
+   "end_s": 40.6,
+   "text": "aber du solltest",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1218,
+   "end_frame": 1246,
+   "start_s": 40.6,
+   "end_s": 41.533,
+   "text": "dir überlegen,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1246,
+   "end_frame": 1339,
+   "start_s": 41.533,
+   "end_s": 44.633,
+   "text": "wie dein Vermögen auf",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1204.8,
+   "baseline_px": 1221.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "en",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "wie",
+     0
+    ],
+    [
+     "dein",
+     2
+    ],
+    [
+     "Vermögen",
+     7
+    ],
+    [
+     "auf",
+     22
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 1276,
+   "end_frame": 1339,
+   "start_s": 42.533,
+   "end_s": 44.633,
+   "text": "unterschiedliche Entwicklungen",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 64,
+   "color": "#fab926",
+   "y_center_px": 1263.0,
+   "baseline_px": 1288.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "en",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1311,
+   "end_frame": 1339,
+   "start_s": 43.7,
+   "end_s": 44.633,
+   "text": "reagieren könnte.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1325.8,
+   "baseline_px": 1342.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "en",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "reagieren",
+     0
+    ],
+    [
+     "könnte.",
+     16
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 1339,
+   "end_frame": 1354,
+   "start_s": 44.633,
+   "end_s": 45.133,
+   "text": "Kommentier",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1354,
+   "end_frame": 1389,
+   "start_s": 45.133,
+   "end_s": 46.3,
+   "text": "mit",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1360,
+   "end_frame": 1523,
+   "start_s": 45.333,
+   "end_s": 50.767,
+   "text": "\"FREIHEITSTRAINING\"",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 80,
+   "color": "#fab926",
+   "y_center_px": 1304.7,
+   "baseline_px": 1336.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "C",
+   "cta": true
+  },
+  {
+   "type": "text",
+   "start_frame": 1389,
+   "end_frame": 1405,
+   "start_s": 46.3,
+   "end_s": 46.833,
+   "text": "und ich zeig",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1405,
+   "end_frame": 1420,
+   "start_s": 46.833,
+   "end_s": 47.333,
+   "text": "dir,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1420,
+   "end_frame": 1454,
+   "start_s": 47.333,
+   "end_s": 48.467,
+   "text": "wie du dein Vermögen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1454,
+   "end_frame": 1481,
+   "start_s": 48.467,
+   "end_s": 49.367,
+   "text": "langfristig",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1481,
+   "end_frame": 1500,
+   "start_s": 49.367,
+   "end_s": 50.0,
+   "text": "unabhängiger",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1500,
+   "end_frame": 1511,
+   "start_s": 50.0,
+   "end_s": 50.367,
+   "text": "aufstellen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1511,
+   "end_frame": 1523,
+   "start_s": 50.367,
+   "end_s": 50.767,
+   "text": "kannst.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1206.8,
+   "baseline_px": 1223.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  }
+ ],
+ "sfx": [
+  {
+   "file": "Riser.mp3",
+   "peak_at_s": 5.3,
+   "place_file_start_at_s": 1.49,
+   "trim_end_at_s": 5.55,
+   "fade_out_ms": 80,
+   "gain_db": -16
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 4.02,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 5.153,
+   "gain_db": -18
+  },
+  {
+   "file": "Camera_Shutter.mp3",
+   "at_s": 5.21,
+   "gain_db": -16
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 7.22,
+   "gain_db": -21
+  },
+  {
+   "file": "Money_Caching.mp3",
+   "at_s": 12.337,
+   "gain_db": -13
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 13.487,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 15.287,
+   "gain_db": -21
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 22.487,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 24.753,
+   "gain_db": -18
+  },
+  {
+   "file": "Swish_Whoosh_Large.mp3",
+   "at_s": 33.107,
+   "gain_db": -19
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 37.087,
+   "gain_db": -21
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 42.387,
+   "gain_db": -18
+  },
+  {
+   "file": "Ding.mp3",
+   "at_s": 45.317,
+   "gain_db": -9
+  }
+ ],
+ "audio": {
+  "voice": "raw audio cut identically to cut_segments, 8 ms fade in/out per segment",
+  "loudness": "two-pass loudnorm I=-17 LUFS, TP=-1.5 dBTP, LRA=11",
+  "music": null
+ }
+}

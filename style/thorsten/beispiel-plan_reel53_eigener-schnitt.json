@@ -1,0 +1,2554 @@
+{
+ "video": "TW_Reel_53",
+ "type": "Rohvideo ungeschnitten -> komplett von Claude geschnitten (Pausen, Zooms, Captions, B-Roll, SFX)",
+ "source": "Reel_53_raw.mp4",
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "total_frames": 1395,
+ "total_s": 46.5,
+ "transcript_words": [
+  {
+   "i": 0,
+   "start_s": 0.365,
+   "end_s": 0.44,
+   "word": "Die"
+  },
+  {
+   "i": 1,
+   "start_s": 0.44,
+   "end_s": 0.96,
+   "word": "wirtschaftliche"
+  },
+  {
+   "i": 2,
+   "start_s": 0.96,
+   "end_s": 1.34,
+   "word": "Zukunft"
+  },
+  {
+   "i": 3,
+   "start_s": 1.34,
+   "end_s": 1.58,
+   "word": "spielt"
+  },
+  {
+   "i": 4,
+   "start_s": 1.58,
+   "end_s": 1.78,
+   "word": "sich"
+  },
+  {
+   "i": 5,
+   "start_s": 1.78,
+   "end_s": 2.0,
+   "word": "nicht"
+  },
+  {
+   "i": 6,
+   "start_s": 2.0,
+   "end_s": 2.2,
+   "word": "mehr"
+  },
+  {
+   "i": 7,
+   "start_s": 2.2,
+   "end_s": 2.62,
+   "word": "ausschließlich"
+  },
+  {
+   "i": 8,
+   "start_s": 2.62,
+   "end_s": 2.76,
+   "word": "in"
+  },
+  {
+   "i": 9,
+   "start_s": 2.76,
+   "end_s": 3.1,
+   "word": "Europa"
+  },
+  {
+   "i": 10,
+   "start_s": 3.1,
+   "end_s": 3.24,
+   "word": "und"
+  },
+  {
+   "i": 11,
+   "start_s": 3.24,
+   "end_s": 3.42,
+   "word": "den"
+  },
+  {
+   "i": 12,
+   "start_s": 3.42,
+   "end_s": 3.68,
+   "word": "USA"
+  },
+  {
+   "i": 13,
+   "start_s": 3.68,
+   "end_s": 4.051,
+   "word": "ab."
+  },
+  {
+   "i": 14,
+   "start_s": 4.206,
+   "end_s": 4.54,
+   "word": "Besonders"
+  },
+  {
+   "i": 15,
+   "start_s": 4.54,
+   "end_s": 4.92,
+   "word": "China,"
+  },
+  {
+   "i": 16,
+   "start_s": 5.14,
+   "end_s": 5.5,
+   "word": "Indien"
+  },
+  {
+   "i": 17,
+   "start_s": 5.5,
+   "end_s": 5.74,
+   "word": "und"
+  },
+  {
+   "i": 18,
+   "start_s": 5.74,
+   "end_s": 5.98,
+   "word": "andere"
+  },
+  {
+   "i": 19,
+   "start_s": 5.98,
+   "end_s": 6.22,
+   "word": "Länder"
+  },
+  {
+   "i": 20,
+   "start_s": 6.22,
+   "end_s": 6.44,
+   "word": "des"
+  },
+  {
+   "i": 21,
+   "start_s": 6.44,
+   "end_s": 6.86,
+   "word": "globalen"
+  },
+  {
+   "i": 22,
+   "start_s": 6.86,
+   "end_s": 7.249,
+   "word": "Südens"
+  },
+  {
+   "i": 23,
+   "start_s": 7.388,
+   "end_s": 7.74,
+   "word": "gewinnen"
+  },
+  {
+   "i": 24,
+   "start_s": 7.74,
+   "end_s": 8.26,
+   "word": "zunehmend"
+  },
+  {
+   "i": 25,
+   "start_s": 8.26,
+   "end_s": 8.44,
+   "word": "an"
+  },
+  {
+   "i": 26,
+   "start_s": 8.44,
+   "end_s": 8.768,
+   "word": "Bedeutung."
+  },
+  {
+   "i": 27,
+   "start_s": 9.168,
+   "end_s": 9.58,
+   "word": "Dort"
+  },
+  {
+   "i": 28,
+   "start_s": 9.58,
+   "end_s": 9.76,
+   "word": "wird"
+  },
+  {
+   "i": 29,
+   "start_s": 9.76,
+   "end_s": 9.9,
+   "word": "in"
+  },
+  {
+   "i": 30,
+   "start_s": 9.9,
+   "end_s": 10.12,
+   "word": "neue"
+  },
+  {
+   "i": 31,
+   "start_s": 10.12,
+   "end_s": 11.08,
+   "word": "Infrastruktur,"
+  },
+  {
+   "i": 32,
+   "start_s": 11.44,
+   "end_s": 11.74,
+   "word": "moderne"
+  },
+  {
+   "i": 33,
+   "start_s": 11.74,
+   "end_s": 12.74,
+   "word": "Produktionsanlagen"
+  },
+  {
+   "i": 34,
+   "start_s": 12.74,
+   "end_s": 12.96,
+   "word": "und"
+  },
+  {
+   "i": 35,
+   "start_s": 12.96,
+   "end_s": 13.62,
+   "word": "technologische"
+  },
+  {
+   "i": 36,
+   "start_s": 13.62,
+   "end_s": 14.12,
+   "word": "Entwicklungen"
+  },
+  {
+   "i": 37,
+   "start_s": 14.12,
+   "end_s": 14.691,
+   "word": "investiert."
+  },
+  {
+   "i": 38,
+   "start_s": 15.224,
+   "end_s": 15.94,
+   "word": "Gleichzeitig"
+  },
+  {
+   "i": 39,
+   "start_s": 15.94,
+   "end_s": 16.16,
+   "word": "bauen"
+  },
+  {
+   "i": 40,
+   "start_s": 16.16,
+   "end_s": 16.46,
+   "word": "diese"
+  },
+  {
+   "i": 41,
+   "start_s": 16.46,
+   "end_s": 16.7,
+   "word": "Länder"
+  },
+  {
+   "i": 42,
+   "start_s": 16.7,
+   "end_s": 16.96,
+   "word": "ihre"
+  },
+  {
+   "i": 43,
+   "start_s": 16.96,
+   "end_s": 17.62,
+   "word": "wirtschaftliche"
+  },
+  {
+   "i": 44,
+   "start_s": 17.62,
+   "end_s": 18.24,
+   "word": "Zusammenarbeit"
+  },
+  {
+   "i": 45,
+   "start_s": 18.24,
+   "end_s": 18.76,
+   "word": "untereinander"
+  },
+  {
+   "i": 46,
+   "start_s": 18.76,
+   "end_s": 19.04,
+   "word": "weiter"
+  },
+  {
+   "i": 47,
+   "start_s": 19.04,
+   "end_s": 19.3,
+   "word": "aus."
+  },
+  {
+   "i": 48,
+   "start_s": 19.643,
+   "end_s": 20.02,
+   "word": "Das"
+  },
+  {
+   "i": 49,
+   "start_s": 20.02,
+   "end_s": 20.22,
+   "word": "könnte"
+  },
+  {
+   "i": 50,
+   "start_s": 20.22,
+   "end_s": 20.8,
+   "word": "langfristig"
+  },
+  {
+   "i": 51,
+   "start_s": 20.8,
+   "end_s": 21.02,
+   "word": "dazu"
+  },
+  {
+   "i": 52,
+   "start_s": 21.02,
+   "end_s": 21.32,
+   "word": "führen,"
+  },
+  {
+   "i": 53,
+   "start_s": 21.64,
+   "end_s": 21.74,
+   "word": "dass"
+  },
+  {
+   "i": 54,
+   "start_s": 21.74,
+   "end_s": 21.86,
+   "word": "sich"
+  },
+  {
+   "i": 55,
+   "start_s": 21.86,
+   "end_s": 22.22,
+   "word": "auch"
+  },
+  {
+   "i": 56,
+   "start_s": 22.22,
+   "end_s": 22.84,
+   "word": "internationale"
+  },
+  {
+   "i": 57,
+   "start_s": 22.84,
+   "end_s": 23.6,
+   "word": "Kapitalströme"
+  },
+  {
+   "i": 58,
+   "start_s": 23.6,
+   "end_s": 23.982,
+   "word": "verändern."
+  },
+  {
+   "i": 59,
+   "start_s": 24.591,
+   "end_s": 24.72,
+   "word": "Aber"
+  },
+  {
+   "i": 60,
+   "start_s": 24.72,
+   "end_s": 24.92,
+   "word": "was"
+  },
+  {
+   "i": 61,
+   "start_s": 24.92,
+   "end_s": 25.24,
+   "word": "bedeutet"
+  },
+  {
+   "i": 62,
+   "start_s": 25.24,
+   "end_s": 25.46,
+   "word": "das"
+  },
+  {
+   "i": 63,
+   "start_s": 25.46,
+   "end_s": 25.62,
+   "word": "für"
+  },
+  {
+   "i": 64,
+   "start_s": 25.62,
+   "end_s": 25.86,
+   "word": "dein"
+  },
+  {
+   "i": 65,
+   "start_s": 25.86,
+   "end_s": 26.274,
+   "word": "Vermögen?"
+  },
+  {
+   "i": 66,
+   "start_s": 26.48,
+   "end_s": 27.08,
+   "word": "Ich"
+  },
+  {
+   "i": 67,
+   "start_s": 27.08,
+   "end_s": 27.26,
+   "word": "würde"
+  },
+  {
+   "i": 68,
+   "start_s": 27.26,
+   "end_s": 27.614,
+   "word": "prüfen,"
+  },
+  {
+   "i": 69,
+   "start_s": 27.753,
+   "end_s": 28.08,
+   "word": "wie"
+  },
+  {
+   "i": 70,
+   "start_s": 28.08,
+   "end_s": 28.34,
+   "word": "stark"
+  },
+  {
+   "i": 71,
+   "start_s": 28.34,
+   "end_s": 28.62,
+   "word": "meine"
+  },
+  {
+   "i": 72,
+   "start_s": 28.62,
+   "end_s": 29.12,
+   "word": "Investments"
+  },
+  {
+   "i": 73,
+   "start_s": 29.12,
+   "end_s": 29.72,
+   "word": "tatsächlich"
+  },
+  {
+   "i": 74,
+   "start_s": 29.72,
+   "end_s": 29.92,
+   "word": "auf"
+  },
+  {
+   "i": 75,
+   "start_s": 29.92,
+   "end_s": 30.32,
+   "word": "Europa"
+  },
+  {
+   "i": 76,
+   "start_s": 30.32,
+   "end_s": 30.52,
+   "word": "und"
+  },
+  {
+   "i": 77,
+   "start_s": 30.52,
+   "end_s": 30.72,
+   "word": "die"
+  },
+  {
+   "i": 78,
+   "start_s": 30.72,
+   "end_s": 31.0,
+   "word": "USA"
+  },
+  {
+   "i": 79,
+   "start_s": 31.0,
+   "end_s": 31.6,
+   "word": "konzentriert"
+  },
+  {
+   "i": 80,
+   "start_s": 31.6,
+   "end_s": 31.757,
+   "word": "sind."
+  },
+  {
+   "i": 81,
+   "start_s": 32.332,
+   "end_s": 32.62,
+   "word": "Selbst"
+  },
+  {
+   "i": 82,
+   "start_s": 32.62,
+   "end_s": 32.84,
+   "word": "ein"
+  },
+  {
+   "i": 83,
+   "start_s": 32.84,
+   "end_s": 33.42,
+   "word": "weltweit"
+  },
+  {
+   "i": 84,
+   "start_s": 33.42,
+   "end_s": 33.92,
+   "word": "investierender"
+  },
+  {
+   "i": 85,
+   "start_s": 33.92,
+   "end_s": 34.46,
+   "word": "ETF"
+  },
+  {
+   "i": 86,
+   "start_s": 34.46,
+   "end_s": 34.86,
+   "word": "kann"
+  },
+  {
+   "i": 87,
+   "start_s": 34.86,
+   "end_s": 35.14,
+   "word": "einen"
+  },
+  {
+   "i": 88,
+   "start_s": 35.14,
+   "end_s": 35.48,
+   "word": "sehr"
+  },
+  {
+   "i": 89,
+   "start_s": 35.48,
+   "end_s": 35.7,
+   "word": "hohen"
+  },
+  {
+   "i": 90,
+   "start_s": 35.7,
+   "end_s": 36.14,
+   "word": "Anteil"
+  },
+  {
+   "i": 91,
+   "start_s": 36.14,
+   "end_s": 36.88,
+   "word": "amerikanischer"
+  },
+  {
+   "i": 92,
+   "start_s": 36.88,
+   "end_s": 37.32,
+   "word": "Unternehmen"
+  },
+  {
+   "i": 93,
+   "start_s": 37.32,
+   "end_s": 37.817,
+   "word": "enthalten."
+  },
+  {
+   "i": 94,
+   "start_s": 38.367,
+   "end_s": 38.46,
+   "word": "Das"
+  },
+  {
+   "i": 95,
+   "start_s": 38.46,
+   "end_s": 38.64,
+   "word": "ist"
+  },
+  {
+   "i": 96,
+   "start_s": 38.64,
+   "end_s": 38.78,
+   "word": "nicht"
+  },
+  {
+   "i": 97,
+   "start_s": 38.78,
+   "end_s": 39.32,
+   "word": "automatisch"
+  },
+  {
+   "i": 98,
+   "start_s": 39.32,
+   "end_s": 39.58,
+   "word": "schlecht,"
+  },
+  {
+   "i": 99,
+   "start_s": 39.9,
+   "end_s": 40.18,
+   "word": "aber"
+  },
+  {
+   "i": 100,
+   "start_s": 40.18,
+   "end_s": 40.34,
+   "word": "du"
+  },
+  {
+   "i": 101,
+   "start_s": 40.34,
+   "end_s": 40.64,
+   "word": "solltest"
+  },
+  {
+   "i": 102,
+   "start_s": 40.64,
+   "end_s": 40.94,
+   "word": "wissen,"
+  },
+  {
+   "i": 103,
+   "start_s": 41.14,
+   "end_s": 41.4,
+   "word": "von"
+  },
+  {
+   "i": 104,
+   "start_s": 41.4,
+   "end_s": 41.66,
+   "word": "welchen"
+  },
+  {
+   "i": 105,
+   "start_s": 41.66,
+   "end_s": 42.7,
+   "word": "Wirtschaftsregionen"
+  },
+  {
+   "i": 106,
+   "start_s": 42.7,
+   "end_s": 42.92,
+   "word": "dein"
+  },
+  {
+   "i": 107,
+   "start_s": 42.92,
+   "end_s": 43.38,
+   "word": "Vermögen"
+  },
+  {
+   "i": 108,
+   "start_s": 43.38,
+   "end_s": 43.88,
+   "word": "tatsächlich"
+  },
+  {
+   "i": 109,
+   "start_s": 43.88,
+   "end_s": 44.236,
+   "word": "abhängt."
+  },
+  {
+   "i": 110,
+   "start_s": 44.86,
+   "end_s": 45.34,
+   "word": "Kommentier"
+  },
+  {
+   "i": 111,
+   "start_s": 45.34,
+   "end_s": 45.7,
+   "word": "mit"
+  },
+  {
+   "i": 112,
+   "start_s": 45.7,
+   "end_s": 46.56,
+   "word": "Freiheitstraining"
+  },
+  {
+   "i": 113,
+   "start_s": 46.56,
+   "end_s": 46.94,
+   "word": "und"
+  },
+  {
+   "i": 114,
+   "start_s": 46.94,
+   "end_s": 47.1,
+   "word": "ich"
+  },
+  {
+   "i": 115,
+   "start_s": 47.1,
+   "end_s": 47.38,
+   "word": "zeige"
+  },
+  {
+   "i": 116,
+   "start_s": 47.38,
+   "end_s": 47.682,
+   "word": "dir,"
+  },
+  {
+   "i": 117,
+   "start_s": 47.851,
+   "end_s": 47.96,
+   "word": "wie"
+  },
+  {
+   "i": 118,
+   "start_s": 47.96,
+   "end_s": 48.16,
+   "word": "du"
+  },
+  {
+   "i": 119,
+   "start_s": 48.16,
+   "end_s": 48.34,
+   "word": "dein"
+  },
+  {
+   "i": 120,
+   "start_s": 48.34,
+   "end_s": 48.761,
+   "word": "Vermögen"
+  },
+  {
+   "i": 121,
+   "start_s": 48.896,
+   "end_s": 49.68,
+   "word": "international"
+  },
+  {
+   "i": 122,
+   "start_s": 49.68,
+   "end_s": 50.2,
+   "word": "breiter"
+  },
+  {
+   "i": 123,
+   "start_s": 50.2,
+   "end_s": 50.6,
+   "word": "aufstellen"
+  },
+  {
+   "i": 124,
+   "start_s": 50.6,
+   "end_s": 50.894,
+   "word": "kannst."
+  }
+ ],
+ "cut_segments": [
+  {
+   "i": 0,
+   "raw_in_s": 0.3,
+   "raw_out_s": 4.067,
+   "out_from_frame": 0,
+   "out_to_frame": 113,
+   "out_from_s": 0.0,
+   "out_to_s": 3.767
+  },
+  {
+   "i": 1,
+   "raw_in_s": 4.167,
+   "raw_out_s": 8.767,
+   "out_from_frame": 113,
+   "out_to_frame": 251,
+   "out_from_s": 3.767,
+   "out_to_s": 8.367
+  },
+  {
+   "i": 2,
+   "raw_in_s": 9.133,
+   "raw_out_s": 14.7,
+   "out_from_frame": 251,
+   "out_to_frame": 418,
+   "out_from_s": 8.367,
+   "out_to_s": 13.933
+  },
+  {
+   "i": 3,
+   "raw_in_s": 15.2,
+   "raw_out_s": 19.333,
+   "out_from_frame": 418,
+   "out_to_frame": 542,
+   "out_from_s": 13.933,
+   "out_to_s": 18.067
+  },
+  {
+   "i": 4,
+   "raw_in_s": 19.6,
+   "raw_out_s": 24.0,
+   "out_from_frame": 542,
+   "out_to_frame": 674,
+   "out_from_s": 18.067,
+   "out_to_s": 22.467
+  },
+  {
+   "i": 5,
+   "raw_in_s": 24.567,
+   "raw_out_s": 26.3,
+   "out_from_frame": 674,
+   "out_to_frame": 726,
+   "out_from_s": 22.467,
+   "out_to_s": 24.2
+  },
+  {
+   "i": 6,
+   "raw_in_s": 26.933,
+   "raw_out_s": 31.767,
+   "out_from_frame": 726,
+   "out_to_frame": 871,
+   "out_from_s": 24.2,
+   "out_to_s": 29.033
+  },
+  {
+   "i": 7,
+   "raw_in_s": 32.3,
+   "raw_out_s": 37.833,
+   "out_from_frame": 871,
+   "out_to_frame": 1037,
+   "out_from_s": 29.033,
+   "out_to_s": 34.567
+  },
+  {
+   "i": 8,
+   "raw_in_s": 38.333,
+   "raw_out_s": 44.267,
+   "out_from_frame": 1037,
+   "out_to_frame": 1215,
+   "out_from_s": 34.567,
+   "out_to_s": 40.5
+  },
+  {
+   "i": 9,
+   "raw_in_s": 44.833,
+   "raw_out_s": 47.7,
+   "out_from_frame": 1215,
+   "out_to_frame": 1301,
+   "out_from_s": 40.5,
+   "out_to_s": 43.367
+  },
+  {
+   "i": 10,
+   "raw_in_s": 47.833,
+   "raw_out_s": 50.967,
+   "out_from_frame": 1301,
+   "out_to_frame": 1395,
+   "out_from_s": 43.367,
+   "out_to_s": 46.5
+  }
+ ],
+ "flash": {
+  "center_frame": 113,
+  "half_frames": 5,
+  "center_s": 3.767
+ },
+ "zooms": [
+  {
+   "start_frame": 6,
+   "ramp_end_frame": 111,
+   "hold_until_frame": 113,
+   "start_s": 0.2,
+   "from_scale": 1.0004,
+   "to_scale": 1.06,
+   "ramp_frames": 105,
+   "anchor_y": 963,
+   "easing": "0.5-0.5*cos(pi*x)",
+   "exit": "hard cut to 1.0 at next segment start"
+  },
+  {
+   "start_frame": 209,
+   "ramp_end_frame": 233,
+   "hold_until_frame": 251,
+   "start_s": 6.967,
+   "from_scale": 1.0,
+   "to_scale": 1.1,
+   "ramp_frames": 24,
+   "anchor_y": 963,
+   "easing": "0.5-0.5*cos(pi*x)",
+   "exit": "hard cut to 1.0 at next segment start"
+  },
+  {
+   "start_frame": 543,
+   "ramp_end_frame": 567,
+   "hold_until_frame": 674,
+   "start_s": 18.1,
+   "from_scale": 1.0,
+   "to_scale": 1.1,
+   "ramp_frames": 24,
+   "anchor_y": 963,
+   "easing": "0.5-0.5*cos(pi*x)",
+   "exit": "hard cut to 1.0 at next segment start"
+  },
+  {
+   "start_frame": 675,
+   "ramp_end_frame": 699,
+   "hold_until_frame": 726,
+   "start_s": 22.5,
+   "from_scale": 1.0,
+   "to_scale": 1.12,
+   "ramp_frames": 24,
+   "anchor_y": 963,
+   "easing": "0.5-0.5*cos(pi*x)",
+   "exit": "hard cut to 1.0 at next segment start"
+  },
+  {
+   "start_frame": 1038,
+   "ramp_end_frame": 1062,
+   "hold_until_frame": 1215,
+   "start_s": 34.6,
+   "from_scale": 1.0,
+   "to_scale": 1.1,
+   "ramp_frames": 24,
+   "anchor_y": 963,
+   "easing": "0.5-0.5*cos(pi*x)",
+   "exit": "hard cut to 1.0 at next segment start"
+  }
+ ],
+ "broll": [
+  {
+   "src": "b_infra.mp4",
+   "start_frame": 251,
+   "end_frame": 419,
+   "start_s": 8.367,
+   "end_s": 13.967,
+   "src_from_s": 0.0,
+   "internal_zoom": "1.00 -> 1.06 linear over clip, origin 540/900"
+  },
+  {
+   "src": "b_etf.mp4",
+   "start_frame": 871,
+   "end_frame": 936,
+   "start_s": 29.033,
+   "end_s": 31.2,
+   "src_from_s": 0.0,
+   "internal_zoom": "1.00 -> 1.06 linear over clip, origin 540/900"
+  }
+ ],
+ "overlays": [
+  {
+   "type": "hook",
+   "start_frame": 0,
+   "end_frame": 113,
+   "start_s": 0.0,
+   "end_s": 3.767,
+   "lines": [
+    "WARUM EUROPA WIRTSCHAFTLICH",
+    "ZURÜCKFALLEN KÖNNTE"
+   ]
+  },
+  {
+   "type": "ki",
+   "start_frame": 0,
+   "end_frame": 113,
+   "start_s": 0.0,
+   "end_s": 3.767,
+   "text": "Info: Dieses Video wurde mit KI erstellt."
+  },
+  {
+   "type": "text",
+   "start_frame": 1,
+   "end_frame": 19,
+   "start_s": 0.033,
+   "end_s": 0.633,
+   "text": "Die wirtschaftliche",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 19,
+   "end_frame": 30,
+   "start_s": 0.633,
+   "end_s": 1.0,
+   "text": "Zukunft",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 30,
+   "end_frame": 37,
+   "start_s": 1.0,
+   "end_s": 1.233,
+   "text": "spielt",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 37,
+   "end_frame": 56,
+   "start_s": 1.233,
+   "end_s": 1.867,
+   "text": "sich nicht mehr",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 56,
+   "end_frame": 73,
+   "start_s": 1.867,
+   "end_s": 2.433,
+   "text": "ausschließlich in",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 73,
+   "end_frame": 100,
+   "start_s": 2.433,
+   "end_s": 3.333,
+   "text": "Europa und den USA",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1126.8,
+   "baseline_px": 1155.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 100,
+   "end_frame": 113,
+   "start_s": 3.333,
+   "end_s": 3.767,
+   "text": "ab.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 113,
+   "end_frame": 173,
+   "start_s": 3.767,
+   "end_s": 5.767,
+   "text": "Besonders",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "ls",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "Besonders",
+     0
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 123,
+   "end_frame": 173,
+   "start_s": 4.1,
+   "end_s": 5.767,
+   "text": "China,",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1212.8,
+   "baseline_px": 1241.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "slide",
+   "group": "ls",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 141,
+   "end_frame": 173,
+   "start_s": 4.7,
+   "end_s": 5.767,
+   "text": "Indien",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1294.8,
+   "baseline_px": 1323.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "slide",
+   "group": "ls",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 152,
+   "end_frame": 173,
+   "start_s": 5.067,
+   "end_s": 5.767,
+   "text": "und andere Länder",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1376.8,
+   "baseline_px": 1405.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "slide",
+   "group": "ls",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 173,
+   "end_frame": 192,
+   "start_s": 5.767,
+   "end_s": 6.4,
+   "text": "des globalen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 192,
+   "end_frame": 208,
+   "start_s": 6.4,
+   "end_s": 6.933,
+   "text": "Südens",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 208,
+   "end_frame": 219,
+   "start_s": 6.933,
+   "end_s": 7.3,
+   "text": "gewinnen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 219,
+   "end_frame": 234,
+   "start_s": 7.3,
+   "end_s": 7.8,
+   "text": "zunehmend",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 234,
+   "end_frame": 251,
+   "start_s": 7.8,
+   "end_s": 8.367,
+   "text": "an Bedeutung.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "shade",
+   "start_frame": 251,
+   "end_frame": 419,
+   "start_s": 8.367,
+   "end_s": 13.967,
+   "center_y_px": 1210,
+   "alpha": 0.36
+  },
+  {
+   "type": "text",
+   "start_frame": 251,
+   "end_frame": 358,
+   "start_s": 8.367,
+   "end_s": 11.933,
+   "text": "Dort wird in neue",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1134.8,
+   "baseline_px": 1151.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "in",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "Dort",
+     0
+    ],
+    [
+     "wird",
+     12
+    ],
+    [
+     "in",
+     18
+    ],
+    [
+     "neue",
+     22
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 279,
+   "end_frame": 358,
+   "start_s": 9.3,
+   "end_s": 11.933,
+   "text": "Infrastruktur,",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1184.4,
+   "baseline_px": 1218.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "in",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 319,
+   "end_frame": 358,
+   "start_s": 10.633,
+   "end_s": 11.933,
+   "text": "moderne Produktionsanlagen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1255.8,
+   "baseline_px": 1272.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "in",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "moderne",
+     0
+    ],
+    [
+     "Produktionsanlagen",
+     9
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 358,
+   "end_frame": 384,
+   "start_s": 11.933,
+   "end_s": 12.8,
+   "text": "und technologische",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 384,
+   "end_frame": 399,
+   "start_s": 12.8,
+   "end_s": 13.3,
+   "text": "Entwicklungen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 399,
+   "end_frame": 418,
+   "start_s": 13.3,
+   "end_s": 13.933,
+   "text": "investiert.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 418,
+   "end_frame": 439,
+   "start_s": 13.933,
+   "end_s": 14.633,
+   "text": "Gleichzeitig",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 439,
+   "end_frame": 455,
+   "start_s": 14.633,
+   "end_s": 15.167,
+   "text": "bauen diese",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 455,
+   "end_frame": 470,
+   "start_s": 15.167,
+   "end_s": 15.667,
+   "text": "Länder ihre",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 470,
+   "end_frame": 490,
+   "start_s": 15.667,
+   "end_s": 16.333,
+   "text": "wirtschaftliche",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 490,
+   "end_frame": 508,
+   "start_s": 16.333,
+   "end_s": 16.933,
+   "text": "Zusammenarbeit",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 508,
+   "end_frame": 524,
+   "start_s": 16.933,
+   "end_s": 17.467,
+   "text": "untereinander",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1121.4,
+   "baseline_px": 1155.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 524,
+   "end_frame": 532,
+   "start_s": 17.467,
+   "end_s": 17.733,
+   "text": "weiter",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 532,
+   "end_frame": 542,
+   "start_s": 17.733,
+   "end_s": 18.067,
+   "text": "aus.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 542,
+   "end_frame": 553,
+   "start_s": 18.067,
+   "end_s": 18.433,
+   "text": "Das",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 553,
+   "end_frame": 577,
+   "start_s": 18.433,
+   "end_s": 19.233,
+   "text": "könnte langfristig",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 577,
+   "end_frame": 602,
+   "start_s": 19.233,
+   "end_s": 20.067,
+   "text": "dazu führen,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 602,
+   "end_frame": 674,
+   "start_s": 20.067,
+   "end_s": 22.467,
+   "text": "dass sich auch",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1134.8,
+   "baseline_px": 1151.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "k",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "dass",
+     0
+    ],
+    [
+     "sich",
+     3
+    ],
+    [
+     "auch",
+     6
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 619,
+   "end_frame": 674,
+   "start_s": 20.633,
+   "end_s": 22.467,
+   "text": "internationale Kapitalströme",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 69,
+   "color": "#fab926",
+   "y_center_px": 1191.0,
+   "baseline_px": 1218.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "k",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 661,
+   "end_frame": 674,
+   "start_s": 22.033,
+   "end_s": 22.467,
+   "text": "verändern.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1255.8,
+   "baseline_px": 1272.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "rise",
+   "group": "k",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 674,
+   "end_frame": 693,
+   "start_s": 22.467,
+   "end_s": 23.1,
+   "text": "Aber was bedeutet",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 693,
+   "end_frame": 705,
+   "start_s": 23.1,
+   "end_s": 23.5,
+   "text": "das für",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 705,
+   "end_frame": 726,
+   "start_s": 23.5,
+   "end_s": 24.2,
+   "text": "dein Vermögen?",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 86,
+   "color": "#fab926",
+   "y_center_px": 1121.4,
+   "baseline_px": 1155.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 726,
+   "end_frame": 749,
+   "start_s": 24.2,
+   "end_s": 24.967,
+   "text": "Ich würde prüfen,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 749,
+   "end_frame": 759,
+   "start_s": 24.967,
+   "end_s": 25.3,
+   "text": "wie",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 759,
+   "end_frame": 767,
+   "start_s": 25.3,
+   "end_s": 25.567,
+   "text": "stark",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 767,
+   "end_frame": 775,
+   "start_s": 25.567,
+   "end_s": 25.833,
+   "text": "meine",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 775,
+   "end_frame": 790,
+   "start_s": 25.833,
+   "end_s": 26.333,
+   "text": "Investments",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 790,
+   "end_frame": 808,
+   "start_s": 26.333,
+   "end_s": 26.933,
+   "text": "tatsächlich",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 808,
+   "end_frame": 847,
+   "start_s": 26.933,
+   "end_s": 28.233,
+   "text": "auf Europa und die USA",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1126.8,
+   "baseline_px": 1155.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 847,
+   "end_frame": 865,
+   "start_s": 28.233,
+   "end_s": 28.833,
+   "text": "konzentriert",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 865,
+   "end_frame": 871,
+   "start_s": 28.833,
+   "end_s": 29.033,
+   "text": "sind.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "shade",
+   "start_frame": 871,
+   "end_frame": 936,
+   "start_s": 29.033,
+   "end_s": 31.2,
+   "center_y_px": 1210,
+   "alpha": 0.36
+  },
+  {
+   "type": "text",
+   "start_frame": 871,
+   "end_frame": 935,
+   "start_s": 29.033,
+   "end_s": 31.167,
+   "text": "Selbst ein weltweit investierender",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1134.8,
+   "baseline_px": 1151.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "e1",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "Selbst",
+     0
+    ],
+    [
+     "ein",
+     9
+    ],
+    [
+     "weltweit",
+     15
+    ],
+    [
+     "investierender",
+     33
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 919,
+   "end_frame": 935,
+   "start_s": 30.633,
+   "end_s": 31.167,
+   "text": "ETF",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 100,
+   "color": "#fab926",
+   "y_center_px": 1184.9,
+   "baseline_px": 1224.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "e1",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 935,
+   "end_frame": 1037,
+   "start_s": 31.167,
+   "end_s": 34.567,
+   "text": "kann einen sehr hohen Anteil",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1134.8,
+   "baseline_px": 1151.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "words",
+   "group": "e2",
+   "lane": "A",
+   "cta": false,
+   "word_offsets_frames": [
+    [
+     "kann",
+     0
+    ],
+    [
+     "einen",
+     12
+    ],
+    [
+     "sehr",
+     20
+    ],
+    [
+     "hohen",
+     30
+    ],
+    [
+     "Anteil",
+     37
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "start_frame": 985,
+   "end_frame": 1037,
+   "start_s": 32.833,
+   "end_s": 34.567,
+   "text": "amerikanischer Unternehmen",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 67,
+   "color": "#fab926",
+   "y_center_px": 1191.8,
+   "baseline_px": 1218.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": "e2",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1021,
+   "end_frame": 1037,
+   "start_s": 34.033,
+   "end_s": 34.567,
+   "text": "enthalten.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1255.8,
+   "baseline_px": 1272.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "rise",
+   "group": "e2",
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1037,
+   "end_frame": 1045,
+   "start_s": 34.567,
+   "end_s": 34.833,
+   "text": "Das ist",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1045,
+   "end_frame": 1083,
+   "start_s": 34.833,
+   "end_s": 36.1,
+   "text": "nicht automatisch schlecht,",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 72,
+   "color": "#fab926",
+   "y_center_px": 1126.8,
+   "baseline_px": 1155.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1083,
+   "end_frame": 1091,
+   "start_s": 36.1,
+   "end_s": 36.367,
+   "text": "aber",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1091,
+   "end_frame": 1105,
+   "start_s": 36.367,
+   "end_s": 36.833,
+   "text": "du solltest",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1105,
+   "end_frame": 1120,
+   "start_s": 36.833,
+   "end_s": 37.333,
+   "text": "wissen,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1120,
+   "end_frame": 1133,
+   "start_s": 37.333,
+   "end_s": 37.767,
+   "text": "von welchen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1133,
+   "end_frame": 1167,
+   "start_s": 37.767,
+   "end_s": 38.9,
+   "text": "Wirtschaftsregionen",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 84,
+   "color": "#fab926",
+   "y_center_px": 1120.2,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "wipe",
+   "group": null,
+   "lane": "A",
+   "cta": false,
+   "wipe_frames": 9
+  },
+  {
+   "type": "text",
+   "start_frame": 1167,
+   "end_frame": 1187,
+   "start_s": 38.9,
+   "end_s": 39.567,
+   "text": "dein Vermögen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1187,
+   "end_frame": 1202,
+   "start_s": 39.567,
+   "end_s": 40.067,
+   "text": "tatsächlich",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1202,
+   "end_frame": 1215,
+   "start_s": 40.067,
+   "end_s": 40.5,
+   "text": "abhängt.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1215,
+   "end_frame": 1229,
+   "start_s": 40.5,
+   "end_s": 40.967,
+   "text": "Kommentier",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1229,
+   "end_frame": 1266,
+   "start_s": 40.967,
+   "end_s": 42.2,
+   "text": "mit",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1240,
+   "end_frame": 1395,
+   "start_s": 41.333,
+   "end_s": 46.5,
+   "text": "\"FREIHEITSTRAINING\"",
+   "font": "SegoePro-BoldItalic",
+   "size_px": 80,
+   "color": "#fab926",
+   "y_center_px": 1234.7,
+   "baseline_px": 1266.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.02,
+   "animation": "pop",
+   "group": null,
+   "lane": "C",
+   "cta": true
+  },
+  {
+   "type": "text",
+   "start_frame": 1266,
+   "end_frame": 1277,
+   "start_s": 42.2,
+   "end_s": 42.567,
+   "text": "und",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1277,
+   "end_frame": 1291,
+   "start_s": 42.567,
+   "end_s": 43.033,
+   "text": "ich zeig",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1291,
+   "end_frame": 1301,
+   "start_s": 43.033,
+   "end_s": 43.367,
+   "text": "dir,",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1301,
+   "end_frame": 1332,
+   "start_s": 43.367,
+   "end_s": 44.4,
+   "text": "wie du dein Vermögen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1332,
+   "end_frame": 1356,
+   "start_s": 44.4,
+   "end_s": 45.2,
+   "text": "international",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1356,
+   "end_frame": 1371,
+   "start_s": 45.2,
+   "end_s": 45.7,
+   "text": "breiter",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1371,
+   "end_frame": 1383,
+   "start_s": 45.7,
+   "end_s": 46.1,
+   "text": "aufstellen",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  },
+  {
+   "type": "text",
+   "start_frame": 1383,
+   "end_frame": 1395,
+   "start_s": 46.1,
+   "end_s": 46.5,
+   "text": "kannst.",
+   "font": "Helvetica-Bold",
+   "size_px": 60,
+   "color": "#ffffff",
+   "y_center_px": 1136.8,
+   "baseline_px": 1153.0,
+   "x_offset_px": 0,
+   "letter_spacing_em": -0.045,
+   "animation": "mini",
+   "group": null,
+   "lane": "A",
+   "cta": false
+  }
+ ],
+ "sfx": [
+  {
+   "file": "Riser.mp3",
+   "peak_at_s": 3.767,
+   "place_file_start_at_s": -0.043,
+   "trim_end_at_s": 4.017,
+   "fade_out_ms": 80,
+   "gain_db": -16
+  },
+  {
+   "file": "Camera_Shutter.mp3",
+   "at_s": 3.677,
+   "gain_db": -16
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 3.953,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 9.153,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 16.787,
+   "gain_db": -21
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 20.487,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 23.353,
+   "gain_db": -21
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 30.487,
+   "gain_db": -18
+  },
+  {
+   "file": "Money_Caching.mp3",
+   "at_s": 30.737,
+   "gain_db": -13
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 32.687,
+   "gain_db": -18
+  },
+  {
+   "file": "Fuwa.mp3",
+   "at_s": 34.687,
+   "gain_db": -21
+  },
+  {
+   "file": "Ding.mp3",
+   "at_s": 41.317,
+   "gain_db": -9
+  }
+ ],
+ "audio": {
+  "voice": "raw audio cut identically to cut_segments, 8 ms fade in/out per segment",
+  "loudness": "two-pass loudnorm I=-17 LUFS, TP=-1.5 dBTP, LRA=11",
+  "music": null
+ }
+}

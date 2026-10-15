@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "zweck": "Maschinenlesbare Werte fuer die Pipeline. style.json enthaelt viele Werte nur als Fliesstext (z. B. 'ffmpeg silencedetect noise=-35dB d=0.12'). Die Pipeline liest Zahlen aus DIESER Datei. style.json und regeln.md bleiben die Quelle der Wahrheit, jeder Wert hier nennt seine Quelle.",
+    "kunde": "Thorsten Wittmann",
+    "regel": "Aenderungen an Stilwerten zuerst in style.json/regeln.md klaeren, dann hier nachziehen. Mit TODO(style) markierte Werte sind Annahmen und nicht vom User bestaetigt."
+  },
+
+  "ingest": {
+    "proxy": { "codec": "libx264", "crf": 14, "gop": 15, "audio": false, "_quelle": "regeln.md Arbeitsablauf 1" },
+    "analyse_audio": { "sample_rate": 16000, "channels": 1, "_quelle": "regeln.md Arbeitsablauf 1" },
+    "master_audio": { "sample_rate": 48000, "channels": 2, "_quelle": "style.json format.finaler_export (AAC 48 kHz Stereo)" },
+    "fps_regel": "quelle_beibehalten",
+    "erlaubte_fps": [24, 25, 30, 50, 60],
+    "soll_aufloesung": [1080, 1920],
+    "_quelle": "style.json format.fps_regel"
+  },
+
+  "analyze": {
+    "stille": { "noise_db": -35, "min_s": 0.12, "_quelle": "style.json schnitt_rhythmus.pausenerkennung" },
+    "leise_bereiche": {
+      "noise_db": -28,
+      "min_s": 0.15,
+      "_todo": "TODO(style): Atmer-Erkennung ist nicht in style.json beschrieben. Schwellen sind eine Annahme (Kandidaten fuer Atmer = leiser als -28 dB, aber nicht still)."
+    },
+    "szenenwechsel": { "schwelle": 0.2, "_quelle": "regeln.md STANDARD 1 (ffmpeg scene > 0.2)" },
+    "vorgeschnitten_ab_harten_schnitten": {
+      "anzahl": 2,
+      "_todo": "TODO(style): Heuristik ist eine Annahme. Laut regeln.md entscheidet zusaetzlich die Aussage des Users ('Zooms hab ich schon gemacht'), siehe --precut."
+    },
+    "lautheit_fenster_s": 0.1
+  },
+
+  "transcribe": {
+    "language": "de",
+    "wortgrenzen_an_stille_anpassen": true,
+    "min_wortdauer_s": 0.04,
+    "vokabel_hinweis": ["Freiheitstraining", "Kontosetup", "Auslandskonto", "Hellmeyer", "Vermögensstruktur"],
+    "_quelle": "regeln.md Arbeitsablauf 2 (faster-whisper medium, int8, de, beam 5, danach Wortgrenzen an Stillen anpassen); style.json schreibweise (Vokabeln)",
+    "_todo": "TODO(style): Die Vokabelliste ist aus Beispielen in style.json abgeleitet, nicht vollstaendig."
+  },
+
+  "schnitt": {
+    "min_pause_s": 0.15,
+    "luft_rand_s": 0.02,
+    "audio_fade_ms": 8,
+    "min_fragment_frames": 6,
+    "_quelle": "style.json schnitt_rhythmus"
+  }
+}
