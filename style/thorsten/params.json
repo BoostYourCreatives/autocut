@@ -88,5 +88,207 @@
     "_todo": "TODO(style): Die genaue Auslegung von 'nach Inhalt' (kriterium_text) ist meine Interpretation, nicht vom User bestaetigt. Mit den ersten Reels abgleichen.",
     "kriterium": "inhalt",
     "kriterium_text": "Claude entscheidet nach dem Inhalt des Hooks. blitz_riser, wenn der Hook ein in sich geschlossener Satz ist (zugespitzte These, Frage oder Aussage), nach dem inhaltlich ein neuer Abschnitt beginnt. hart, wenn der erste Satz gedanklich direkt in den naechsten uebergeht (z. B. Aufzaehlung, 'Erstens ...', Satz ohne eigenen Abschluss). Die Entscheidung bekommt reason und confidence; bei mittel/niedrig erscheint sie in der Liste 'Hier genauer hinschauen'."
+  },
+  "captions": {
+    "merge": {
+      "min_anzeige_s": 0.24,
+      "funktionswort_max_anzeige_s": 0.3,
+      "max_zeichen": 22,
+      "funktionswoerter": [
+        "die",
+        "der",
+        "das",
+        "dein",
+        "deine",
+        "ein",
+        "eine",
+        "einer",
+        "einem",
+        "einen",
+        "in",
+        "für",
+        "von",
+        "und",
+        "wenn",
+        "wie",
+        "du",
+        "ich",
+        "sie",
+        "ihr",
+        "dass",
+        "mich",
+        "dich",
+        "ist",
+        "wird",
+        "mit",
+        "es",
+        "sind",
+        "was",
+        "bei",
+        "am",
+        "dir",
+        "des",
+        "um",
+        "zu",
+        "bis",
+        "mein",
+        "je",
+        "da",
+        "auf",
+        "nur",
+        "nicht",
+        "sich",
+        "dann",
+        "als",
+        "den",
+        "all",
+        "ja",
+        "gar"
+      ],
+      "_quelle": "style.json untertitel.woerter_pro_einblendung. Das Kriterium bezieht sich auf die Anzeigedauer des zuletzt angehaengten Wortes; so ergibt es die Gruppen aus Reel 48 ('Wenn ich mein Vermögen', 'auf die nächsten', 'würde ich mir')."
+    },
+    "timing": {
+      "start_vorlauf_frames": 1,
+      "nachlauf_luecke_s": 0.35,
+      "nachlauf_s": 0.18,
+      "wipe_vorlauf_frames": 4,
+      "_quelle": "style.json untertitel.timing, hervorhebungen_gold.typen.wipe"
+    },
+    "min_frames": 6,
+    "ende_nach_letztem_wort_s": 0.05,
+    "cta": {
+      "erkennung_woerter": [
+        "kommentier",
+        "kommentiere"
+      ],
+      "_quelle": "style.json call_to_action"
+    }
+  },
+  "zoom": {
+    "erlaubte_werte": [
+      1.1,
+      1.12,
+      1.15
+    ],
+    "rampe_frames": 24,
+    "max_schritt_pro_frame": 0.0105,
+    "anzahl": {
+      "min": 3,
+      "max": 6
+    },
+    "hook_push_nach": 1.06,
+    "_quelle": "regeln.md MUSS 2/3, STANDARD 3/4",
+    "_todo": "TODO(style): Anzahl 3-6 ist ein Toleranzband um 'fuenf pro Reel'; bei kurzen Reels sind weniger plausibel."
+  },
+  "sfx": {
+    "verboten_muster": [
+      "swish_whoosh",
+      "whoosh"
+    ],
+    "cues": {
+      "riser": {
+        "file": "Riser.mp3",
+        "gain_db": -16,
+        "peak_im_file_s": 3.81,
+        "ende_nach_blitz_s": 0.25,
+        "fade_out_ms": 80
+      },
+      "shutter": {
+        "file": "Camera_Shutter.mp3",
+        "gain_db": -16,
+        "versatz_s": -0.09
+      },
+      "fuwa_stark": {
+        "file": "Fuwa.mp3",
+        "gain_db": -18,
+        "versatz_s": -0.18,
+        "anzahl": {
+          "min": 4,
+          "max": 6
+        }
+      },
+      "fuwa_leise": {
+        "file": "Fuwa.mp3",
+        "gain_db": -21,
+        "versatz_s": -0.18,
+        "anzahl": {
+          "min": 2,
+          "max": 4
+        }
+      },
+      "money": {
+        "file": "Money_Caching.mp3",
+        "gain_db": -13,
+        "versatz_s": 0.07,
+        "anzahl": {
+          "min": 1,
+          "max": 1
+        }
+      },
+      "ding": {
+        "file": "Ding.mp3",
+        "gain_db": -9,
+        "versatz_s": -0.05
+      }
+    },
+    "_quelle": "style.json soundeffekte.cues (Versaetze gegen Reel 48/53 nachgerechnet)"
+  },
+  "broll": {
+    "anzahl": {
+      "min": 2,
+      "max": 4
+    },
+    "shade_alpha": 0.36,
+    "shade_alpha_hell": 0.62,
+    "vorlauf_frames": 1,
+    "nachlauf_s": 0.18,
+    "_quelle": "style.json b_roll, regeln.md STANDARD 7"
+  },
+  "hook": {
+    "zeilen": 2,
+    "ki_text": "Info: Dieses Video wurde mit KI erstellt.",
+    "max_zeichen_zeile": 30,
+    "min_luecke_s": 0.04,
+    "_quelle": "style.json text_hooks",
+    "_todo": "TODO(style): max_zeichen_zeile=30 ist eine Annahme (laengste Beispielzeile hat 27 Zeichen)."
+  },
+  "farben": {
+    "weiss": "#ffffff",
+    "gold": "#fab926",
+    "erlaubt": [
+      "#ffffff",
+      "#fab926",
+      "#000000"
+    ],
+    "_quelle": "style.json farben"
+  },
+  "schriften": {
+    "weiss": "Helvetica-Bold",
+    "gold": "SegoePro-BoldItalic",
+    "zitat": "SegoePro-BoldItalic",
+    "cta": "SegoePro-BoldItalic",
+    "_quelle": "regeln.md MUSS 4/15"
+  },
+  "gold": {
+    "anzahl": {
+      "min": 6,
+      "max": 18
+    },
+    "_quelle": "style.json hervorhebungen_gold.dosierung_pro_reel (10-16)",
+    "_todo": "TODO(style): Band 6-18 als Warnschwelle, weil 10-16 'in der Praxis' steht."
+  },
+  "validator": {
+    "tonsprung_warn_db": -30,
+    "tonsprung_fehler_db": -15,
+    "wortrand_toleranz_s": 0.012,
+    "max_entfernt_sprechanteil": 0.25,
+    "min_laenge_verhaeltnis": 0.6,
+    "min_laenge_verhaeltnis_vorgeschnitten": 0.97,
+    "_todo": "TODO(style): Alle Schwellen dieses Blocks sind Annahmen (nicht in style.json/regeln.md). Mit echten Reels kalibrieren."
+  },
+  "plan": {
+    "claude_effort": "high",
+    "max_tokens": 16000,
+    "_todo": "TODO(config): Effort/max_tokens fuer den Plan sind Annahmen."
   }
 }

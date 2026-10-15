@@ -22,10 +22,24 @@
     "maxPlanAttempts": 3
   },
   "pricing": {
-    "whisperUsdPerMinute": 0.006
+    "whisperUsdPerMinute": 0.006,
+    "claude": {
+      "claude-opus-5-5": {
+        "inputPerMTok": 4,
+        "outputPerMTok": 20,
+        "cacheReadPerMTok": 0.2,
+        "cacheWritePerMTok": 5
+      },
+      "claude-sonnet-5-5": {
+        "inputPerMTok": 2,
+        "outputPerMTok": 10,
+        "cacheReadPerMTok": 0.2,
+        "cacheWritePerMTok": 2.5
+      }
+    }
   },
   "_todo": [
-    "TODO(config): pricing fuer Claude kommt in M4 (Kosten-Log).",
-    "Hinweis: B-Roll kommt spaeter ueber eine eigene Upload-Funktion (ggf. Datenbank). Canva/Higgsfield aus regeln.md sind irrelevant. stockBrollDir bleibt bis dahin leer."
+    "Hinweis: B-Roll kommt spaeter ueber eine eigene Upload-Funktion (ggf. Datenbank). Canva/Higgsfield aus regeln.md sind irrelevant. stockBrollDir bleibt bis dahin leer.",
+    "TODO(config): Claude-Preise aus der Modelltabelle (Stand 2026-10-06), Cache-Write = 1,25x Input (5-Minuten-Cache). Bei Preisaenderung hier anpassen."
   ]
 }

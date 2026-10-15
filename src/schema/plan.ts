@@ -49,6 +49,8 @@ export const Removal = z.object({
 });
 
 export const Hook = z.object({
+  /** Letztes Wort des Hooks (Index in transcript.json) */
+  end_word_idx: z.number().int().nonnegative(),
   /** Ende des Hooks im Rohmaterial (= Ende des ersten Satzes bzw. gesetzter Schnittpunkt) */
   end_raw_s: seconds,
   /** Hook-Box: genau 2 Zeilen, wird im Render in Versalien gesetzt */
@@ -87,6 +89,18 @@ export const Caption = z.object({
   word_idx: z.array(z.number().int().nonnegative()).min(1),
   start_s: seconds,
   end_s: seconds,
+  /** Schrift/Farbe sind aus kind abgeleitet; der Validator prüft die Kombination */
+  font: z.enum(["Helvetica-Bold", "SegoePro-BoldItalic"]),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  /** Nur animation "words": Frame-Offset je Wort relativ zum Start der Einblendung */
+  word_offsets_frames: z.array(z.tuple([z.string(), z.number().int().nonnegative()])).optional(),
+  ...decisionFields,
+});
+
+/** Korrektur eines Transkriptionsfehlers: der Untertitel zeigt `text` statt des Transkriptworts. */
+export const TextCorrection = z.object({
+  word_idx: z.number().int().nonnegative(),
+  text: z.string().min(1),
   ...decisionFields,
 });
 
@@ -171,6 +185,7 @@ export const Plan = z
     hook: Hook.nullable(),
     cut_segments: z.array(CutSegment).min(1),
     removed: z.array(Removal),
+    text_corrections: z.array(TextCorrection).default([]),
     captions: z.array(Caption),
     zooms: z.array(Zoom),
     sfx: z.array(Sfx),
@@ -204,3 +219,9 @@ export const Plan = z
 export type Plan = z.infer<typeof Plan>;
 export type CutSegment = z.infer<typeof CutSegment>;
 export type Removal = z.infer<typeof Removal>;
+export type Caption = z.infer<typeof Caption>;
+export type Zoom = z.infer<typeof Zoom>;
+export type Sfx = z.infer<typeof Sfx>;
+export type BrollSlot = z.infer<typeof BrollSlot>;
+export type Overlay = z.infer<typeof Overlay>;
+export type Hook = z.infer<typeof Hook>;

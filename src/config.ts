@@ -24,7 +24,13 @@ const ConfigSchema = z.object({
     selfcheckModel: z.string(),
     maxPlanAttempts: z.number().int().min(1).max(3),
   }),
-  pricing: z.object({ whisperUsdPerMinute: z.number() }),
+  pricing: z.object({
+    whisperUsdPerMinute: z.number(),
+    claude: z.record(
+      z.string(),
+      z.object({ inputPerMTok: z.number(), outputPerMTok: z.number(), cacheReadPerMTok: z.number(), cacheWritePerMTok: z.number() }),
+    ),
+  }),
 });
 export type Config = z.infer<typeof ConfigSchema> & {
   /** Absoluter Pfad zum Stilordner (z. B. <root>/style/thorsten) */

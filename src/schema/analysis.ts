@@ -26,6 +26,9 @@ export const Analysis = z.object({
     window_s: z.number(),
     /** RMS in dBFS je Fenster, auf 0.1 dB gerundet */
     series_db: z.array(z.number()),
+    /** Feinere Reihe (20 ms) für die Prüfung der Schnittkanten */
+    fine_window_s: z.number(),
+    fine_series_db: z.array(z.number()),
   }),
   scene_changes: z.array(z.object({ t_s: seconds, score: z.number() })),
   precut: z.object({

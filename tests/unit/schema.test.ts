@@ -9,7 +9,7 @@ const base = () => ({
   style: "thorsten",
   source: { clip: "reel", file: "x.mp4", fps: 30, width: 1080, height: 1920, duration_s: 10 },
   precut: false,
-  hook: { end_raw_s: 3, lines: ["ZEILE EINS", "ZEILE ZWEI"], text_origin: "generated", transition: "hart", push: true, reason: "Erster Satz endet bei 3 s", confidence: "hoch" },
+  hook: { end_word_idx: 3, end_raw_s: 3, lines: ["ZEILE EINS", "ZEILE ZWEI"], text_origin: "generated", transition: "hart", push: true, reason: "Erster Satz endet bei 3 s", confidence: "hoch" },
   cut_segments: [
     { id: 0, raw_in_s: 0.3, raw_out_s: 3, reason: "Hook, ungeschnitten", confidence: "hoch" },
     { id: 1, raw_in_s: 3.2, raw_out_s: 9, reason: "Body", confidence: "hoch" },

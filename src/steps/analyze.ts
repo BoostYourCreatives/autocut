@@ -29,6 +29,8 @@ export async function analyze(cfg: Config, style: Style, runName: string, clipId
       ]);
 
       const series = rmsSeries(pcm, sr, A.lautheit_fenster_s);
+      const FINE_S = 0.02;
+      const fine = rmsSeries(pcm, sr, FINE_S);
       const meanDb = (a: number, b: number) => {
         const i0 = Math.floor(a / A.lautheit_fenster_s);
         const i1 = Math.max(i0 + 1, Math.ceil(b / A.lautheit_fenster_s));
@@ -56,7 +58,7 @@ export async function analyze(cfg: Config, style: Style, runName: string, clipId
         },
         silences: silRaw.map(withDuration),
         breath_candidates: breath,
-        loudness: { ...ebu, window_s: A.lautheit_fenster_s, series_db: series },
+        loudness: { ...ebu, window_s: A.lautheit_fenster_s, series_db: series, fine_window_s: FINE_S, fine_series_db: fine },
         scene_changes: scenes,
         precut: { setting, detected, effective, hard_cuts: scenes.length },
       });
