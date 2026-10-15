@@ -84,7 +84,9 @@
       "blitz_riser",
       "hart"
     ],
-    "_quelle": "User-Vorgabe 15.10.2026: Der Uebergang mit Riser soll nicht immer gemacht werden. regeln.md MUSS 7 beschreibt nur, WIE er aussieht, wenn er gesetzt wird.",
-    "_todo": "TODO(style): Kriterium, wann Blitz+Riser und wann harter Schnitt, ist offen. Bis dahin entscheidet Claude pro Reel mit reason/confidence; die Entscheidung landet in der 'Hier genauer hinschauen'-Liste. CLI: --uebergang blitz|hart|auto."
+    "_quelle": "User-Vorgabe 15.10.2026: Uebergang mit Riser nicht immer, Kriterium 'nach Inhalt'. regeln.md MUSS 7 beschreibt nur, WIE er aussieht, wenn er gesetzt wird.",
+    "_todo": "TODO(style): Die genaue Auslegung von 'nach Inhalt' (kriterium_text) ist meine Interpretation, nicht vom User bestaetigt. Mit den ersten Reels abgleichen.",
+    "kriterium": "inhalt",
+    "kriterium_text": "Claude entscheidet nach dem Inhalt des Hooks. blitz_riser, wenn der Hook ein in sich geschlossener Satz ist (zugespitzte These, Frage oder Aussage), nach dem inhaltlich ein neuer Abschnitt beginnt. hart, wenn der erste Satz gedanklich direkt in den naechsten uebergeht (z. B. Aufzaehlung, 'Erstens ...', Satz ohne eigenen Abschluss). Die Entscheidung bekommt reason und confidence; bei mittel/niedrig erscheint sie in der Liste 'Hier genauer hinschauen'."
   }
 }
