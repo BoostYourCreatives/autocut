@@ -7,12 +7,11 @@ import { ingest } from "./steps/ingest.ts";
 import { transcribe } from "./steps/transcribe/index.ts";
 import { analyze } from "./steps/analyze.ts";
 import { plan, planPaths, PlanFailedError } from "./steps/plan.ts";
-import { validate } from "./validate/validate.ts";
+import { validatePlanFile } from "./steps/check.ts";
+import { measureChin } from "./steps/chin.ts";
+import { renderPlan } from "./steps/render.ts";
+import { deliver } from "./steps/deliver.ts";
 import { buildSfxIndex } from "./lib/sfxIndex.ts";
-import { Plan } from "./schema/plan.ts";
-import { Analysis } from "./schema/analysis.ts";
-import { Transcript } from "./schema/transcript.ts";
-import { readJsonSchema } from "./util/files.ts";
 import { mmss } from "./util/fmt.ts";
 import { loadManifest, runPaths } from "./util/run.ts";
 import { readRunLog } from "./util/runlog.ts";
@@ -113,17 +112,43 @@ program
     const cfg = loadConfig();
     const style = loadStyle(cfg);
     const planFile = arg.endsWith(".json") ? path.resolve(arg) : planPaths(runPaths(cfg, arg)).plan;
-    const runDir = path.dirname(planFile);
-    const p = readJsonSchema(planFile, Plan);
-    const clipDir = path.join(runDir, "clips", p.source.clip);
-    const transcript = readJsonSchema(path.join(clipDir, "transcript.json"), Transcript);
-    const analysis = readJsonSchema(path.join(clipDir, "analysis.json"), Analysis);
-    const v = validate({ plan: p, transcript, analysis, params: style.params, sfxIndex: buildSfxIndex(cfg.sfxLibrary) });
+    const { result: v } = validatePlanFile(cfg, style, planFile);
     for (const e of v.errors) console.log(`FEHLER   [${e.code}]${e.t_s !== undefined ? ` @${mmss(e.t_s)}` : ""} ${e.message}`);
     for (const w of v.warnings) console.log(`WARNUNG  [${w.code}]${w.t_s !== undefined ? ` @${mmss(w.t_s)}` : ""} ${w.message}`);
     for (const n of v.notChecked) console.log(`NICHT GEPRÜFT: ${n}`);
     console.log(`\n${v.ok ? "OK" : "NICHT OK"}: ${v.errors.length} Fehler, ${v.warnings.length} Warnung(en), Länge ${v.stats.out_duration_s.toFixed(1)} s (${(v.stats.length_ratio * 100).toFixed(0)} % der Quelle)`);
     process.exit(v.ok ? 0 : 1);
+  });
+
+program
+  .command("chin <run>")
+  .description("Kinnhöhe messen (MediaPipe), nötig für die Position der Untertitel")
+  .option("--clip <id>", "Nur diesen Clip", collect)
+  .action(async (runName: string, o) => {
+    const cfg = loadConfig();
+    await measureChin(cfg, loadStyle(cfg), runName, o.clip);
+  });
+
+program
+  .command("render <run>")
+  .description("Plan rendern (Bild + Ton + Export). --still 1.5,4 rendert nur Einzelbilder zur Kontrolle")
+  .option("--still <sekunden>", "Kommagetrennte Zeitpunkte, rendert nur PNGs")
+  .option("--force", "Auch rendern, wenn der Validator Fehler meldet")
+  .option("--no-selfcheck", "Selfcheck überspringen")
+  .action(async (runName: string, o) => {
+    const cfg = loadConfig();
+    await renderCommand(cfg, loadStyle(cfg), planPaths(runPaths(cfg, runName)).plan, { still: o.still, force: o.force, selfcheck: o.selfcheck !== false });
+  });
+
+program
+  .command("rerender <plan>")
+  .description("Einen (manuell geänderten) Plan neu rendern, ohne ingest/transcribe/analyze/plan zu wiederholen")
+  .option("--no-selfcheck", "Selfcheck überspringen")
+  .option("--still <sekunden>", "Kommagetrennte Zeitpunkte, rendert nur PNGs")
+  .option("--force", "Auch rendern, wenn der Validator Fehler meldet")
+  .action(async (planFile: string, o) => {
+    const cfg = loadConfig();
+    await renderCommand(cfg, loadStyle(cfg), path.resolve(planFile), { still: o.still, force: o.force, selfcheck: o.selfcheck !== false });
   });
 
 program
@@ -138,7 +163,7 @@ program
 
 program
   .command("run <run>")
-  .description("Alle bisher implementierten Schritte nacheinander (M2: ingest, transcribe, analyze, plan+validate)")
+  .description("Alles in einem Durchgang: ingest, transcribe, analyze, chin, plan+validate, render, selfcheck, hinschauen")
   .option("--reel <datei>", "Einzelnes Reel", collect)
   .option("--hook <datei>", "Hook-Clip", collect)
   .option("--body <datei>", "Gemeinsamer Body")
@@ -148,6 +173,8 @@ program
   .option("--uebergang <blitz|hart|auto>", "Hook-Übergang vorgeben")
   .option("--hook-text <z1/z2>", "Hook-Text vorgeben")
   .option("--name <TW_Reel_NN>", "Videoname im Plan")
+  .option("--no-render", "Nach plan+validate aufhören (kein Video)")
+  .option("--no-selfcheck", "Selfcheck überspringen")
   .action(async (runName: string, o) => {
     const cfg = loadConfig();
     const style = loadStyle(cfg);
@@ -155,6 +182,7 @@ program
     const provider = o.fromFile ? "file" : o.provider;
     await transcribe(cfg, style, runName, { provider, fromFile: o.fromFile ? { "*": path.resolve(o.fromFile) } : undefined });
     await analyze(cfg, style, runName);
+    await measureChin(cfg, style, runName);
     try {
       await plan(cfg, style, runName, { transition: parseTransition(o.uebergang), hookLines: parseHookText(o.hookText), video: o.name });
     } catch (e) {
@@ -164,6 +192,10 @@ program
         process.exit(2);
       }
       throw e;
+    }
+    if (o.render !== false) {
+      const cfg2 = cfg;
+      await renderCommand(cfg2, style, planPaths(runPaths(cfg2, runName)).plan, { force: false, selfcheck: o.selfcheck !== false });
     }
     printStatus(runName);
     printQuality(runName);
@@ -183,6 +215,28 @@ program
     for (const t of todos) console.log(`- ${t.file}: ${t.text}`);
     console.log(`\n${todos.length} offene TODO-Marker.`);
   });
+
+async function renderCommand(cfg: ReturnType<typeof loadConfig>, style: ReturnType<typeof loadStyle>, planFile: string, o: { still?: string; force?: boolean; selfcheck: boolean }): Promise<void> {
+  const { result: v } = validatePlanFile(cfg, style, planFile);
+  if (!v.ok) {
+    for (const e of v.errors) console.log(`FEHLER   [${e.code}]${e.t_s !== undefined ? ` @${mmss(e.t_s)}` : ""} ${e.message}`);
+    if (!o.force) {
+      log.error(`Plan besteht den Validator nicht (${v.errors.length} Fehler). Es wird nicht gerendert. Mit --force trotzdem rendern.`);
+      process.exit(1);
+    }
+    log.warn("--force: rendere trotz Validator-Fehlern");
+  }
+  const stills = o.still ? o.still.split(",").map((x) => parseFloat(x.trim())).filter((x) => Number.isFinite(x)) : undefined;
+  if (stills) {
+    const r = await renderPlan(cfg, style, planFile, { stills });
+    for (const f of r.stills) console.log(f);
+    for (const w of r.warnings) log.warn(w);
+    return;
+  }
+  const d = await deliver(cfg, style, planFile, { selfcheck: o.selfcheck });
+  for (const w of d.render.warnings) log.warn(w);
+  console.log(`\nVideo:      ${d.render.videoFile}\nHinschauen: ${d.attentionFile}${d.selfcheck?.result ? `\nSelfcheck:  ${d.selfcheck.result.urteil}, ${d.selfcheck.result.befunde.length} Befund(e)` : ""}`);
+}
 
 function printQuality(runName: string): void {
   const cfg = loadConfig();

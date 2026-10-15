@@ -5,3 +5,5 @@ runs/
 .DS_Store
 tests/.tmp/
 dev-assets/
+assets/fonts/
+runs/

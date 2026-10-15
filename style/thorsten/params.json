@@ -290,5 +290,236 @@
     "claude_effort": "high",
     "max_tokens": 16000,
     "_todo": "TODO(config): Effort/max_tokens fuer den Plan sind Annahmen."
+  },
+  "layout": {
+    "_quelle": "style.json (typografie, untertitel, hervorhebungen_gold, text_hooks, b_roll, uebergaenge, zooms_und_kamera). Positionen in Pixel im 1080x1920-Frame; BL = Grundlinie, DY = Verschiebung nach unten (aus der Kinn-Messung).",
+    "schrift": {
+      "weiss": {
+        "datei": "Helvetica-Bold.ttf",
+        "familie": "Helvetica-Bold",
+        "fallback": "Helvetica Neue, Helvetica, Arial, Inter, sans-serif",
+        "K": 0.27,
+        "letter_spacing_em": -0.045,
+        "gewicht": 700,
+        "kursiv": false
+      },
+      "gold": {
+        "datei": "SegoePro-BoldItalic.ttf",
+        "familie": "SegoePro-BoldItalic",
+        "fallback": "Segoe UI, Inter, sans-serif",
+        "K": 0.391,
+        "letter_spacing_em": -0.02,
+        "gewicht": 700,
+        "kursiv": true
+      },
+      "ki": {
+        "datei": "heros-regular.otf",
+        "familie": "Heros-Regular",
+        "fallback": "Helvetica Neue, Helvetica, Arial, Inter, sans-serif"
+      }
+    },
+    "max_breite_px": 900,
+    "weiss": {
+      "size": 60,
+      "baseline": 978
+    },
+    "gold": {
+      "size_standard": 72,
+      "groessen_nach_zeichen": [
+        [
+          3,
+          100
+        ],
+        [
+          9,
+          90
+        ],
+        [
+          12,
+          86
+        ],
+        [
+          18,
+          80
+        ]
+      ],
+      "baseline_zuschlag": 2,
+      "_todo": "TODO(style): style.json nennt 72 (Standard), 80-90 (kurze Kernwoerter), 100 (sehr kurze). Die Staffel nach Zeichenzahl ist aus den Beispielplaenen abgeleitet."
+    },
+    "zitat": {
+      "size": 64,
+      "baseline_zuschlag": 2
+    },
+    "stack": {
+      "zeile1_baseline": 976,
+      "gold_baseline": 1043,
+      "zeile3_baseline": 1093,
+      "zeile3_unterlaenge_zuschlag": 4,
+      "gold_size_standard": 86
+    },
+    "liste": {
+      "eintrag_abstaende": [
+        88,
+        170,
+        252,
+        334
+      ],
+      "eintrag_size": 72
+    },
+    "cta": {
+      "size": 80,
+      "baseline": 1091,
+      "kontur_px": 2
+    },
+    "wipe": {
+      "frames": 9,
+      "maske_padding": "0.4em 16px",
+      "kante_prozent": 12
+    },
+    "animation": {
+      "mini": {
+        "scale_von": 0.95,
+        "frames": 3
+      },
+      "pop": {
+        "frames": [
+          0,
+          2,
+          4,
+          6
+        ],
+        "scale": [
+          1.28,
+          1.06,
+          0.985,
+          1.0
+        ],
+        "opacity_von": 0.3
+      },
+      "slide": {
+        "x_von": -70,
+        "frames_x": 5,
+        "frames_opacity": 3
+      },
+      "rise": {
+        "y_von": 16,
+        "frames_y": 4,
+        "frames_opacity": 3
+      },
+      "words": {
+        "opacity_von": 0.4,
+        "scale_von": 0.95,
+        "frames": 3
+      }
+    },
+    "schatten": {
+      "weiss": "1px 3px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.25)",
+      "gold": "1px 4px 14px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.28)",
+      "ki": "1px 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2)"
+    },
+    "hook_box": {
+      "top": 282,
+      "radius": 10,
+      "padding": [
+        12,
+        18,
+        10,
+        18
+      ],
+      "size": 56,
+      "zeilenhoehe": 0.875,
+      "letter_spacing_em": -0.02,
+      "farbe_text": "#000000",
+      "farbe_hintergrund": "#ffffff"
+    },
+    "ki_hinweis": {
+      "size": 35,
+      "y_mitte": 1706,
+      "letter_spacing_em": -0.025
+    },
+    "b_roll": {
+      "zoom_von": 1.0,
+      "zoom_bis": 1.06,
+      "origin": [
+        540,
+        900
+      ],
+      "shade_cy": 1035,
+      "shade_ellipse": [
+        560,
+        330
+      ],
+      "shade_einblenden_frames": 4
+    },
+    "blitz": {
+      "halbe_dauer_frames": 5,
+      "warm_frames": [
+        -5,
+        -1,
+        0,
+        1,
+        5
+      ],
+      "warm_opacity": [
+        0,
+        0.85,
+        1,
+        0.85,
+        0
+      ],
+      "weiss_frames": [
+        -2,
+        0,
+        2
+      ],
+      "weiss_opacity": [
+        0,
+        0.95,
+        0
+      ],
+      "warm_verlauf": "radial-gradient(ellipse at 70% 30%, #fece40 0%, #fab926 35%, #f99d27 70%, #c86a10 100%)",
+      "weiss_verlauf": "radial-gradient(ellipse at 60% 40%, #fffdf5 0%, #fff4cf 55%, #ffe39a 100%)"
+    },
+    "kamera": {
+      "ease": "cosine",
+      "hook_push_ab_frame": 1
+    },
+    "kinn": {
+      "mindestabstand_px": 20,
+      "messung_jedes_n_frame": 3,
+      "oberkante_faktor_cap": 0.75,
+      "dy_ersatz_ohne_messung": 160,
+      "_todo": "TODO(style): oberkante_faktor_cap (Schrifthoehe oberhalb der Grundlinie = 0,75 x Schriftgroesse) ist eine Naeherung. dy_ersatz_ohne_messung=160 gilt nur, wenn das Kinn nicht gemessen werden konnte (style.json: 132-245 je nach Setting)."
+    },
+    "schrift_ersatz_hinweis": "Fehlen die Original-Schriften in assets/fonts, rendert die Pipeline mit der Fallback-Schrift und warnt."
+  },
+  "export": {
+    "zwischen": {
+      "codec": "h264",
+      "crf": 14
+    },
+    "final": {
+      "codec": "libx265",
+      "bitrate_kbps": 4400,
+      "pass": 2,
+      "preset": "medium",
+      "tag": "hvc1",
+      "audio_codec": "aac",
+      "audio_kbps": 192,
+      "max_mb": 30
+    },
+    "lautheit": {
+      "i": -17,
+      "tp": -1.5,
+      "lra": 11
+    },
+    "_quelle": "style.json format.finaler_export, soundeffekte.mix"
+  },
+  "selfcheck": {
+    "frame_abstand_s": 2.0,
+    "bildbreite_px": 540,
+    "max_bilder": 40,
+    "modell_effort": "medium",
+    "_todo": "TODO(config): Abstand und Bildbreite der Selfcheck-Frames sind Annahmen."
   }
 }

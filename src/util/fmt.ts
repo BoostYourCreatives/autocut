@@ -7,3 +7,9 @@ export function mmss(t: number): string {
   const s = t - m * 60;
   return `${m}:${s.toFixed(1).padStart(4, "0").replace(".", ",")}`;
 }
+
+/** m:ss ohne Nachkommastelle, für die Hinweisliste */
+export function mmssShort(t: number): string {
+  const total = Math.max(0, Math.round(t));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}

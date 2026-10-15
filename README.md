@@ -8,10 +8,10 @@ ingest → transcribe → analyze → plan → validate (≤3 Retries) → rende
  M1      M1           M1        M2     M2                      M3       M3            M4
 ```
 
-## Stand: M2
+## Stand: M3
 
-Fertig: Projektstruktur, zod-Schemas, `ingest`, `transcribe`, `analyze`, `plan` (Claude) + `validate` mit Retry-Schleife, Schritt-Log, Qualitätszusammenfassung.
-Noch offen: `render`, `selfcheck`, „Hier genauer hinschauen“-Liste, `rerender` (M3); Kosten-Gesamtlog, Testbefehl (M4).
+Fertig: Projektstruktur, zod-Schemas, `ingest`, `transcribe`, `analyze`, `chin`, `plan` (Claude) + `validate` mit Retry-Schleife, `render` (Remotion + ffmpeg), `selfcheck`, „Hier genauer hinschauen“-Liste, `rerender`.
+Noch offen (M4): Kosten-Gesamtlog, Testbefehl `tests/` für 2–3 Beispielvideos.
 
 ```bash
 npm install
@@ -29,6 +29,10 @@ npx tsx src/cli.ts plan reel53 --uebergang hart     # Hook-Übergang vorgeben (b
 npx tsx src/cli.ts plan reel53 --hook-text "WARUM EUROPA / ZURÜCKFALLEN KÖNNTE"
 npx tsx src/cli.ts validate reel53                  # Plan ohne KI prüfen (auch für von Hand geänderte Pläne)
 npx tsx src/cli.ts sfx-index                        # Dateien der SFX-Library
+
+npx tsx src/cli.ts chin reel53                      # Kinnhöhe messen (MediaPipe), für die Position der Untertitel
+npx tsx src/cli.ts render reel53                    # Video rendern + Selfcheck + Hinweisliste (--no-selfcheck, --still 1.5,4)
+npx tsx src/cli.ts rerender runs/reel53/plan.json   # (manuell geänderten) Plan neu rendern, ohne ingest/transcribe/analyze/plan
 
 npx tsx src/cli.ts status reel53   # Dateien + Dauer/Kosten je Schritt
 npx tsx src/cli.ts todos        # offene Platzhalter
@@ -76,3 +80,19 @@ Danach wird nicht gerendert: `fehlerbericht.md`, `plan.failed.json`, Exit-Code 2
 Ergebnis in `runs/<run>/`: `plan.json`, `quality.json` (Versuche, Fehler je Versuch, entfernter Anteil, Tokens, Kosten), `plan-attempts/attempt-N.json`, `sfx-index.json`.
 
 Lokal ohne Mac-Library testen: `AUTOCUT_SFX_LIBRARY=dev-assets/sfx` (Ordner `dev-assets/` ist gitignored, dort liegen die 5 CapCut-Sounds).
+
+## render, selfcheck, rerender (M3)
+
+`render` liest nur `plan.json` und den Clip-Ordner daneben (`proxy.mp4`, `audio_48k.wav`, optional `chin.json`), startet also unabhängig vom Rest.
+`rerender <plan>` ist derselbe Weg für einen von Hand geänderten Plan: erst strenge Prüfung (`validate`), bei Fehlern wird nicht gerendert (`--force` überstimmt),
+dann Bild (Remotion, Komponenten in `src/render/remotion/`, alle Maße aus `params.json` → `layout`), Ton (ffmpeg: Stimme nach Schnittliste, 8 ms Fades, SFX mit Gain, zweistufiges loudnorm −17 LUFS),
+Export (x265 2-pass, 4400 kbit/s, bei langen Videos gesenkt, damit die Datei unter 30 MB bleibt).
+
+Ergebnisse in `runs/<run>/out/`: `TW_Reel_NN.mp4`, `.selfcheck.json` (Claude prüft Standbilder im festen Abstand gegen Plan und Transkript), `.hinschauen.md` (Stellen mit mittlerer/niedriger Confidence, Validator-Warnungen und Selfcheck-Befunde mit Zeitpunkt).
+Ohne API-Schlüssel wird der Selfcheck übersprungen, das Video entsteht trotzdem.
+
+Voraussetzungen auf dem Rechner:
+- Node 20+, ffmpeg mit libx265, Chrome/Chromium (Remotion lädt bei Bedarf selbst eines; `AUTOCUT_BROWSER` für einen eigenen Pfad)
+- Für die Kinn-Messung: `pip install mediapipe opencv-python-headless` (unter Linux ggf. `apt install libegl1`)
+- Original-Schriften in `assets/fonts/` (siehe dort), sonst Ersatzschrift mit Warnung
+- Remotion ist für Unternehmen ab 4 Personen lizenzpflichtig (remotion.pro)

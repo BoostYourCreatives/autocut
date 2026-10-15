@@ -20,6 +20,7 @@ export interface ClipPaths {
   transcript: string;
   transcriptRaw: string;
   analysis: string;
+  chin: string;
 }
 
 export function runPaths(cfg: Config, name: string): RunPaths {
@@ -41,6 +42,7 @@ export function runPaths(cfg: Config, name: string): RunPaths {
         transcript: path.join(d, "transcript.json"),
         transcriptRaw: path.join(d, "transcript.raw.json"),
         analysis: path.join(d, "analysis.json"),
+        chin: path.join(d, "chin.json"),
       };
     },
   };
