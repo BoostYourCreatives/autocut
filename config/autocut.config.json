@@ -2,30 +2,30 @@
   "style": "thorsten",
   "styleDir": "style",
   "runsDir": "runs",
-
   "sfxLibrary": "/Users/noah/Downloads/Soundeffekte",
   "musicLibrary": "/Users/noah/Downloads/Musik-Library",
   "stockBrollDir": null,
-
   "transcription": {
     "provider": "openai",
-    "openai": { "model": "whisper-1" },
-    "fasterWhisper": { "model": "medium", "computeType": "int8", "beamSize": 5 }
+    "openai": {
+      "model": "whisper-1"
+    },
+    "fasterWhisper": {
+      "model": "medium",
+      "computeType": "int8",
+      "beamSize": 5
+    }
   },
-
   "llm": {
     "planModel": "claude-opus-5-5",
     "selfcheckModel": "claude-sonnet-5-5",
     "maxPlanAttempts": 3
   },
-
   "pricing": {
     "whisperUsdPerMinute": 0.006
   },
-
   "_todo": [
-    "TODO(config): stockBrollDir ist offen. style.json nennt /Users/kevinbauer/Desktop/Templates/Stock B-Roll, das ist ein anderer User als /Users/noah.",
-    "TODO(config): llm.planModel / selfcheckModel sind Annahmen, nicht mit dem User abgestimmt.",
-    "TODO(config): pricing fuer Claude kommt in M4 (Kosten-Log)."
+    "TODO(config): pricing fuer Claude kommt in M4 (Kosten-Log).",
+    "Hinweis: B-Roll kommt spaeter ueber eine eigene Upload-Funktion (ggf. Datenbank). Canva/Higgsfield aus regeln.md sind irrelevant. stockBrollDir bleibt bis dahin leer."
   ]
 }

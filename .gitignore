@@ -4,3 +4,4 @@ runs/
 .env
 .DS_Store
 tests/.tmp/
+dev-assets/
