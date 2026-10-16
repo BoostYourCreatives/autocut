@@ -6,18 +6,18 @@
   "musicLibrary": "/Users/noah/Downloads/Musik-Library",
   "stockBrollDir": null,
   "transcription": {
-    "provider": "openai",
+    "provider": "faster-whisper",
     "openai": {
       "model": "whisper-1"
     },
     "fasterWhisper": {
-      "model": "medium",
+      "model": "large-v3-turbo",
       "computeType": "int8",
       "beamSize": 5
     }
   },
   "llm": {
-    "planModel": "claude-opus-5-5",
+    "planModel": "claude-sonnet-5-5",
     "selfcheckModel": "claude-sonnet-5-5",
     "maxPlanAttempts": 3
   },

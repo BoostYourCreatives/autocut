@@ -101,7 +101,7 @@ export class JobRunner {
     try {
       if (job.kind === "pipeline") {
         await step("ingest", () => ingest(cfg, style, job.run, { reels: [source!], hooks: [], precut: opts.precut }));
-        const provider = opts.provider === "auto" ? (process.env.OPENAI_API_KEY ? "openai" : "faster-whisper") : opts.provider;
+        const provider = opts.provider === "auto" ? "faster-whisper" : opts.provider;
         await step("transcribe", () => transcribe(cfg, style, job.run, { provider }));
         await step("analyze", () => analyze(cfg, style, job.run));
         await step("chin", () => measureChin(cfg, style, job.run));

@@ -14,7 +14,7 @@ from faster_whisper import WhisperModel
 ap = argparse.ArgumentParser()
 ap.add_argument("wav")
 ap.add_argument("out")
-ap.add_argument("--model", default="medium")
+ap.add_argument("--model", default="large-v3-turbo")
 ap.add_argument("--compute-type", default="int8")
 ap.add_argument("--beam-size", type=int, default=5)
 ap.add_argument("--language", default="de")
@@ -29,6 +29,7 @@ segments, info = model.transcribe(
     beam_size=a.beam_size,
     initial_prompt=a.prompt,
     vad_filter=False,
+    condition_on_previous_text=False,
 )
 words, texts = [], []
 for seg in segments:
