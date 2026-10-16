@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Config } from "../config.ts";
+import { log } from "../util/log.ts";
 
 export interface LlmUsage {
   input_tokens: number;
@@ -31,6 +32,8 @@ export interface LlmTurn {
   content: unknown[];
   usage: LlmUsage;
   stopReason: string;
+  /** Gesetzt, wenn die API das erzwungene JSON-Format abgelehnt hat (Antwort kommt dann als freier Text) */
+  structuredError?: string;
 }
 
 export interface LlmClient {
@@ -40,6 +43,7 @@ export interface LlmClient {
 export class AnthropicLlm implements LlmClient {
   private client: Anthropic;
   private structured = true;
+  private structuredError: string | undefined;
   constructor() {
     this.client = new Anthropic();
   }
@@ -60,6 +64,7 @@ export class AnthropicLlm implements LlmClient {
     };
 
     let res: Anthropic.Message;
+    let structuredError: string | undefined = this.structuredError;
     try {
       res = await send(this.structured);
     } catch (e) {
@@ -69,6 +74,8 @@ export class AnthropicLlm implements LlmClient {
       // Falls die API das Schema ablehnt: einmal ohne Structured Outputs, dann steht das JSON-Format nur im Prompt
       if (this.structured && e instanceof Anthropic.BadRequestError && /schema|output_config|format/i.test(e.message)) {
         this.structured = false;
+        this.structuredError = structuredError = e.message.slice(0, 600);
+        log.warn(`Claude-API hat das erzwungene JSON-Format abgelehnt, weiche auf freien Text aus. Meldung: ${structuredError}`);
         res = await send(false);
       } else throw e;
     }
@@ -89,6 +96,7 @@ export class AnthropicLlm implements LlmClient {
       text,
       content: res.content as unknown[],
       stopReason: res.stop_reason ?? "unknown",
+      ...(structuredError ? { structuredError } : {}),
       usage: {
         input_tokens: u.input_tokens ?? 0,
         output_tokens: u.output_tokens ?? 0,

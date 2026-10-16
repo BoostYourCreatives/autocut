@@ -156,7 +156,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       out.attempts = files.map((f) => {
         const a = JSON.parse(fs.readFileSync(path.join(attDir, f), "utf8"));
         const lines: string[] = a.issues ?? (a.errors ? a.errors.map((e: { code: string; message: string }) => `[${e.code}] ${e.message}`) : a.feedback ? [a.feedback] : []);
-        return { attempt: a.attempt, stage: a.stage, lines: lines.slice(0, 8) };
+        return { attempt: a.attempt, stage: a.stage, lines: lines.slice(0, 8), structured_error: a.structured_error ?? null };
       });
     }
     out.summary = summarizeRun(dir);

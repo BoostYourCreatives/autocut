@@ -31,6 +31,19 @@ export interface PlanOptions {
   exampleFiles?: string[];
 }
 
+/** Zieht das JSON-Objekt aus einer Antwort, auch wenn Claude es in einen Codeblock gesetzt oder Text davor/danach geschrieben hat. */
+export function extractJson(text: string): unknown {
+  const t = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+  try {
+    return JSON.parse(t);
+  } catch {
+    const a = t.indexOf("{");
+    const b = t.lastIndexOf("}");
+    if (a >= 0 && b > a) return JSON.parse(t.slice(a, b + 1));
+    throw new Error("keine JSON-Klammern in der Antwort gefunden");
+  }
+}
+
 export class PlanFailedError extends Error {
   constructor(message: string, public reportPath: string) {
     super(message);
@@ -86,11 +99,11 @@ export async function plan(cfg: Config, style: Style, runName: string, opts: Pla
   const forcedTransition = opts.transition ?? (std === "auto" ? undefined : std);
   const exampleFiles =
     opts.exampleFiles ?? fs.readdirSync(style.dir).filter((f) => /^beispiel-plan_.*\.json$/.test(f)).sort().map((f) => path.join(style.dir, f));
-  const system = buildSystemPrompt(style, sfxIndex, exampleFiles);
+  const schema = toApiSchema(PlanDraft);
+  const system = buildSystemPrompt(style, sfxIndex, exampleFiles, schema);
   const userPrompt = buildUserPrompt({ meta, transcript, analysis, minPause: style.params.schnitt.min_pause_s, force: { transition: forcedTransition, hookLines: opts.hookLines } });
   const llm = opts.llm ?? new AnthropicLlm();
   const model = cfg.llm.planModel;
-  const schema = toApiSchema(PlanDraft);
   const video = opts.video ?? `TW_Reel_${runName}`;
 
   const messages: LlmMessage[] = [{ role: "user", content: userPrompt }];
@@ -98,6 +111,7 @@ export async function plan(cfg: Config, style: Style, runName: string, opts: Pla
   const tokens: LlmUsage = { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0 };
   let lastPlan: Plan | undefined;
   let lastFeedback = "";
+  let lastStructuredError: string | undefined;
   let finalValidation: ValidationResult | undefined;
 
   for (let attempt = 1; attempt <= cfg.llm.maxPlanAttempts; attempt++) {
@@ -122,11 +136,11 @@ export async function plan(cfg: Config, style: Style, runName: string, opts: Pla
     let draft: PlanDraft | undefined;
     let feedback = "";
     try {
-      const parsed = PlanDraft.safeParse(JSON.parse(turn.text));
+      const parsed = PlanDraft.safeParse(extractJson(turn.text));
       if (parsed.success) draft = parsed.data;
       else feedback = "Die Antwort entspricht nicht dem Schema:\n" + parsed.error.issues.map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n");
     } catch (e) {
-      feedback = `Die Antwort ist kein gültiges JSON (${(e as Error).message}). Antworte ausschließlich mit dem JSON-Objekt.`;
+      feedback = `Die Antwort ist kein gültiges JSON (${(e as Error).message}). Antworte ausschließlich mit dem JSON-Objekt, ohne Codeblock.`;
     }
 
     // 2) Entwurf → Plan (deterministisch) → Validator
@@ -157,7 +171,8 @@ export async function plan(cfg: Config, style: Style, runName: string, opts: Pla
     }
     errorsPerAttempt.push(errorCount);
     lastFeedback = feedback;
-    writeJson(path.join(pp.attempts, `attempt-${attempt}.json`), { attempt, draft: draft ?? null, raw: draft ? undefined : turn.text, ...attemptRecord, usage: turn.usage });
+    lastStructuredError = turn.structuredError ?? lastStructuredError;
+    writeJson(path.join(pp.attempts, `attempt-${attempt}.json`), { attempt, draft: draft ?? null, raw: draft ? undefined : turn.text.slice(0, 4000), structured_error: turn.structuredError, ...attemptRecord, usage: turn.usage });
     log.warn(`plan: Versuch ${attempt}/${cfg.llm.maxPlanAttempts} abgelehnt (${errorCount} Fehler)`);
 
     // Fehler zurück an Claude (Konversation wird nur verlängert, nie verändert)
@@ -167,7 +182,7 @@ export async function plan(cfg: Config, style: Style, runName: string, opts: Pla
 
   // Alle Versuche verbraucht: nicht rendern, Bericht schreiben
   if (lastPlan) writeJson(pp.failed, lastPlan);
-  const report = failureReport(runName, clip.id, errorsPerAttempt, lastFeedback, finalValidation, cfg.llm.maxPlanAttempts);
+  const report = failureReport(runName, clip.id, errorsPerAttempt, lastFeedback, finalValidation, cfg.llm.maxPlanAttempts, lastStructuredError);
   fs.writeFileSync(pp.report, report);
   writeRunReport(run.dir);
   throw new PlanFailedError(`Plan besteht den Validator nach ${cfg.llm.maxPlanAttempts} Versuchen nicht. Es wird nicht gerendert. Bericht: ${pp.report}`, pp.report);
@@ -209,7 +224,7 @@ function finish(cfg: Config, run: RunPaths, p: Plan, v: ValidationResult, attemp
   return p;
 }
 
-function failureReport(run: string, clip: string, perAttempt: number[], feedback: string, v: ValidationResult | undefined, max: number): string {
+function failureReport(run: string, clip: string, perAttempt: number[], feedback: string, v: ValidationResult | undefined, max: number, structuredError?: string): string {
   return [
     `# Fehlerbericht: Plan für Run "${run}" (Clip ${clip})`,
     "",
@@ -217,6 +232,7 @@ function failureReport(run: string, clip: string, perAttempt: number[], feedback
     "",
     `Fehler je Versuch: ${perAttempt.join(", ")}`,
     "",
+    ...(structuredError ? ["Hinweis: Die Claude-API hat das erzwungene JSON-Format abgelehnt, Antworten kamen als freier Text. Meldung der API:", "", "    " + structuredError, ""] : []),
     "## Letzte Rückmeldung",
     "",
     feedback || "(keine)",

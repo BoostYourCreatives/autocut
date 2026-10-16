@@ -214,7 +214,8 @@ function render(d) {
       el('div', { class: 's', text: s.status === 'pending' ? 'wartet' : s.status === 'running' ? 'läuft' : `${s.seconds} s` }))))));
 
   if (d.job && d.job.error) {
-    const att = d.attempts && d.attempts.length ? el('ul', {}, ...d.attempts.flatMap((a) => a.lines.slice(0, 3).map((l) => el('li', { text: `Versuch ${a.attempt}: ${l}` })))) : null;
+    const se = d.attempts && d.attempts.find((a) => a.structured_error);
+    const att = d.attempts && d.attempts.length ? el('ul', {}, ...(se ? [el('li', { text: `Die Claude-API hat das erzwungene JSON-Format abgelehnt: ${se.structured_error}` })] : []), ...d.attempts.flatMap((a) => a.lines.slice(0, 3).map((l) => el('li', { text: `Versuch ${a.attempt}: ${l}` })))) : null;
     kids.push(el('div', { class: 'err' }, el('b', { text: 'Das hat nicht geklappt: ' }), d.job.error, att));
   }
 

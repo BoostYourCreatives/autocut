@@ -116,3 +116,23 @@ test("plan: CLI-Vorgabe 'hart' wird im Prompt genannt und im Plan erzwungen", as
   assert.deepEqual(p.hook!.lines, ["EIGENE ZEILE EINS", "EIGENE ZEILE ZWEI"]);
   assert.equal(p.hook!.text_origin, "user");
 });
+
+import { extractJson } from "../../src/steps/plan.ts";
+test("extractJson: Codeblock und Text drumherum werden toleriert (Claude setzt JSON manchmal in ```json)", () => {
+  assert.deepEqual(extractJson('```json\n{"a":1}\n```'), { a: 1 });
+  assert.deepEqual(extractJson('Hier ist mein Plan:\n{"a":{"b":2}}\nViel Erfolg'), { a: { b: 2 } });
+  assert.deepEqual(extractJson('{"a":1}'), { a: 1 });
+  assert.throws(() => extractJson("kein json"));
+});
+
+test("plan: Antwort im Codeblock wird akzeptiert; Prompt enthält Schema und Format-Beispiel für den Ausweichmodus", async () => {
+  const llm = new FakeLlm(["```json\n" + JSON.stringify(draftReel53) + "\n```"]);
+  const p = await plan(cfg, loadStyle(cfg), "r53", { llm });
+  assert.equal(llm.calls.length, 1, "kein zweiter Versuch nötig");
+  assert.ok(p.cut_segments.length > 3);
+  const sys = llm.calls[0]!.system;
+  assert.match(sys, /# Ausgabeformat/);
+  assert.match(sys, /"additionalProperties":false/);
+  assert.match(sys, /"end_word_idx"/);
+  assert.match(sys, /ohne Codeblock/);
+});

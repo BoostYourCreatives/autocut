@@ -6,6 +6,7 @@ import type { ClipMeta } from "../schema/ingest.ts";
 import type { Transcript } from "../schema/transcript.ts";
 import type { SfxEntry } from "../lib/sfxIndex.ts";
 import { de1, de2 } from "../util/fmt.ts";
+import { exampleDraft } from "./exampleDraft.ts";
 
 /** Transkript als Sätze mit Wortindizes und ⏸-Markierung für Pausen, die der Code automatisch schneidet. */
 export function transcriptText(words: Transcript["words"], silences: { start_s: number; end_s: number }[], minPause: number): string {
@@ -58,7 +59,7 @@ export function sfxIndexText(index: SfxEntry[]): string {
 }
 
 /** Statischer Systemprompt: ändert sich zwischen Läufen nicht (Prompt-Caching). */
-export function buildSystemPrompt(style: Style, index: SfxEntry[], exampleFiles: string[]): string {
+export function buildSystemPrompt(style: Style, index: SfxEntry[], exampleFiles: string[], schema?: Record<string, unknown>): string {
   const hu = style.params.hook_uebergang as unknown as { kriterium_text?: string };
   const examples = exampleFiles.map((f) => {
     const ex = JSON.parse(fs.readFileSync(f, "utf8"));
@@ -107,6 +108,13 @@ ${JSON.stringify(style.styleJson)}
 
 ${examples.join("\n\n")}
 
+# Ausgabeformat
+
+Antworte ausschließlich mit EINEM JSON-Objekt, ohne Codeblock (kein \`\`\`), ohne Text davor oder danach. Alle Felder sind Pflicht; was nicht vorkommt, ist ein leeres Array (oder null bei cta). Jede Entscheidung hat reason (ein Satz) und confidence ("hoch", "mittel" oder "niedrig"). Verweise sind Wortindizes als Zahlen. Nichtvorhandenes in gold-Einträgen ist null. Die Schlüsselnamen sind genau die des Schemas, erfinde keine eigenen.
+${schema ? `\nJSON-Schema:\n${JSON.stringify(schema)}\n` : ""}
+Beispiel für ein gültiges JSON (nur zur Form, die Wortindizes gehören zu einem anderen Reel):
+${JSON.stringify(exampleDraft)}
+
 # Verfügbare Soundeffekte (nur diese, niemals Sounds oder Musik generieren; Musik gibt es in Thorsten-Reels nicht)
 
 ${sfxIndexText(index)}
@@ -135,6 +143,6 @@ export function buildUserPrompt(inp: UserPromptInput): string {
   if (inp.force?.transition) lines.push(`VORGABE des Users: Übergang = ${inp.force.transition}. Setze hook.transition entsprechend.`);
   if (inp.force?.hookLines) lines.push(`VORGABE des Users: Hook-Text = "${inp.force.hookLines[0]} / ${inp.force.hookLines[1]}". Setze hook.lines entsprechend.`);
   lines.push("", "Transkript (Zeiten in Rohzeit, [i] = Wortindex, ⏸x,xx = Pause in Sekunden, die automatisch geschnitten wird):", transcriptText(transcript.words, analysis.silences, inp.minPause));
-  lines.push("", "Liefere den Entwurf als JSON im vorgegebenen Schema.");
+  lines.push("", "Antworte nur mit dem JSON-Objekt im vorgegebenen Format, ohne Codeblock und ohne weiteren Text.");
   return lines.join("\n");
 }
