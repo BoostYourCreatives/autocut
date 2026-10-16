@@ -38,6 +38,16 @@ export async function health(cfg: Config, style: Style): Promise<HealthItem[]> {
   const stockKeys = [process.env.PEXELS_API_KEY ? "Pexels" : null, process.env.PIXABAY_API_KEY ? "Pixabay" : null].filter(Boolean);
   add({ key: "stock", label: "Stock-B-Rolls", ok: stockKeys.length > 0, optional: true, detail: stockKeys.length ? `Zugang: ${stockKeys.join(", ")}` : "PEXELS_API_KEY / PIXABAY_API_KEY fehlen: Stock-B-Rolls sind nicht möglich" });
 
+  try {
+    fs.mkdirSync(cfg.runsPath, { recursive: true });
+    const st = fs.statfsSync(cfg.runsPath);
+    const freeGb = (st.bavail * st.bsize) / 1e9;
+    const totalGb = (st.blocks * st.bsize) / 1e9;
+    add({ key: "disk", label: "Speicherplatz", ok: freeGb >= 2, optional: freeGb >= 0.5, detail: `${freeGb.toFixed(1)} GB frei von ${totalGb.toFixed(1)} GB${freeGb < 2 ? ". Zu wenig: Volume bei Railway vergrößern oder alte Läufe löschen" : ""}` });
+  } catch {
+    /* statfs nicht verfügbar */
+  }
+
   const missingFonts = (["weiss", "gold", "ki"] as const).map((k) => style.params.layout.schrift[k].datei).filter((f) => !fs.existsSync(path.join(cfg.fontsDir, f)));
   add({ key: "fonts", label: "Original-Schriften", ok: missingFonts.length === 0, optional: true, detail: missingFonts.length ? `fehlen in ${cfg.fontsDir}: ${missingFonts.join(", ")}` : "vorhanden" });
 

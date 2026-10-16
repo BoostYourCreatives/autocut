@@ -12,6 +12,7 @@ import { runPaths } from "../util/run.ts";
 import { health } from "./health.ts";
 import { createAuth, loginPage } from "./auth.ts";
 import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
+import { pruneModelCache } from "../util/modelCache.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
@@ -176,6 +177,11 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     }
   };
   cleanup();
+  try {
+    pruneModelCache(cfg);
+  } catch {
+    /* nicht kritisch */
+  }
   const cleanupTimer = o.retentionDays ? setInterval(cleanup, 6 * 3600e3) : null;
   cleanupTimer?.unref();
 

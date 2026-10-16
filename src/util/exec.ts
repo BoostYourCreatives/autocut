@@ -44,7 +44,11 @@ export async function execOk(cmd: string, args: string[]): Promise<ExecResult> {
   const r = await exec(cmd, args);
   if (r.code !== 0) {
     const killed = r.code === -1 ? "Der Prozess wurde vom System beendet, meist wegen zu wenig Arbeitsspeicher (Railway: Settings → Resources, Metrics prüfen). " : "";
-    throw new Error(`${killed}${cmd} ${args.slice(0, 12).join(" ")} …\nExit ${r.code}\n${r.stderr.split("\n").slice(-15).join("\n")}`);
+    const lines = r.stderr.split("\n").map((l) => l.trim()).filter(Boolean);
+    const noSpace = /No space left on device|Disk quota exceeded/i.test(r.stderr);
+    const hits = lines.filter((l) => /error|invalid|cannot|unable|failed|denied|no such|not found|space left|quota/i.test(l) && !/^\[libx26[45]/.test(l)).slice(-3);
+    const why = noSpace ? "Der Speicherplatz auf dem Server ist voll (Railway: Volume vergrößern oder alte Läufe löschen). " : killed;
+    throw new Error(`${why}${hits.length ? `${cmd}: ${hits.join(" | ")}\n` : ""}${cmd} ${args.slice(0, 12).join(" ")} …\nExit ${r.code}\n${lines.slice(-15).join("\n")}`);
   }
   return r;
 }
