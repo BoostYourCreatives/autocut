@@ -31,6 +31,9 @@ ENV HOST=0.0.0.0 \
     AUTOCUT_FONTS_DIR=/data/fonts \
     AUTOCUT_CACHE_DIR=/data/cache \
     HF_HOME=/data/cache/huggingface \
+    AUTOCUT_THREADS=4 \
+    AUTOCUT_CONCURRENCY=2 \
+    OMP_NUM_THREADS=4 \
     RETENTION_DAYS=30 \
     MAX_UPLOAD_MB=500
 

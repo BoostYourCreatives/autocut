@@ -7,6 +7,7 @@ import { Plan, type BrollSlot } from "../schema/plan.ts";
 import { readJson, readJsonSchema, writeJson, ensureDir } from "../util/files.ts";
 import { log } from "../util/log.ts";
 import { timed } from "../util/runlog.ts";
+import { renderConcurrency } from "../util/threads.ts";
 import type { RunPaths } from "../util/run.ts";
 import { buildTimeline, outDuration } from "../plan/timeline.ts";
 import { anchorY, checkChin, type ChinData } from "../lib/chin.ts";
@@ -165,7 +166,7 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
   let lastPct = -1;
   await timed(runLike, "render-video", undefined, async () => {
     await renderMedia({
-      composition, serveUrl, codec: "h264", crf: P.export.zwischen.crf, outputLocation: silent, muted: true,
+      composition, serveUrl, codec: "h264", crf: P.export.zwischen.crf, outputLocation: silent, muted: true, concurrency: renderConcurrency(),
       inputProps: props as unknown as Record<string, unknown>, browserExecutable,
       onProgress: ({ progress }) => {
         const pct = Math.floor(progress * 10) * 10;

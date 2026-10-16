@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { threads } from "./threads.ts";
 
 export interface ExecResult {
   stdout: Buffer;
@@ -6,7 +7,21 @@ export interface ExecResult {
   code: number;
 }
 
-export function exec(cmd: string, args: string[]): Promise<ExecResult> {
+/** ffmpeg mit begrenzter Thread-Zahl für Decoder, Filter und Encoder (sonst nutzt es alle Kerne des Servers). */
+export function limitFfmpegThreads(args: string[], n = threads()): string[] {
+  if (args.includes("-threads")) return args;
+  const out: string[] = ["-filter_threads", String(n), "-filter_complex_threads", String(n)];
+  args.forEach((a) => {
+    if (a === "-i") out.push("-threads", String(n));
+    out.push(a);
+  });
+  // letztes Argument ist die Ausgabe: Encoder-Threads davor
+  out.splice(out.length - 1, 0, "-threads", String(n));
+  return out;
+}
+
+export function exec(cmd: string, argsIn: string[]): Promise<ExecResult> {
+  const args = cmd === "ffmpeg" ? limitFfmpegThreads(argsIn) : argsIn;
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
     const out: Buffer[] = [];
@@ -14,8 +29,12 @@ export function exec(cmd: string, args: string[]): Promise<ExecResult> {
     child.stdout.on("data", (d: Buffer) => out.push(d));
     child.stderr.on("data", (d: Buffer) => err.push(d));
     child.on("error", (e) => reject(new Error(`${cmd} konnte nicht gestartet werden: ${e.message}`)));
-    child.on("close", (code) =>
-      resolve({ stdout: Buffer.concat(out), stderr: Buffer.concat(err).toString("utf8"), code: code ?? -1 }),
+    child.on("close", (code, signal) =>
+      resolve({
+        stdout: Buffer.concat(out),
+        stderr: Buffer.concat(err).toString("utf8") + (code === null ? `\n[Prozess vom System beendet: ${signal ?? "unbekannt"}]` : ""),
+        code: code ?? -1,
+      }),
     );
   });
 }
@@ -24,7 +43,8 @@ export function exec(cmd: string, args: string[]): Promise<ExecResult> {
 export async function execOk(cmd: string, args: string[]): Promise<ExecResult> {
   const r = await exec(cmd, args);
   if (r.code !== 0) {
-    throw new Error(`${cmd} ${args.join(" ")}\nExit ${r.code}\n${r.stderr.split("\n").slice(-15).join("\n")}`);
+    const killed = r.code === -1 ? "Der Prozess wurde vom System beendet, meist wegen zu wenig Arbeitsspeicher (Railway: Settings → Resources, Metrics prüfen). " : "";
+    throw new Error(`${killed}${cmd} ${args.slice(0, 12).join(" ")} …\nExit ${r.code}\n${r.stderr.split("\n").slice(-15).join("\n")}`);
   }
   return r;
 }

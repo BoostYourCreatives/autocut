@@ -35,6 +35,7 @@ opts = vision.FaceLandmarkerOptions(
 )
 landmarker = vision.FaceLandmarker.create_from_options(opts)
 
+cv2.setNumThreads(int(os.environ.get("AUTOCUT_THREADS", "4")))
 cap = cv2.VideoCapture(a.video)
 fps = cap.get(cv2.CAP_PROP_FPS)
 w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

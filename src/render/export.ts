@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { StyleParams } from "../schema/style.ts";
 import { execOk } from "../util/exec.ts";
+import { threads } from "../util/threads.ts";
 
 /** Zielbitrate: 4400 kbit/s laut style.json, aber so gesenkt, dass die Datei unter dem Limit (30 MB) bleibt. */
 export function targetBitrateKbps(P: StyleParams, durationS: number): number {
@@ -19,12 +20,12 @@ export async function exportFinal(P: StyleParams, videoMp4: string, audioWav: st
   for (let attempt = 0; attempt < 2; attempt++) {
     await execOk("ffmpeg", [
       "-hide_banner", "-nostdin", "-y", "-i", videoMp4, "-an", "-c:v", E.codec, "-b:v", `${kbps}k`, "-preset", E.preset,
-      "-x265-params", `pass=1:stats=${stats}:log-level=error`, "-f", "null", "-",
+      "-x265-params", `pass=1:stats=${stats}:log-level=error:pools=${threads()}:frame-threads=2`, "-f", "null", "-",
     ]);
     await execOk("ffmpeg", [
       "-hide_banner", "-nostdin", "-y", "-i", videoMp4, "-i", audioWav, "-map", "0:v", "-map", "1:a",
       "-c:v", E.codec, "-b:v", `${kbps}k`, "-preset", E.preset, "-tag:v", E.tag,
-      "-x265-params", `pass=2:stats=${stats}:log-level=error`,
+      "-x265-params", `pass=2:stats=${stats}:log-level=error:pools=${threads()}:frame-threads=2`,
       "-c:a", E.audio_codec, "-b:a", `${E.audio_kbps}k`, "-ar", "48000", "-ac", "2",
       "-movflags", "+faststart", "-shortest", outFile,
     ]);

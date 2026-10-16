@@ -7,6 +7,7 @@ Ausgabe: JSON {language, duration_s, text, words:[{word,start_s,end_s}]}
 """
 import argparse
 import json
+import os
 
 from faster_whisper import WhisperModel
 
@@ -20,7 +21,7 @@ ap.add_argument("--language", default="de")
 ap.add_argument("--prompt", default=None)
 a = ap.parse_args()
 
-model = WhisperModel(a.model, device="cpu", compute_type=a.compute_type)
+model = WhisperModel(a.model, device="cpu", compute_type=a.compute_type, cpu_threads=int(os.environ.get("AUTOCUT_THREADS", "4")))
 segments, info = model.transcribe(
     a.wav,
     language=a.language,

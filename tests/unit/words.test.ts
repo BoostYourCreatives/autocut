@@ -69,3 +69,13 @@ test("parseEbur128 / parseSceneMetadata / rmsSeries", () => {
   const pcm = new Int16Array(1600).fill(16384); // 0.5 FS => -6 dB
   assert.equal(rmsSeries(pcm, 16000, 0.1)[0], -6);
 });
+
+import { limitFfmpegThreads } from "../../src/util/exec.ts";
+test("ffmpeg-Threads werden für Eingang, Filter und Ausgabe begrenzt (Container melden sonst alle Kerne des Servers)", () => {
+  const a = limitFfmpegThreads(["-hide_banner", "-y", "-i", "in.mp4", "-an", "-c:v", "libx264", "out.mp4"], 4);
+  assert.deepEqual(a.slice(0, 4), ["-filter_threads", "4", "-filter_complex_threads", "4"]);
+  assert.equal(a[a.indexOf("-i") - 2], "-threads");
+  assert.deepEqual(a.slice(-3), ["-threads", "4", "out.mp4"]);
+  // Nichts doppelt, wenn schon gesetzt
+  assert.deepEqual(limitFfmpegThreads(["-threads", "2", "-i", "a", "b"]), ["-threads", "2", "-i", "a", "b"]);
+});
