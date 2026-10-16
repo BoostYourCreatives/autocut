@@ -271,7 +271,12 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         job.events.forEach(send);
         if (job.status !== "running") return res.end();
         job.listeners.add(send);
-        req.on("close", () => job.listeners.delete(send));
+        // Keep-alive: Proxys (Railway & Co.) schließen stille Verbindungen sonst nach kurzer Zeit
+        const beat = setInterval(() => res.write(": ping\n\n"), 15000);
+        req.on("close", () => {
+          clearInterval(beat);
+          job.listeners.delete(send);
+        });
         return;
       }
       if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/plan$/))) {

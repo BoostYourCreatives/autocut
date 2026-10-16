@@ -20,7 +20,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 # Chrome Headless Shell für Remotion schon beim Bauen laden, nicht erst beim ersten Reel
-RUN npx remotion browser ensure
+RUN node --input-type=module -e "import { ensureBrowser } from '@remotion/renderer'; await ensureBrowser();"
 
 COPY . .
 
