@@ -10,6 +10,8 @@ import { summarizeRun } from "../steps/report.ts";
 import { readRunLog } from "../util/runlog.ts";
 import { runPaths } from "../util/run.ts";
 import { health } from "./health.ts";
+import { createAuth, loginPage } from "./auth.ts";
+import { assetDir, listAssets, MAX_ASSET_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
@@ -39,17 +41,48 @@ const readBody = (req: http.IncomingMessage, max = 8e6): Promise<string> =>
     req.on("error", reject);
   });
 
+/** Schreibt den Request-Body in eine Datei; bricht ab und löscht sie, wenn das Limit überschritten wird. Gibt true zurück bei Überschreitung. */
+function saveLimited(req: http.IncomingMessage, dest: string, max: number): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const ws = fs.createWriteStream(dest);
+    let n = 0;
+    let over = false;
+    req.on("data", (c: Buffer) => {
+      n += c.length;
+      if (n > max && !over) {
+        over = true;
+        req.unpipe(ws);
+        ws.destroy();
+        fs.rmSync(dest, { force: true });
+        resolve(true);
+      }
+    });
+    req.pipe(ws);
+    ws.on("finish", () => !over && resolve(false));
+    ws.on("error", (e) => (over ? undefined : reject(e)));
+    req.on("error", reject);
+  });
+}
+
 export interface ServerOptions {
   cfg: Config;
   style: Style;
   port?: number;
   host?: string;
   llm?: LlmClient;
+  /** Gemeinsames Passwort; ohne Passwort ist die Oberfläche offen (nur lokal sinnvoll) */
+  password?: string;
+  /** Größtes erlaubtes Video in MB */
+  maxUploadMb?: number;
+  /** Läufe älter als so viele Tage werden automatisch gelöscht (0 = nie) */
+  retentionDays?: number;
 }
 
 export function startServer(o: ServerOptions): Promise<{ server: http.Server; url: string; jobs: JobRunner }> {
   const { cfg, style } = o;
   const jobs = new JobRunner(cfg, style, o.llm);
+  const auth = createAuth(o.password);
+  const maxUpload = (o.maxUploadMb ?? 500) * 1024 * 1024;
   const runDir = (name: string) => runPaths(cfg, name).dir;
   const validName = (n: string) => /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(n);
 
@@ -130,17 +163,61 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     return out;
   };
 
+  const cleanup = () => {
+    if (!o.retentionDays || !fs.existsSync(cfg.runsPath)) return;
+    const limit = Date.now() - o.retentionDays * 864e5;
+    for (const d of fs.readdirSync(cfg.runsPath, { withFileTypes: true })) {
+      if (!d.isDirectory() || jobs.busyRun === d.name) continue;
+      const f = path.join(cfg.runsPath, d.name, "run.json");
+      if (fs.existsSync(f) && fs.statSync(f).mtimeMs < limit) fs.rmSync(path.join(cfg.runsPath, d.name), { recursive: true, force: true });
+    }
+  };
+  cleanup();
+  const cleanupTimer = o.retentionDays ? setInterval(cleanup, 6 * 3600e3) : null;
+  cleanupTimer?.unref();
+
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? "/", "http://localhost");
       const p = url.pathname;
       const m = (re: RegExp) => p.match(re);
 
+      // ---- offen: Gesundheitscheck der Plattform, Anmeldung ----
+      if (p === "/healthz") {
+        res.writeHead(200, { "content-type": "text/plain" });
+        return res.end("ok");
+      }
+      if (p === "/login") {
+        if (req.method === "POST") {
+          const body = new URLSearchParams(await readBody(req, 4096));
+          const r = auth.login(req, body.get("password") ?? "");
+          if (r.ok) {
+            res.writeHead(303, { location: "/", "set-cookie": r.cookie });
+            return res.end();
+          }
+          res.writeHead(r.locked ? 429 : 401, { "content-type": "text/html; charset=utf-8" });
+          return res.end(loginPage(r.locked ? "Zu viele Versuche. Bitte in 15 Minuten erneut versuchen." : "Passwort falsch."));
+        }
+        res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+        return res.end(loginPage());
+      }
+      if (p === "/logout" && req.method === "POST") {
+        res.writeHead(303, { location: "/login", "set-cookie": auth.logoutCookie(req) });
+        return res.end();
+      }
+      // ---- alles andere nur angemeldet ----
+      if (!auth.isAuthed(req)) {
+        if (p.startsWith("/api/") || p.startsWith("/media/")) return json(res, 401, { error: "Nicht angemeldet" });
+        res.writeHead(303, { location: "/login" });
+        return res.end();
+      }
+      if (req.method !== "GET" && !auth.sameOrigin(req)) return json(res, 403, { error: "Anfrage von fremder Seite abgelehnt" });
+
       if (req.method === "GET" && p === "/") {
         res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
         return res.end(fs.readFileSync(path.join(ROOT, "src", "ui", "index.html")));
       }
-      if (req.method === "GET" && p === "/api/health") return json(res, 200, { items: await health(cfg, style), busy: jobs.busyRun });
+      if (req.method === "GET" && p === "/api/health") return json(res, 200, { items: await health(cfg, style), busy: jobs.busyRun, auth: auth.enabled });
       if (req.method === "GET" && p === "/api/runs") return json(res, 200, listRuns());
 
       if (req.method === "POST" && p === "/api/upload") {
@@ -151,13 +228,19 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         const inDir = path.join(runDir(name), "input");
         fs.mkdirSync(inDir, { recursive: true });
         const dest = path.join(inDir, filename.replace(/[^A-Za-z0-9._-]+/g, "_"));
-        await new Promise<void>((resolve, reject) => {
-          const ws = fs.createWriteStream(dest);
-          req.pipe(ws);
-          ws.on("finish", () => resolve());
-          ws.on("error", reject);
-          req.on("error", reject);
-        });
+        if (!/\.(mp4|mov|m4v)$/i.test(dest)) {
+          fs.rmSync(runDir(name), { recursive: true, force: true });
+          return json(res, 415, { error: "Bitte ein Video als mp4 oder mov hochladen." });
+        }
+        if (Number(req.headers["content-length"] ?? 0) > maxUpload) {
+          fs.rmSync(runDir(name), { recursive: true, force: true });
+          return json(res, 413, { error: `Das Video ist größer als ${Math.round(maxUpload / 1048576)} MB.` });
+        }
+        const tooBig = await saveLimited(req, dest, maxUpload);
+        if (tooBig) {
+          fs.rmSync(runDir(name), { recursive: true, force: true });
+          return json(res, 413, { error: `Das Video ist größer als ${Math.round(maxUpload / 1048576)} MB.` });
+        }
         const jo: JobOptions = {
           precut: opts.precut === undefined ? "auto" : opts.precut,
           provider: opts.provider ?? "auto",
@@ -251,6 +334,22 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
           return json(res, 409, { error: (e as Error).message });
         }
         return json(res, 200, { started: true });
+      }
+
+      if (p === "/api/assets") {
+        const kind = url.searchParams.get("kind") as AssetKind | null;
+        if (req.method === "GET") return json(res, 200, listAssets(cfg, style));
+        if ((kind !== "sfx" && kind !== "fonts") || !["POST", "DELETE"].includes(req.method ?? "")) return json(res, 400, { error: "kind=sfx|fonts angeben" });
+        const name = safeAssetName(kind, url.searchParams.get("filename") ?? "");
+        if (!name) return json(res, 415, { error: kind === "sfx" ? "Nur Audiodateien (mp3, wav, m4a, aiff, flac, ogg)." : "Nur Schriftdateien (ttf, otf)." });
+        const dest = path.join(assetDir(cfg, kind), name);
+        if (req.method === "DELETE") {
+          fs.rmSync(dest, { force: true });
+          return json(res, 200, listAssets(cfg, style));
+        }
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        if (await saveLimited(req, dest, MAX_ASSET_MB * 1048576)) return json(res, 413, { error: `Datei größer als ${MAX_ASSET_MB} MB.` });
+        return json(res, 200, listAssets(cfg, style));
       }
 
       if (req.method === "GET" && (mm = m(/^\/media\/([^/]+)\/(.+)$/))) {

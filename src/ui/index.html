@@ -68,7 +68,7 @@
 </style>
 </head>
 <body>
-<header><span class="dot"></span><h1>autocut</h1><span class="sub">Rohvideo rein, fertig geschnittenes Reel raus (Thorsten Wittmann)</span></header>
+<header><span class="dot"></span><h1>autocut</h1><span class="sub">Rohvideo rein, fertig geschnittenes Reel raus (Thorsten Wittmann)</span><form method="post" action="/logout" id="logout" style="margin-left:auto;display:none"><button>Abmelden</button></form></header>
 <main>
   <aside>
     <section class="card">
@@ -89,6 +89,17 @@
     </section>
     <section class="card runs"><h2>Läufe</h2><div id="runs"><div class="muted">Noch keine.</div></div></section>
     <section class="card health"><h2>System-Check</h2><ul id="health"></ul></section>
+    <section class="card">
+      <h2>Soundeffekte und Schriften</h2>
+      <div class="hint" style="margin:0 0 8px">Diese Dateien liegen auf dem Server und werden für jedes Reel gebraucht. Einmal hochladen genügt.</div>
+      <ul id="assetNeed" style="list-style:none;margin:0;padding:0;font-size:13px"></ul>
+      <label>Soundeffekte hinzufügen (mp3, wav, …)</label>
+      <input type="file" id="sfxFiles" multiple accept="audio/*,.mp3,.wav,.m4a,.aif,.aiff,.flac,.ogg">
+      <label>Schriften hinzufügen (ttf, otf)</label>
+      <input type="file" id="fontFiles" multiple accept=".ttf,.otf">
+      <div class="hint" id="assetMsg"></div>
+      <details data-k="assets" style="margin-top:8px"><summary style="font-size:13px">Vorhandene Dateien</summary><div id="assetList" class="hint"></div></details>
+    </section>
   </aside>
 
   <section id="detail"><div class="card empty">Links ein Reel hochladen oder einen Lauf auswählen.</div></section>
@@ -117,7 +128,8 @@ async function api(path, opts) {
 
 // ---------- System-Check ----------
 async function loadHealth() {
-  const { items, busy } = await api('/api/health');
+  const { items, busy, auth } = await api('/api/health');
+  $('logout').style.display = auth ? '' : 'none';
   const ul = $('health'); ul.replaceChildren();
   for (const i of items) {
     ul.append(el('li', {}, el('span', { class: 'i', text: i.ok ? '✓' : (i.optional ? '!' : '✗'), style: `color:var(--${i.ok ? 'ok' : i.optional ? 'warn' : 'bad'})` }),
@@ -292,7 +304,29 @@ async function replan() {
   try { await api(`/api/runs/${current}/replan`, { method: 'POST', body: JSON.stringify({ selfcheck: $('sc2').checked }) }); await select(current); } catch (e) { $('planMsg').textContent = e.message; }
 }
 
-loadHealth(); loadRuns(); setInterval(() => { loadRuns(); loadHealth(); }, 8000);
+// ---------- Soundeffekte und Schriften ----------
+async function loadAssets() {
+  const a = await api('/api/assets');
+  const ul = $('assetNeed'); ul.replaceChildren();
+  const rows = [...a.missing.sfx.map((n) => [false, n]), ...a.missing.fonts.map((n) => [false, n])];
+  if (!rows.length) ul.append(el('li', { text: '✓ Alles Nötige ist vorhanden.', style: 'color:var(--ok)' }));
+  for (const [, n] of rows) ul.append(el('li', { text: `✗ fehlt: ${n}`, style: 'color:var(--bad)' }));
+  $('assetList').replaceChildren(el('div', { text: `Soundeffekte (${a.sfx.length}): ${a.sfx.map((x) => x.file).join(', ') || '–'}` }), el('div', { text: `Schriften (${a.fonts.length}): ${a.fonts.map((x) => x.file).join(', ') || '–'}`, style: 'margin-top:4px' }));
+}
+async function uploadAssets(kind, input) {
+  const files = [...input.files]; if (!files.length) return;
+  for (const [i, f] of files.entries()) {
+    $('assetMsg').textContent = `Lade ${f.name} hoch (${i + 1}/${files.length}) …`;
+    try { await api(`/api/assets?kind=${kind}&filename=${encodeURIComponent(f.name)}`, { method: 'POST', body: f }); }
+    catch (e) { $('assetMsg').textContent = `${f.name}: ${e.message}`; input.value = ''; return; }
+  }
+  input.value = ''; $('assetMsg').textContent = 'Fertig hochgeladen.';
+  await loadAssets(); await loadHealth();
+}
+$('sfxFiles').addEventListener('change', (e) => uploadAssets('sfx', e.target));
+$('fontFiles').addEventListener('change', (e) => uploadAssets('fonts', e.target));
+
+loadHealth(); loadRuns(); loadAssets(); setInterval(() => { loadRuns(); loadHealth(); }, 8000);
 </script>
 </body>
 </html>

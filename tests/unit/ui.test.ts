@@ -63,3 +63,81 @@ test("Laufbericht: Dauer, Tokens und Kosten je Schritt", () => {
   assert.match(md, /\$0\.05/);
   writeJson(path.join(TMP, "x.json"), {});
 });
+
+// ---------------- öffentlicher Betrieb: Passwort, Assets, Upload-Limit ----------------
+const cfg2: Config = { ...cfg, runsPath: path.join(TMP, "runs2"), sfxLibrary: path.join(TMP, "sfx2"), fontsDir: path.join(TMP, "fonts2") };
+const pub = await startServer({ cfg: cfg2, style, port: 0, password: "geheim123", maxUploadMb: 1 });
+after(() => pub.server.close());
+const raw = (p: string, init?: RequestInit) => fetch(pub.url + p, { redirect: "manual", ...init });
+
+test("Öffentlich: ohne Anmeldung kein Zugriff (API 401, Seite leitet auf /login), /healthz bleibt offen", async () => {
+  assert.equal((await raw("/api/runs")).status, 401);
+  const home = await raw("/");
+  assert.equal(home.status, 303);
+  assert.equal(home.headers.get("location"), "/login");
+  assert.equal((await raw("/healthz")).status, 200);
+  assert.equal((await raw("/media/x/y.mp4")).status, 401);
+});
+
+test("Öffentlich: falsches Passwort wird abgelehnt, richtiges setzt ein HttpOnly-Cookie und gibt Zugriff", async () => {
+  const bad = await raw("/login", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: "password=falsch" });
+  assert.equal(bad.status, 401);
+  assert.ok(!bad.headers.get("set-cookie"));
+  const ok = await raw("/login", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: "password=geheim123" });
+  assert.equal(ok.status, 303);
+  const cookie = ok.headers.get("set-cookie")!;
+  assert.match(cookie, /HttpOnly/);
+  assert.match(cookie, /SameSite=Lax/);
+  const c = cookie.split(";")[0]!;
+  const runs = await raw("/api/runs", { headers: { cookie: c } });
+  assert.equal(runs.status, 200);
+  // manipuliertes Cookie
+  const forged = await raw("/api/runs", { headers: { cookie: c.slice(0, -2) + "00" } });
+  assert.equal(forged.status, 401);
+});
+
+test("Öffentlich: nach 10 Fehlversuchen wird gesperrt (auch mit richtigem Passwort)", async () => {
+  const hdr = { "content-type": "application/x-www-form-urlencoded", "x-forwarded-for": "9.9.9.9" };
+  for (let i = 0; i < 10; i++) await raw("/login", { method: "POST", headers: hdr, body: "password=x" });
+  const locked = await raw("/login", { method: "POST", headers: hdr, body: "password=geheim123" });
+  assert.equal(locked.status, 429);
+});
+
+async function session() {
+  const ok = await raw("/login", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded", "x-forwarded-for": "1.2.3.4" }, body: "password=geheim123" });
+  return ok.headers.get("set-cookie")!.split(";")[0]!;
+}
+
+test("Öffentlich: Fremde Herkunft (CSRF) wird bei schreibenden Anfragen abgelehnt", async () => {
+  const c = await session();
+  const r = await raw("/api/runs/x/replan", { method: "POST", headers: { cookie: c, origin: "https://boese.example" }, body: "{}" });
+  assert.equal(r.status, 403);
+});
+
+test("Assets: Soundeffekte und Schriften hochladen, listen, Fehlendes wird angezeigt, falsche Dateitypen und Pfade werden abgewiesen", async () => {
+  const c = await session();
+  const up = (kind: string, name: string, body: string) => raw(`/api/assets?kind=${kind}&filename=${encodeURIComponent(name)}`, { method: "POST", headers: { cookie: c }, body });
+  assert.equal((await up("sfx", "Riser.mp3", "abc")).status, 200);
+  assert.equal((await up("fonts", "Helvetica-Bold.ttf", "abc")).status, 200);
+  assert.equal((await up("sfx", "virus.exe", "abc")).status, 415);
+  assert.equal((await up("fonts", "Riser.mp3", "abc")).status, 415);
+  // Pfad im Namen wird auf den Dateinamen reduziert und landet nicht außerhalb
+  assert.equal((await up("sfx", "../../evil.mp3", "abc")).status, 200);
+  assert.ok(fs.existsSync(path.join(cfg2.sfxLibrary, "evil.mp3")));
+  assert.ok(!fs.existsSync(path.join(TMP, "evil.mp3")));
+  const list = await (await raw("/api/assets", { headers: { cookie: c } })).json();
+  assert.ok(list.sfx.some((f: { file: string }) => f.file === "Riser.mp3"));
+  assert.ok(list.missing.sfx.includes("Fuwa.mp3") && !list.missing.sfx.includes("Riser.mp3"));
+  assert.ok(list.missing.fonts.includes("SegoePro-BoldItalic.ttf") && !list.missing.fonts.includes("Helvetica-Bold.ttf"));
+});
+
+test("Upload-Limit: zu großes Video wird abgewiesen, kein Run bleibt zurück; falscher Dateityp ebenso", async () => {
+  const c = await session();
+  const big = Buffer.alloc(2 * 1024 * 1024, 1);
+  const r = await raw(`/api/upload?filename=x.mp4&o=${encodeURIComponent("{}")}`, { method: "POST", headers: { cookie: c }, body: big });
+  assert.equal(r.status, 413);
+  const t = await raw(`/api/upload?filename=x.txt&o=${encodeURIComponent("{}")}`, { method: "POST", headers: { cookie: c }, body: "hallo" });
+  assert.equal(t.status, 415);
+  const runs = await (await raw("/api/runs", { headers: { cookie: c } })).json();
+  assert.deepEqual(runs, []);
+});

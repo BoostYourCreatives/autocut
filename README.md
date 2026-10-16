@@ -52,8 +52,8 @@ danach Video zum Abspielen, „Hier genauer hinschauen“ (Klick auf die Zeit sp
 Dauer/Kosten sowie einen **Plan-Editor** (Prüfen, Speichern und neu rendern, oder Claude neu planen lassen). Der System-Check links zeigt, was auf dem Rechner noch fehlt.
 Die Oberfläche läuft lokal (nur 127.0.0.1) und ruft dieselben Schritte auf wie die CLI. Es läuft immer nur ein Lauf gleichzeitig.
 
-Warum nicht auf Vercel: Das Video-Rendern braucht ffmpeg, Chromium und mehrere Minuten Rechenzeit pro Reel, das passt nicht in Vercels Serverless-Funktionen.
-Eine gehostete Version wäre: Oberfläche auf Vercel + ein eigener Render-Rechner (Docker auf einem Server) + Dateispeicher. Das ist ein eigener Ausbauschritt.
+Öffentlich betreiben: siehe [docs/DEPLOY.md](docs/DEPLOY.md) (Dockerfile, Passwortschutz, Anbietervergleich, Anleitung für Railway und Hetzner).
+Warum nicht auf Vercel: Das Rendern braucht ffmpeg, Chromium und mehrere Minuten Rechenzeit pro Reel, das passt nicht in Serverless-Funktionen.
 
 ## Testbefehl für den kompletten Durchlauf
 

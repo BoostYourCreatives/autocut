@@ -223,11 +223,23 @@ program
 program
   .command("ui")
   .description("Web-Oberfläche zum Testen starten (läuft lokal auf diesem Rechner)")
-  .option("--port <n>", "Port", "3000")
+  .option("--port <n>", "Port (Standard: Umgebungsvariable PORT oder 3000)")
+  .option("--host <adresse>", "Adresse (Standard: Umgebungsvariable HOST oder 127.0.0.1; im Internet 0.0.0.0)")
   .action(async (o) => {
     const cfg = loadConfig();
-    const { url } = await startServer({ cfg, style: loadStyle(cfg), port: parseInt(o.port, 10) });
-    console.log(`\nautocut läuft: ${url}\nZum Beenden: Strg+C`);
+    const env = process.env;
+    const host = o.host ?? env.HOST ?? "127.0.0.1";
+    const password = env.APP_PASSWORD || undefined;
+    const isLocal = host === "127.0.0.1" || host === "localhost" || host === "::1";
+    if (!isLocal && !password && env.AUTOCUT_ALLOW_OPEN !== "1") {
+      throw new Error("Öffentlicher Betrieb (HOST=" + host + ") braucht ein Passwort: APP_PASSWORD setzen. (Nur zum Testen: AUTOCUT_ALLOW_OPEN=1)");
+    }
+    const retention = env.RETENTION_DAYS ? parseInt(env.RETENTION_DAYS, 10) : 0;
+    const { url } = await startServer({
+      cfg, style: loadStyle(cfg), host, port: parseInt(o.port ?? env.PORT ?? "3000", 10),
+      password, maxUploadMb: env.MAX_UPLOAD_MB ? parseInt(env.MAX_UPLOAD_MB, 10) : undefined, retentionDays: retention || undefined,
+    });
+    console.log(`\nautocut läuft: ${url}${password ? " (Passwortschutz an)" : ""}${retention ? `, Läufe werden nach ${retention} Tagen gelöscht` : ""}\nZum Beenden: Strg+C`);
   });
 
 program

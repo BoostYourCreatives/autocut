@@ -18,7 +18,7 @@ import { readRunLog } from "../../src/util/runlog.ts";
  *   Ton 0.0-1.0 | Stille 1.0-1.6 | Ton 1.6-2.6 | leise 2.6-2.9 (ca. -31 dBFS RMS, Atmer-Kandidat) | Ton 2.9-4.0
  *   Bild: blau bis 2.0 s, dann hart gelb (Szenenwechsel bei 2.0 s)
  */
-const TMP = path.join(ROOT, "tests", ".tmp");
+const TMP = path.join(ROOT, "tests", ".tmp", "m1");
 let cfg: Config;
 
 before(async () => {

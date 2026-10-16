@@ -1,0 +1,11 @@
+node_modules
+.git
+.env
+runs
+dev-assets
+tests/.tmp
+tests/videos/*.mp4
+tests/videos/*.mov
+assets/fonts/*.ttf
+assets/fonts/*.otf
+*.log

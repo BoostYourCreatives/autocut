@@ -22,7 +22,7 @@ ap.add_argument("out")
 ap.add_argument("--every", type=int, default=3)
 a = ap.parse_args()
 
-cache = os.path.expanduser("~/.cache/autocut")
+cache = os.environ.get("AUTOCUT_CACHE_DIR") or os.path.expanduser("~/.cache/autocut")
 os.makedirs(cache, exist_ok=True)
 model_path = os.path.join(cache, "face_landmarker.task")
 if not os.path.exists(model_path):
