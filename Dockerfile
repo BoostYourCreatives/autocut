@@ -34,7 +34,7 @@ ENV HOST=0.0.0.0 \
     RETENTION_DAYS=30 \
     MAX_UPLOAD_MB=500
 
-VOLUME ["/data"]
+# /data wird vom Anbieter als Volume eingehängt (Railway: im Dashboard anlegen; eigener Server: docker run -v)
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
