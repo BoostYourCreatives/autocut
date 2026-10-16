@@ -28,7 +28,7 @@ ENV HOST=0.0.0.0 \
     PORT=3000 \
     AUTOCUT_RUNS_DIR=/data/runs \
     AUTOCUT_SFX_LIBRARY=/data/sfx \
-    AUTOCUT_FONTS_DIR=/data/fonts \
+    AUTOCUT_FONTS_DIR=/data/fonts AUTOCUT_BROLL_LIBRARY=/data/broll \
     AUTOCUT_CACHE_DIR=/data/cache \
     HF_HOME=/data/cache/huggingface \
     AUTOCUT_THREADS=4 \

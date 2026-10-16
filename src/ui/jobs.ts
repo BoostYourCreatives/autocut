@@ -9,9 +9,11 @@ import { measureChin } from "../steps/chin.ts";
 import { plan, planPaths, PlanFailedError } from "../steps/plan.ts";
 import { deliver } from "../steps/deliver.ts";
 import { validatePlanFile } from "../steps/check.ts";
+import { sourceBroll } from "../steps/broll.ts";
 import { writeRunReport } from "../steps/report.ts";
 import { log, logListeners } from "../util/log.ts";
 import { runPaths } from "../util/run.ts";
+import { timed } from "../util/runlog.ts";
 import { exec } from "../util/exec.ts";
 import { writeJson } from "../util/files.ts";
 
@@ -21,6 +23,9 @@ export interface JobOptions {
   precut: "auto" | boolean;
   provider: "auto" | "openai" | "faster-whisper";
   selfcheck: boolean;
+  /** B-Roll aus der eigenen Bibliothek / von Pexels und Pixabay. Beides aus = keine B-Rolls. */
+  brollOwn?: boolean;
+  brollStock?: boolean;
   video?: string;
 }
 
@@ -40,7 +45,7 @@ export interface Job {
   listeners: Set<(e: JobEvent) => void>;
 }
 
-export const STEP_ORDER = ["ingest", "transcribe", "analyze", "chin", "plan", "render"] as const;
+export const STEP_ORDER = ["ingest", "transcribe", "analyze", "chin", "plan", "broll", "render"] as const;
 
 export class JobRunner {
   jobs = new Map<string, Job>();
@@ -59,6 +64,12 @@ export class JobRunner {
   /** Startet im Hintergrund. Es läuft immer nur ein Job (Rendern belegt den Rechner). */
   start(run: string, kind: Job["kind"], opts: JobOptions, source?: string): Job {
     if (this.busy) throw new Error(`Es läuft schon ein Lauf (${this.busy}). Bitte warten, bis er fertig ist.`);
+    // B-Roll-Wahl pro Lauf merken, damit "Neu planen" dieselbe Wahl verwendet
+    const wahl = path.join(runPaths(this.cfg, run).dir, "broll-wahl.json");
+    if (opts.brollOwn === undefined && opts.brollStock === undefined && fs.existsSync(wahl)) {
+      const w = JSON.parse(fs.readFileSync(wahl, "utf8")) as { own?: boolean; stock?: boolean };
+      opts = { ...opts, brollOwn: !!w.own, brollStock: !!w.stock };
+    } else writeJson(wahl, { own: !!opts.brollOwn, stock: !!opts.brollStock });
     const job: Job = { run, kind, status: "running", current: null, error: null, events: [], listeners: new Set() };
     // Marker: bleibt er nach einem Neustart liegen, wurde der Lauf unterbrochen (z. B. Container wegen Speicher beendet)
     writeJson(path.join(runPaths(this.cfg, run).dir, "job.json"), { kind, started_at: new Date().toISOString() });
@@ -97,6 +108,9 @@ export class JobRunner {
       }
       if (job.kind === "pipeline" || job.kind === "replan") {
         await step("plan", () => plan(cfg, style, job.run, { llm: this.llm, transition: opts.transition, hookLines: opts.hookLines, video: opts.video }));
+      }
+      if (job.kind === "pipeline" || job.kind === "replan") {
+        await step("broll", () => timed(run, "broll", undefined, async () => ({ value: await sourceBroll(cfg, run, planFile, { own: !!opts.brollOwn, stock: !!opts.brollStock, llm: this.llm }) })));
       }
       // rerender/pipeline/replan: Validator ist schon bestanden bzw. wird hier erneut geprüft
       const v = validatePlanFile(cfg, style, planFile).result;

@@ -50,6 +50,7 @@ export function attentionItems(plan: Plan, validation: ValidationResult | null, 
   for (const z of plan.zooms) if (low(z.confidence)) add(z.start_s, `Zoom auf ${z.to_scale.toString().replace(".", ",")}: ${z.reason}`, W[z.confidence]);
   for (const b of plan.broll) {
     if (b.source.kind === "offen") add(b.start_s, `B-Roll „${b.motif}“ hat noch keine Quelle${b.covers_ai_error ? " (deckt einen KI-Fehler ab, muss ergänzt werden)" : ""}`, b.covers_ai_error ? -1 : 0.5);
+    else if (b.source.kind === "stock_ordner") add(b.start_s, `B-Roll „${b.motif}“: Stock-Video wurde automatisch gewählt, bitte prüfen, ob es passt`, 0.4);
     else if (low(b.confidence)) add(b.start_s, `B-Roll „${b.motif}“: ${b.reason}`, W[b.confidence]);
   }
   for (const s of plan.sfx) if (low(s.confidence)) add(Math.max(0, s.at_s), `Soundeffekt ${s.file}: ${s.reason}`, W[s.confidence]);

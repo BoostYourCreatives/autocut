@@ -83,6 +83,10 @@
       <select id="transition"><option value="auto">Claude entscheidet nach Inhalt</option><option value="blitz">Immer Blitz + Riser</option><option value="hart">Immer harter Schnitt</option></select>
       <label>Material</label>
       <select id="precut"><option value="auto">automatisch erkennen</option><option value="ja">schon vorgeschnitten und gezoomt</option><option value="nein">roh, ungeschnitten</option></select>
+      <label>B-Rolls</label>
+      <label class="check"><input type="checkbox" id="brollOwn"> Eigene B-Rolls verwenden (aus deiner Bibliothek)</label>
+      <label class="check"><input type="checkbox" id="brollStock"> Stock-B-Rolls verwenden (Pexels und Pixabay)</label>
+      <div class="hint">Nichts angehakt: Das Reel bekommt keine B-Rolls. Beides: erst eigene, sonst Stock.</div>
       <label class="check"><input type="checkbox" id="selfcheck" checked> Nach dem Rendern von Claude prüfen lassen</label>
       <button class="primary" id="start" disabled>Starten</button>
       <div class="hint" id="startHint"></div>
@@ -95,6 +99,9 @@
       <ul id="assetNeed" style="list-style:none;margin:0;padding:0;font-size:13px"></ul>
       <label>Soundeffekte hinzufügen (mp3, wav, …)</label>
       <input type="file" id="sfxFiles" multiple accept="audio/*,.mp3,.wav,.m4a,.aif,.aiff,.flac,.ogg">
+      <label>Eigene B-Roll-Videos hinzufügen (mp4, mov)</label>
+      <input type="file" id="brollFiles" multiple accept="video/*,.mp4,.mov,.m4v,.webm">
+      <div class="hint">Benenne die Dateien so, dass man das Motiv erkennt, z. B. „baustelle-kran.mp4“. Daran findet Claude die passende Datei.</div>
       <label>Schriften hinzufügen (ttf, otf)</label>
       <input type="file" id="fontFiles" multiple accept=".ttf,.otf">
       <div class="hint" id="assetMsg"></div>
@@ -161,6 +168,7 @@ $('start').addEventListener('click', async () => {
     transition: $('transition').value,
     precut: { auto: 'auto', ja: true, nein: false }[$('precut').value],
     selfcheck: $('selfcheck').checked,
+    brollOwn: $('brollOwn').checked, brollStock: $('brollStock').checked,
     hook1: $('hook1').value.trim() || undefined, hook2: $('hook2').value.trim() || undefined,
   };
   try {
@@ -315,7 +323,7 @@ async function loadAssets() {
   const rows = [...a.missing.sfx.map((n) => [false, n]), ...a.missing.fonts.map((n) => [false, n])];
   if (!rows.length) ul.append(el('li', { text: '✓ Alles Nötige ist vorhanden.', style: 'color:var(--ok)' }));
   for (const [, n] of rows) ul.append(el('li', { text: `✗ fehlt: ${n}`, style: 'color:var(--bad)' }));
-  $('assetList').replaceChildren(el('div', { text: `Soundeffekte (${a.sfx.length}): ${a.sfx.map((x) => x.file).join(', ') || '–'}` }), el('div', { text: `Schriften (${a.fonts.length}): ${a.fonts.map((x) => x.file).join(', ') || '–'}`, style: 'margin-top:4px' }));
+  $('assetList').replaceChildren(el('div', { text: `Soundeffekte (${a.sfx.length}): ${a.sfx.map((x) => x.file).join(', ') || '–'}` }), el('div', { text: `Eigene B-Rolls (${a.broll.length}): ${a.broll.map((x) => x.file).join(', ') || '–'}`, style: 'margin-top:4px' }), el('div', { text: `Schriften (${a.fonts.length}): ${a.fonts.map((x) => x.file).join(', ') || '–'}`, style: 'margin-top:4px' }));
 }
 async function uploadAssets(kind, input) {
   const files = [...input.files]; if (!files.length) return;
@@ -328,6 +336,7 @@ async function uploadAssets(kind, input) {
   await loadAssets(); await loadHealth();
 }
 $('sfxFiles').addEventListener('change', (e) => uploadAssets('sfx', e.target));
+$('brollFiles').addEventListener('change', (e) => uploadAssets('broll', e.target));
 $('fontFiles').addEventListener('change', (e) => uploadAssets('fonts', e.target));
 
 loadHealth(); loadRuns(); loadAssets(); setInterval(() => { loadRuns(); loadHealth(); }, 8000);

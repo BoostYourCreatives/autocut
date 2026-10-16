@@ -45,7 +45,7 @@ test("UI: Lauf erscheint in der Liste, Detail zeigt Schritte, ungültiger Plan w
   const runs = JSON.parse((await get("/api/runs")).body);
   assert.deepEqual(runs.map((r: { name: string }) => r.name), ["demo"]);
   const d = JSON.parse((await get("/api/runs/demo")).body);
-  assert.deepEqual(d.steps.map((s: { key: string; status: string }) => [s.key, s.status]), [["ingest", "ok"], ["transcribe", "pending"], ["analyze", "pending"], ["chin", "pending"], ["plan", "ok"], ["render", "pending"]]);
+  assert.deepEqual(d.steps.map((s: { key: string; status: string }) => [s.key, s.status]), [["ingest", "ok"], ["transcribe", "pending"], ["analyze", "pending"], ["chin", "pending"], ["plan", "ok"], ["broll", "pending"], ["render", "pending"]]);
   assert.equal(d.summary.cost_usd, 0.05);
   const bad = await fetch(`${srv.url}/api/runs/demo/plan/check`, { method: "POST", body: "{kaputt" });
   assert.equal(bad.status, 422);

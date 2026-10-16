@@ -11,7 +11,7 @@ import { readRunLog } from "../util/runlog.ts";
 import { runPaths } from "../util/run.ts";
 import { health } from "./health.ts";
 import { createAuth, loginPage } from "./auth.ts";
-import { assetDir, listAssets, MAX_ASSET_MB, safeAssetName, type AssetKind } from "./assets.ts";
+import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
@@ -19,6 +19,7 @@ const STEP_LABEL: Record<string, string> = {
   transcribe: "Transkription",
   analyze: "Analyse",
   chin: "Kinn-Messung",
+  broll: "B-Rolls",
   plan: "Schnittplan",
   render: "Video bauen",
 };
@@ -107,7 +108,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     if (!fs.existsSync(path.join(dir, "run.json"))) return null;
     const job = jobs.jobs.get(name);
     const log = readRunLog(runPaths(cfg, name));
-    const uiStep = (s: string) => (s.startsWith("render") || s === "selfcheck" ? "render" : s);
+    const uiStep = (s: string) => (s.startsWith("render") || s === "selfcheck" ? "render" : s.startsWith("broll") ? "broll" : s);
     const steps = STEP_ORDER.map((key) => {
       const entries = log.steps.filter((s) => uiStep(s.step) === key);
       const last = entries[entries.length - 1];
@@ -138,7 +139,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         for (const r of plan.removed) if (!["pause", "leerlauf_anfang", "leerlauf_ende"].includes(r.kind)) dec.push({ t_s: tlOut(r.raw_from_s), typ: r.kind, text: `${r.raw_from_s.toFixed(1)}–${r.raw_to_s.toFixed(1)} s Rohzeit entfernt`, reason: r.reason, confidence: r.confidence });
         for (const c of plan.captions) if (c.kind !== "weiss" && c.layout !== "stack_oben" && c.layout !== "stack_unten" && c.layout !== "liste_kopf") dec.push({ t_s: c.start_s, typ: c.kind === "gold" ? "Gold" : c.kind === "cta" ? "CTA" : "Zitat", text: c.text, reason: c.reason, confidence: c.confidence });
         for (const z of plan.zooms) dec.push({ t_s: z.start_s, typ: "Zoom", text: `auf ${z.to_scale}`, reason: z.reason, confidence: z.confidence });
-        for (const b of plan.broll) dec.push({ t_s: b.start_s, typ: "B-Roll", text: b.motif + (b.source.kind === "offen" ? " (Quelle offen)" : ""), reason: b.reason, confidence: b.confidence });
+        for (const b of plan.broll) dec.push({ t_s: b.start_s, typ: "B-Roll", text: b.motif + (b.source.kind === "offen" ? " (kein Video)" : "info" in b.source && b.source.info ? ` (${b.source.info})` : ""), reason: b.reason, confidence: b.confidence });
         for (const s of plan.sfx) if (!["riser", "shutter"].includes(s.role)) dec.push({ t_s: Math.max(0, s.at_s), typ: "Sound", text: s.file, reason: s.reason, confidence: s.confidence });
         out.decisions = dec.sort((a, b) => a.t_s - b.t_s);
         const outDir = path.join(runDir(name), "out");
@@ -247,6 +248,8 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
           precut: opts.precut === undefined ? "auto" : opts.precut,
           provider: opts.provider ?? "auto",
           selfcheck: opts.selfcheck !== false,
+          brollOwn: opts.brollOwn === true,
+          brollStock: opts.brollStock === true,
           transition: opts.transition === "blitz" ? "blitz_riser" : opts.transition === "hart" ? "hart" : undefined,
           hookLines: opts.hook1 && opts.hook2 ? [opts.hook1, opts.hook2] : undefined,
           video: `TW_Reel_${name}`,
@@ -346,16 +349,17 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       if (p === "/api/assets") {
         const kind = url.searchParams.get("kind") as AssetKind | null;
         if (req.method === "GET") return json(res, 200, listAssets(cfg, style));
-        if ((kind !== "sfx" && kind !== "fonts") || !["POST", "DELETE"].includes(req.method ?? "")) return json(res, 400, { error: "kind=sfx|fonts angeben" });
+        if ((kind !== "sfx" && kind !== "fonts" && kind !== "broll") || !["POST", "DELETE"].includes(req.method ?? "")) return json(res, 400, { error: "kind=sfx|fonts|broll angeben" });
         const name = safeAssetName(kind, url.searchParams.get("filename") ?? "");
-        if (!name) return json(res, 415, { error: kind === "sfx" ? "Nur Audiodateien (mp3, wav, m4a, aiff, flac, ogg)." : "Nur Schriftdateien (ttf, otf)." });
+        if (!name) return json(res, 415, { error: kind === "sfx" ? "Nur Audiodateien (mp3, wav, m4a, aiff, flac, ogg)." : kind === "broll" ? "Nur Videodateien (mp4, mov, m4v, webm)." : "Nur Schriftdateien (ttf, otf)." });
         const dest = path.join(assetDir(cfg, kind), name);
         if (req.method === "DELETE") {
           fs.rmSync(dest, { force: true });
           return json(res, 200, listAssets(cfg, style));
         }
         fs.mkdirSync(path.dirname(dest), { recursive: true });
-        if (await saveLimited(req, dest, MAX_ASSET_MB * 1048576)) return json(res, 413, { error: `Datei größer als ${MAX_ASSET_MB} MB.` });
+        const lim = kind === "broll" ? MAX_BROLL_MB : MAX_ASSET_MB;
+        if (await saveLimited(req, dest, lim * 1048576)) return json(res, 413, { error: `Datei größer als ${lim} MB.` });
         return json(res, 200, listAssets(cfg, style));
       }
 

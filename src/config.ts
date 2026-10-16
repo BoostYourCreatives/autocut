@@ -15,6 +15,7 @@ const ConfigSchema = z.object({
   musicLibrary: z.string(),
   stockBrollDir: z.string().nullable(),
   fontsDir: z.string().default("assets/fonts"),
+  brollLibrary: z.string().default("assets/broll"),
   browserExecutable: z.string().nullable().default(null),
   transcription: z.object({
     provider: z.enum(["openai", "faster-whisper", "file"]),
@@ -49,6 +50,7 @@ export function loadConfig(file = path.join(ROOT, "config", "autocut.config.json
     sfxLibrary: env.AUTOCUT_SFX_LIBRARY ?? parsed.sfxLibrary,
     musicLibrary: env.AUTOCUT_MUSIC_LIBRARY ?? parsed.musicLibrary,
     stockBrollDir: env.AUTOCUT_STOCK_BROLL_DIR ?? parsed.stockBrollDir,
+    brollLibrary: path.resolve(ROOT, env.AUTOCUT_BROLL_LIBRARY ?? parsed.brollLibrary),
     fontsDir: path.resolve(ROOT, env.AUTOCUT_FONTS_DIR ?? parsed.fontsDir),
     browserExecutable: env.AUTOCUT_BROWSER ?? parsed.browserExecutable,
     runsDir: env.AUTOCUT_RUNS_DIR ?? parsed.runsDir,

@@ -144,8 +144,8 @@ export const Overlay = z.discriminatedUnion("type", [
 ]);
 
 export const BrollSource = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("user_clip"), path: z.string() }),
-  z.object({ kind: z.literal("stock_ordner"), path: z.string() }),
+  z.object({ kind: z.literal("user_clip"), path: z.string(), info: z.string().optional() }),
+  z.object({ kind: z.literal("stock_ordner"), path: z.string(), info: z.string().optional() }),
   z.object({ kind: z.literal("canva"), ref: z.string() }),
   z.object({ kind: z.literal("standbild_prompt"), prompt: z.string() }),
   /** Slot ist geplant, aber noch kein Clip gefunden (Prototyp: kein Auto-Sourcing) */

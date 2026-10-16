@@ -26,7 +26,7 @@ Vercel kann später nur die Oberfläche hosten, das Rendern müsste trotzdem auf
 1. Auf railway.com mit GitHub anmelden, **New Project → Deploy from GitHub repo** und `BoostYourCreatives/autocut` wählen (Railway braucht dafür Zugriff auf die Organisation).
 2. Beim Dienst unter **Settings → Source** den Branch `claude/gifted-curie-y1k1np` einstellen (oder den Code vorher nach `main` übernehmen). Railway liest `railway.json` und baut das `Dockerfile`, der erste Bau dauert ca. 10–15 Minuten.
 3. **Volume** hinzufügen (Rechtsklick auf die Fläche oder **+ New → Volume**) und unter `/data` einhängen.
-4. **Variables** eintragen: `APP_PASSWORD`, `ANTHROPIC_API_KEY`, optional `OPENAI_API_KEY`. (Die anderen Werte stehen schon im Dockerfile.)
+4. **Variables** eintragen: `APP_PASSWORD`, `ANTHROPIC_API_KEY`, optional `OPENAI_API_KEY`, optional `PEXELS_API_KEY` und `PIXABAY_API_KEY` (für Stock-B-Rolls). (Die anderen Werte stehen schon im Dockerfile.)
 5. **Settings → Resources**: mindestens 4 vCPU und 8 GB RAM erlauben (dafür braucht es den Hobby- oder Pro-Tarif).
 6. **Settings → Networking → Generate Domain**: das ist die öffentliche Adresse.
 7. Adresse öffnen, mit dem Passwort anmelden, Soundeffekte und Schriften hochladen (siehe unten).

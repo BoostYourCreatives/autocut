@@ -35,6 +35,9 @@ export async function health(cfg: Config, style: Style): Promise<HealthItem[]> {
   const hasClaude = !!process.env.ANTHROPIC_API_KEY || !!process.env.ANTHROPIC_AUTH_TOKEN;
   add({ key: "anthropic", label: "Claude (Plan und Selfcheck)", ok: hasClaude, detail: hasClaude ? "Schlüssel gesetzt" : "ANTHROPIC_API_KEY fehlt (in .env eintragen)" });
 
+  const stockKeys = [process.env.PEXELS_API_KEY ? "Pexels" : null, process.env.PIXABAY_API_KEY ? "Pixabay" : null].filter(Boolean);
+  add({ key: "stock", label: "Stock-B-Rolls", ok: stockKeys.length > 0, optional: true, detail: stockKeys.length ? `Zugang: ${stockKeys.join(", ")}` : "PEXELS_API_KEY / PIXABAY_API_KEY fehlen: Stock-B-Rolls sind nicht möglich" });
+
   const missingFonts = (["weiss", "gold", "ki"] as const).map((k) => style.params.layout.schrift[k].datei).filter((f) => !fs.existsSync(path.join(cfg.fontsDir, f)));
   add({ key: "fonts", label: "Original-Schriften", ok: missingFonts.length === 0, optional: true, detail: missingFonts.length ? `fehlen in ${cfg.fontsDir}: ${missingFonts.join(", ")}` : "vorhanden" });
 

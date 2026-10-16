@@ -2,15 +2,17 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Config, Style } from "../config.ts";
 
-export type AssetKind = "sfx" | "fonts";
+export type AssetKind = "sfx" | "fonts" | "broll";
 
 const EXT: Record<AssetKind, RegExp> = {
   sfx: /\.(mp3|wav|m4a|aif|aiff|flac|ogg)$/i,
   fonts: /\.(ttf|otf)$/i,
+  broll: /\.(mp4|mov|m4v|webm)$/i,
 };
 export const MAX_ASSET_MB = 50;
+export const MAX_BROLL_MB = 300;
 
-export const assetDir = (cfg: Config, kind: AssetKind) => (kind === "sfx" ? cfg.sfxLibrary : cfg.fontsDir);
+export const assetDir = (cfg: Config, kind: AssetKind) => (kind === "sfx" ? cfg.sfxLibrary : kind === "broll" ? cfg.brollLibrary : cfg.fontsDir);
 
 /** Dateiname bereinigen: nur der Name, keine Pfade. */
 export function safeAssetName(kind: AssetKind, name: string): string | null {
@@ -36,7 +38,9 @@ export function listAssets(cfg: Config, style: Style) {
   const needFonts = (["weiss", "gold", "ki"] as const).map((k) => style.params.layout.schrift[k].datei);
   const needSfx = [...new Set(Object.values(style.params.sfx.cues).map((c) => c.file))];
   const hasSfx = (n: string) => sfx.some((s) => s.file.toLowerCase().endsWith(n.toLowerCase()));
+  const broll = walk(cfg.brollLibrary).filter((f) => EXT.broll.test(f.file));
   return {
+    broll,
     sfx,
     fonts: fonts.filter((f) => EXT.fonts.test(f.file)),
     missing: {
