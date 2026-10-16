@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { Config, Style } from "../../config.ts";
 import { detectSilences } from "../../lib/audio.ts";
 import { snapWords } from "../../lib/words.ts";
@@ -10,6 +11,7 @@ import { Transcript } from "../../schema/transcript.ts";
 import { transcribeOpenAI, type ProviderResult } from "./openai.ts";
 import { transcribeFasterWhisper } from "./fasterWhisper.ts";
 import { transcribeFromFile } from "./file.ts";
+import { alignWords } from "./align.ts";
 
 export interface TranscribeOptions {
   clips?: string[];
@@ -53,7 +55,16 @@ export async function transcribe(cfg: Config, style: Style, runName: string, opt
       writeJson(paths.transcriptRaw, res);
 
       let silencesUsed = 0;
-      const words = res.words;
+      let words = res.words;
+      if (cfg.transcription.align.enabled && provider !== "file") {
+        try {
+          const al = await alignWords(paths.audio16k, words, cfg.transcription.align.model, path.join(path.dirname(paths.transcriptRaw), "align.tmp.json"));
+          words = al.words;
+          log.info(`transcribe ${clip.id}: Wortzeiten nachgeschärft (${al.aligned} Wörter angepasst, ${al.kept} mit Whisper-Zeit)`);
+        } catch (e) {
+          log.warn(`Wortzeiten konnten nicht nachgeschärft werden, es gelten die Whisper-Zeiten (${(e as Error).message.split("\n").slice(-2).join(" ").slice(0, 200)})`);
+        }
+      }
       let snapped;
       if (P.wortgrenzen_an_stille_anpassen) {
         const sil = await detectSilences(paths.audio16k, style.params.analyze.stille.noise_db, style.params.analyze.stille.min_s, meta.duration_s);

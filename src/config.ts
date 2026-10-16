@@ -21,6 +21,7 @@ const ConfigSchema = z.object({
     provider: z.enum(["openai", "faster-whisper", "file"]),
     openai: z.object({ model: z.string() }),
     fasterWhisper: z.object({ model: z.string(), computeType: z.string(), beamSize: z.number().int() }),
+    align: z.object({ enabled: z.boolean(), model: z.string() }).default({ enabled: true, model: "jonatasgrosman/wav2vec2-large-xlsr-53-german" }),
   }),
   llm: z.object({
     planModel: z.string(),

@@ -11,9 +11,13 @@
       "model": "whisper-1"
     },
     "fasterWhisper": {
-      "model": "large-v3-turbo",
+      "model": "large-v3",
       "computeType": "int8",
       "beamSize": 5
+    },
+    "align": {
+      "enabled": true,
+      "model": "jonatasgrosman/wav2vec2-large-xlsr-53-german"
     }
   },
   "llm": {
