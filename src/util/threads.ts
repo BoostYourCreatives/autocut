@@ -18,3 +18,9 @@ export function renderConcurrency(): number {
   if (env > 0) return env;
   return Math.max(1, Math.floor(threads() / 2));
 }
+
+/** Zwischenspeicher für das Lesen von Videos beim Rendern (MB). Remotion nimmt sonst bis zur Hälfte des freien Speichers des Servers. */
+export function videoCacheBytes(): number {
+  const env = parseInt(process.env.AUTOCUT_VIDEO_CACHE_MB ?? "", 10);
+  return (env > 0 ? env : 400) * 1024 * 1024;
+}

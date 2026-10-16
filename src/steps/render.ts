@@ -7,7 +7,7 @@ import { Plan, type BrollSlot } from "../schema/plan.ts";
 import { readJson, readJsonSchema, writeJson, ensureDir } from "../util/files.ts";
 import { log } from "../util/log.ts";
 import { timed } from "../util/runlog.ts";
-import { renderConcurrency } from "../util/threads.ts";
+import { renderConcurrency, threads, videoCacheBytes } from "../util/threads.ts";
 import type { RunPaths } from "../util/run.ts";
 import { buildTimeline, outDuration } from "../plan/timeline.ts";
 import { anchorY, checkChin, type ChinData } from "../lib/chin.ts";
@@ -164,20 +164,36 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
   // ---- Bild ----
   const silent = path.join(work, "video.mp4");
   let lastPct = -1;
-  await timed(runLike, "render-video", undefined, async () => {
-    await renderMedia({
-      composition, serveUrl, codec: "h264", crf: P.export.zwischen.crf, outputLocation: silent, muted: true, concurrency: renderConcurrency(),
-      inputProps: props as unknown as Record<string, unknown>, browserExecutable,
-      onProgress: ({ progress }) => {
-        const pct = Math.floor(progress * 10) * 10;
-        if (pct !== lastPct) {
-          lastPct = pct;
-          log.info(`Bild rendern: ${pct} %`);
-        }
-      },
+  const totalFrames = composition.durationInFrames;
+  const tStart = Date.now();
+  let rendered = 0;
+  const beat = setInterval(() => log.info(`Bild rendern läuft seit ${Math.round((Date.now() - tStart) / 1000)} s, bisher ${rendered} von ${totalFrames} Bildern`), 30000);
+  try {
+    await timed(runLike, "render-video", undefined, async () => {
+      await renderMedia({
+        composition, serveUrl, codec: "h264", crf: P.export.zwischen.crf, outputLocation: silent, muted: true, concurrency: renderConcurrency(),
+        // Speicher begrenzen: sonst rechnen Remotion/ffmpeg mit dem Speicher des ganzen Servers und der Container wird abgeschossen
+        offthreadVideoCacheSizeInBytes: videoCacheBytes(), offthreadVideoThreads: threads(), timeoutInMilliseconds: 120000,
+        inputProps: props as unknown as Record<string, unknown>, browserExecutable,
+        onBrowserLog: (l) => {
+          if (l.type === "error" || l.type === "warning") log.warn(`Browser: ${l.text.slice(0, 200)}`);
+        },
+        onProgress: ({ progress, renderedFrames }) => {
+          rendered = renderedFrames;
+          const pct = Math.floor(progress * 20) * 5;
+          if (pct !== lastPct) {
+            lastPct = pct;
+            const s = Math.round((Date.now() - tStart) / 1000);
+            const eta = progress > 0.02 ? Math.round((s / progress) * (1 - progress)) : null;
+            log.info(`Bild rendern: ${pct} % (${renderedFrames}/${totalFrames} Bilder, ${s} s${eta !== null ? `, noch ca. ${eta} s` : ""})`);
+          }
+        },
+      });
+      return { value: null };
     });
-    return { value: null };
-  });
+  } finally {
+    clearInterval(beat);
+  }
 
   // ---- Ton ----
   const sfxIndex = buildSfxIndex(cfg.sfxLibrary);

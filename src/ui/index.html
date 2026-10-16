@@ -213,6 +213,9 @@ function render(d) {
       el('div', { class: 'n', text: `${{ ok: '✓', error: '✗', running: '…', pending: '·' }[s.status]} ${s.label}` }),
       el('div', { class: 's', text: s.status === 'pending' ? 'wartet' : s.status === 'running' ? 'läuft' : `${s.seconds} s` }))))));
 
+  if (d.interrupted) {
+    kids.push(el('div', { class: 'err' }, el('b', { text: 'Der Lauf wurde unterbrochen. ' }), `Der Server wurde während des Laufs neu gestartet (gestartet ${d.interrupted.started_at}). Meist hat Railway ihn beendet, weil der Arbeitsspeicher nicht reichte. Sieh bei Railway unter Metrics nach und lade das Reel danach neu hoch.`));
+  }
   if (d.job && d.job.error) {
     const se = d.attempts && d.attempts.find((a) => a.structured_error);
     const att = d.attempts && d.attempts.length ? el('ul', {}, ...(se ? [el('li', { text: `Die Claude-API hat das erzwungene JSON-Format abgelehnt: ${se.structured_error}` })] : []), ...d.attempts.flatMap((a) => a.lines.slice(0, 3).map((l) => el('li', { text: `Versuch ${a.attempt}: ${l}` })))) : null;

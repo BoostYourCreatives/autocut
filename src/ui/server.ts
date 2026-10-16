@@ -95,7 +95,8 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         const dir = path.join(cfg.runsPath, d.name);
         const job = jobs.jobs.get(d.name);
         const hasVideo = fs.existsSync(path.join(dir, "out")) && fs.readdirSync(path.join(dir, "out")).some((f) => f.endsWith(".mp4"));
-        const status = job?.status === "running" ? "running" : job?.status === "error" ? "error" : hasVideo ? "done" : fs.existsSync(path.join(dir, "fehlerbericht.md")) ? "error" : "idle";
+        const interrupted = !job && fs.existsSync(path.join(dir, "job.json"));
+        const status = interrupted ? "error" : job?.status === "running" ? "running" : job?.status === "error" ? "error" : hasVideo ? "done" : fs.existsSync(path.join(dir, "fehlerbericht.md")) ? "error" : "idle";
         return { name: d.name, status, mtime: fs.statSync(path.join(dir, "run.json")).mtimeMs };
       })
       .sort((a, b) => b.mtime - a.mtime);
@@ -115,6 +116,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       return { key, label: STEP_LABEL[key], status, seconds: Math.round(secs * 10) / 10 };
     });
     const out: Record<string, unknown> = { name, steps, job: job ? { status: job.status, current: job.current, error: job.error, kind: job.kind } : null };
+    if (!job && fs.existsSync(path.join(dir, "job.json"))) out.interrupted = JSON.parse(fs.readFileSync(path.join(dir, "job.json"), "utf8"));
 
     const planFile = planPaths(runPaths(cfg, name)).plan;
     if (fs.existsSync(planFile)) {

@@ -13,6 +13,7 @@ import { writeRunReport } from "../steps/report.ts";
 import { log, logListeners } from "../util/log.ts";
 import { runPaths } from "../util/run.ts";
 import { exec } from "../util/exec.ts";
+import { writeJson } from "../util/files.ts";
 
 export interface JobOptions {
   hookLines?: [string, string];
@@ -59,6 +60,8 @@ export class JobRunner {
   start(run: string, kind: Job["kind"], opts: JobOptions, source?: string): Job {
     if (this.busy) throw new Error(`Es läuft schon ein Lauf (${this.busy}). Bitte warten, bis er fertig ist.`);
     const job: Job = { run, kind, status: "running", current: null, error: null, events: [], listeners: new Set() };
+    // Marker: bleibt er nach einem Neustart liegen, wurde der Lauf unterbrochen (z. B. Container wegen Speicher beendet)
+    writeJson(path.join(runPaths(this.cfg, run).dir, "job.json"), { kind, started_at: new Date().toISOString() });
     this.jobs.set(run, job);
     this.busy = run;
     void this.execute(job, opts, source).finally(() => (this.busy = null));
@@ -108,6 +111,7 @@ export class JobRunner {
       this.push(job, { type: "error", msg: job.error, t: t() });
     } finally {
       logListeners.delete(listener);
+      fs.rmSync(path.join(run.dir, "job.json"), { force: true });
       job.current = null;
       writeRunReport(run.dir);
     }
