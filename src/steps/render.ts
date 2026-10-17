@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { bundle } from "@remotion/bundler";
-import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
+import { renderFrames, renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import { ROOT, type Config, type Style } from "../config.ts";
 import { Plan, type BrollSlot } from "../schema/plan.ts";
 import { readJson, readJsonSchema, writeJson, ensureDir } from "../util/files.ts";
@@ -14,6 +14,7 @@ import { anchorY, checkChin, type ChinData } from "../lib/chin.ts";
 import { buildSfxIndex, findSfx } from "../lib/sfxIndex.ts";
 import { renderAudio } from "../render/audio.ts";
 import { exportFinal } from "../render/export.ts";
+import { execOk } from "../util/exec.ts";
 import type { ReelProps } from "../render/remotion/Reel.tsx";
 
 export interface RenderOptions {
@@ -21,6 +22,33 @@ export interface RenderOptions {
   outDir?: string;
   /** Statt des Videos nur Einzelbilder (Sekunden der Ausgabe-Timeline) als PNG rendern */
   stills?: number[];
+  /**
+   * Nur die Text-Ebene neu rendern (Bild und Ton bleiben aus dem letzten Lauf: render/base.mp4).
+   * ids = geänderte Untertitel; null = alle Texte neu.
+   */
+  captionsPatch?: { ids: number[] | null };
+}
+
+/** Ordner mit den Text-Einzelbildern (PNG mit Transparenz), eines pro Videobild */
+export const captionFramesDir = (runDir: string) => path.join(runDir, "render", "captions");
+export const baseVideoFile = (runDir: string) => path.join(runDir, "render", "base.mp4");
+export const hasLayeredRender = (runDir: string) => fs.existsSync(baseVideoFile(runDir)) && fs.existsSync(captionFramesDir(runDir)) && fs.existsSync(path.join(runDir, "render", "render-info.json"));
+
+/** Bildbereiche (inklusive), in denen sich die Texte der geänderten Untertitel (und ihrer Gruppe) ändern können */
+export function captionFrameRanges(plan: Plan, ids: number[] | null, fps: number, totalFrames: number): [number, number][] {
+  if (ids === null) return [[0, totalFrames - 1]];
+  const groups = new Set(plan.captions.filter((c) => ids.includes(c.id) && c.group).map((c) => c.group));
+  const hit = plan.captions.filter((c) => ids.includes(c.id) || (c.group && groups.has(c.group)));
+  const r: [number, number][] = hit
+    .map((c) => [Math.max(0, Math.round(c.start_s * fps) - 1), Math.min(totalFrames - 1, Math.round(c.end_s * fps) + 1)] as [number, number])
+    .sort((a, b) => a[0] - b[0]);
+  const merged: [number, number][] = [];
+  for (const x of r) {
+    const last = merged[merged.length - 1];
+    if (last && x[0] <= last[1] + 1) last[1] = Math.max(last[1], x[1]);
+    else merged.push([...x]);
+  }
+  return merged;
 }
 
 export interface RenderInfo {
@@ -107,6 +135,13 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
     warnings.push(`Kinn nicht gemessen: Ersatzwert DY=${DY} px. Text könnte das Kinn berühren (pip install mediapipe opencv-python-headless, dann autocut chin).`);
   }
 
+  if (opts.captionsPatch && fs.existsSync(path.join(work, "render-info.json"))) {
+    // Das Bild wurde mit diesen Werten gerendert; die Texte müssen dazu passen
+    const prev = readJson<RenderInfo>(path.join(work, "render-info.json"));
+    DY = prev.DY;
+    AY = prev.AY;
+  }
+
   // ---- Schriften und B-Roll bereitstellen ----
   const pub = ensureDir(path.join(work, "public"));
   const fonts: Record<string, string> = {};
@@ -161,54 +196,100 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
     return { stills: files, info, warnings };
   }
 
-  // ---- Bild ----
-  const silent = path.join(work, "video.mp4");
-  let lastPct = -1;
-  const totalFrames = composition.durationInFrames;
-  const tStart = Date.now();
-  let rendered = 0;
-  const beat = setInterval(() => log.info(`Bild rendern läuft seit ${Math.round((Date.now() - tStart) / 1000)} s, bisher ${rendered} von ${totalFrames} Bildern`), 30000);
-  try {
-    await timed(runLike, "render-video", undefined, async () => {
-      await renderMedia({
-        composition, serveUrl, codec: "h264", crf: P.export.zwischen.crf, outputLocation: silent, muted: true, concurrency: renderConcurrency(),
-        // Speicher begrenzen: sonst rechnen Remotion/ffmpeg mit dem Speicher des ganzen Servers und der Container wird abgeschossen
-        offthreadVideoCacheSizeInBytes: videoCacheBytes(), offthreadVideoThreads: threads(), timeoutInMilliseconds: 120000,
-        inputProps: props as unknown as Record<string, unknown>, browserExecutable,
-        onBrowserLog: (l) => {
-          if (l.type === "error" || l.type === "warning") log.warn(`Browser: ${l.text.slice(0, 200)}`);
-        },
-        onProgress: ({ progress, renderedFrames }) => {
-          rendered = renderedFrames;
-          const pct = Math.floor(progress * 20) * 5;
-          if (pct !== lastPct) {
-            lastPct = pct;
-            const s = Math.round((Date.now() - tStart) / 1000);
-            const eta = progress > 0.02 ? Math.round((s / progress) * (1 - progress)) : null;
-            log.info(`Bild rendern: ${pct} % (${renderedFrames}/${totalFrames} Bilder, ${s} s${eta !== null ? `, noch ca. ${eta} s` : ""})`);
+  const sfxIndex = buildSfxIndex(cfg.sfxLibrary);
+  const baseFile = baseVideoFile(runDir);
+  const capDir = captionFramesDir(runDir);
+  const patch = opts.captionsPatch;
+  if (patch && !hasLayeredRender(runDir)) throw new Error("Für diesen Lauf gibt es noch kein getrenntes Bild. Bitte einmal komplett neu rendern.");
+  const progress = (label: string, total: number, tStart: number, state: { rendered: number; lastPct: number }) => ({ progress, renderedFrames }: { progress: number; renderedFrames: number }) => {
+    state.rendered = renderedFrames;
+    const pct = Math.floor(progress * 20) * 5;
+    if (pct !== state.lastPct) {
+      state.lastPct = pct;
+      const s = Math.round((Date.now() - tStart) / 1000);
+      const eta = progress > 0.02 ? Math.round((s / progress) * (1 - progress)) : null;
+      log.info(`${label}: ${pct} % (${renderedFrames}/${total} Bilder, ${s} s${eta !== null ? `, noch ca. ${eta} s` : ""})`);
+    }
+  };
+  const common = {
+    serveUrl, concurrency: renderConcurrency(), browserExecutable, timeoutInMilliseconds: 120000,
+    // Speicher begrenzen: sonst rechnen Remotion/ffmpeg mit dem Speicher des ganzen Servers und der Container wird abgeschossen
+    offthreadVideoCacheSizeInBytes: videoCacheBytes(), offthreadVideoThreads: threads(),
+    onBrowserLog: (l: { type: string; text: string }) => {
+      if (l.type === "error" || l.type === "warning") log.warn(`Browser: ${l.text.slice(0, 200)}`);
+    },
+  };
+
+  if (!patch) {
+    // ---- Bild (ohne Texte) ----
+    const baseProps = { ...props, layer: "base" } as unknown as Record<string, unknown>;
+    const baseComp = await selectComposition({ serveUrl, id: "Reel", inputProps: baseProps, browserExecutable });
+    const silent = path.join(work, "base_silent.mp4");
+    const st = { rendered: 0, lastPct: -1 };
+    const t0 = Date.now();
+    const beat = setInterval(() => log.info(`Bild rendern läuft seit ${Math.round((Date.now() - t0) / 1000)} s, bisher ${st.rendered} von ${baseComp.durationInFrames} Bildern`), 30000);
+    try {
+      await timed(runLike, "render-video", undefined, async () => {
+        await renderMedia({ ...common, composition: baseComp, codec: "h264", crf: P.export.zwischen.crf, outputLocation: silent, muted: true, inputProps: baseProps, onProgress: progress("Bild rendern", baseComp.durationInFrames, t0, st) });
+        return { value: null };
+      });
+    } finally {
+      clearInterval(beat);
+    }
+
+    // ---- Ton ----
+    const sfxPaths = plan.sfx.map((s) => {
+      const e = findSfx(sfxIndex, s.file);
+      if (!e) throw new Error(`SFX "${s.file}" nicht in der Library ${cfg.sfxLibrary}`);
+      return path.join(cfg.sfxLibrary, e.file);
+    });
+    const finalWav = path.join(work, "audio.wav");
+    const m = await timed(runLike, "render-audio", undefined, async () => ({ value: await renderAudio(plan, P, voice, sfxPaths, work, finalWav) }));
+    log.info(`ton: Eingang ${m.measured.input_i} LUFS → Ziel ${P.export.lautheit.i} LUFS`);
+    // Bild und Ton zusammen: so lässt sich die Basis auch im Browser abspielen, und der Export übernimmt den Ton unverändert
+    await timed(runLike, "render-basis", undefined, async () => {
+      await execOk("ffmpeg", ["-hide_banner", "-nostdin", "-y", "-i", silent, "-i", finalWav, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", P.export.final.audio_codec, "-b:a", `${P.export.final.audio_kbps}k`, "-ar", "48000", "-ac", "2", "-movflags", "+faststart", "-shortest", baseFile]);
+      fs.rmSync(silent, { force: true });
+      fs.rmSync(finalWav, { force: true });
+      return { value: null };
+    });
+  }
+
+  // ---- Texte (eigene Ebene, PNG mit Transparenz) ----
+  const capProps = { ...props, layer: "captions" } as unknown as Record<string, unknown>;
+  const capComp = await selectComposition({ serveUrl, id: "Reel", inputProps: capProps, browserExecutable });
+  const ranges = captionFrameRanges(plan, patch ? patch.ids : null, fps, capComp.durationInFrames);
+  if (!patch) fs.rmSync(capDir, { recursive: true, force: true });
+  ensureDir(capDir);
+  await timed(runLike, "render-texte", undefined, async () => {
+    for (const [a, b] of ranges) {
+      const tmpDir = path.join(work, "captions-tmp");
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+      const t0 = Date.now();
+      const st = { rendered: 0, lastPct: -1 };
+      const n = b - a + 1;
+      await renderFrames({
+        composition: capComp, serveUrl, outputDir: tmpDir, imageFormat: "png", inputProps: capProps, frameRange: [a, b], concurrency: renderConcurrency(), browserExecutable,
+        timeoutInMilliseconds: 120000, onBrowserLog: common.onBrowserLog, onStart: () => undefined,
+        onFrameUpdate: (done: number) => {
+          st.rendered = done;
+          const pct = Math.floor((done / n) * 20) * 5;
+          if (pct !== st.lastPct) {
+            st.lastPct = pct;
+            log.info(`Texte rendern: ${pct} % (${done}/${n} Bilder, ${Math.round((Date.now() - t0) / 1000)} s)`);
           }
         },
       });
-      return { value: null };
-    });
-  } finally {
-    clearInterval(beat);
-  }
-
-  // ---- Ton ----
-  const sfxIndex = buildSfxIndex(cfg.sfxLibrary);
-  const sfxPaths = plan.sfx.map((s) => {
-    const e = findSfx(sfxIndex, s.file);
-    if (!e) throw new Error(`SFX "${s.file}" nicht in der Library ${cfg.sfxLibrary}`);
-    return path.join(cfg.sfxLibrary, e.file);
+      for (const f of fs.readdirSync(tmpDir)) fs.renameSync(path.join(tmpDir, f), path.join(capDir, f));
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+    return { value: null };
   });
-  const finalWav = path.join(work, "audio.wav");
-  const m = await timed(runLike, "render-audio", undefined, async () => ({ value: await renderAudio(plan, P, voice, sfxPaths, work, finalWav) }));
-  log.info(`ton: Eingang ${m.measured.input_i} LUFS → Ziel ${P.export.lautheit.i} LUFS`);
+  if (patch) log.info(`Texte: ${ranges.map(([a, b]) => `${(a / fps).toFixed(1)}–${(b / fps).toFixed(1)} s`).join(", ")} neu gerendert, Bild und Ton bleiben`);
 
   // ---- Export ----
   const outFile = path.join(outDir, `${plan.video}.mp4`);
-  const exp = await timed(runLike, "render-export", undefined, async () => ({ value: await exportFinal(P, silent, finalWav, total, outFile, work) }));
+  const exp = await timed(runLike, "render-export", undefined, async () => ({ value: await exportFinal(P, baseFile, { dir: capDir, fps }, total, outFile, work) }));
   if (exp.size_mb > P.export.final.max_mb) warnings.push(`Datei ist ${exp.size_mb} MB (Limit ${P.export.final.max_mb} MB)`);
   log.info(`render: ${outFile} (${total.toFixed(1)} s, ${exp.size_mb} MB, ${exp.bitrate_kbps} kbit/s)`);
   for (const w of warnings) log.warn(`  ${w}`);

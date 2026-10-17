@@ -11,22 +11,28 @@ export function targetBitrateKbps(P: StyleParams, durationS: number): number {
   return Math.max(500, Math.floor(Math.min(E.bitrate_kbps, budgetKbps)));
 }
 
-/** Video (ohne Ton) + Ton → finale Datei: libx265 2-pass, hvc1, AAC, faststart. */
-export async function exportFinal(P: StyleParams, videoMp4: string, audioWav: string, durationS: number, outFile: string, workDir: string): Promise<{ bitrate_kbps: number; size_mb: number }> {
+/** Basis (Bild + Ton) + Text-Ebene (PNG-Folge mit Transparenz) → finale Datei: libx265 2-pass, hvc1, Ton unverändert, faststart. */
+export async function exportFinal(P: StyleParams, baseMp4: string, overlay: { dir: string; fps: number }, durationS: number, outFile: string, workDir: string): Promise<{ bitrate_kbps: number; size_mb: number }> {
   const E = P.export.final;
   let kbps = targetBitrateKbps(P, durationS);
   const stats = path.join(workDir, "x265_2pass");
+  const first = fs.readdirSync(overlay.dir).filter((f) => f.endsWith(".png")).sort()[0];
+  if (!first) throw new Error("Keine Text-Bilder vorhanden");
+  const m = /^(.*?)(\d+)\.png$/.exec(first)!;
+  const pattern = path.join(overlay.dir, `${m[1]}%0${m[2]!.length}d.png`);
+  const inputs = ["-i", baseMp4, "-framerate", String(overlay.fps), "-start_number", String(parseInt(m[2]!, 10)), "-i", pattern];
+  const filter = ["-filter_complex", "[0:v][1:v]overlay=format=auto:shortest=1,format=yuv420p[v]"];
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   for (let attempt = 0; attempt < 2; attempt++) {
     await execOk("ffmpeg", [
-      "-hide_banner", "-nostdin", "-y", "-i", videoMp4, "-an", "-c:v", E.codec, "-b:v", `${kbps}k`, "-preset", E.preset,
+      "-hide_banner", "-nostdin", "-y", ...inputs, ...filter, "-map", "[v]", "-an", "-c:v", E.codec, "-b:v", `${kbps}k`, "-preset", E.preset,
       "-x265-params", `pass=1:stats=${stats}:log-level=error:pools=${threads()}:frame-threads=2`, "-f", "null", "-",
     ]);
     await execOk("ffmpeg", [
-      "-hide_banner", "-nostdin", "-y", "-i", videoMp4, "-i", audioWav, "-map", "0:v", "-map", "1:a",
+      "-hide_banner", "-nostdin", "-y", ...inputs, ...filter, "-map", "[v]", "-map", "0:a",
       "-c:v", E.codec, "-b:v", `${kbps}k`, "-preset", E.preset, "-tag:v", E.tag,
       "-x265-params", `pass=2:stats=${stats}:log-level=error:pools=${threads()}:frame-threads=2`,
-      "-c:a", E.audio_codec, "-b:a", `${E.audio_kbps}k`, "-ar", "48000", "-ac", "2",
+      "-c:a", "copy",
       "-movflags", "+faststart", "-shortest", outFile,
     ]);
     const mb = fs.statSync(outFile).size / 1e6;

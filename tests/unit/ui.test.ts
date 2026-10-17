@@ -183,3 +183,13 @@ test("Untertitel-Editor: geänderter Text wird übernommen, Validator akzeptiert
   assert.equal(after.errors.filter((e) => e.code === "caption_text").length, 0);
   assert.equal(before.errors.length, after.errors.length);
 });
+
+test("Text-Ebene: Bildbereiche für geänderte Untertitel (mit Gruppe, zusammengelegt)", async () => {
+  const { captionFrameRanges } = await import("../../src/steps/render.ts");
+  const mk = (id: number, s: number, e: number, group: string | null = null) => ({ id, start_s: s, end_s: e, group }) as never;
+  const plan = { captions: [mk(0, 0, 1), mk(1, 1, 2, "g"), mk(2, 2, 3, "g"), mk(3, 10, 11)] } as never;
+  assert.deepEqual(captionFrameRanges(plan, [3], 25, 400), [[249, 276]]);
+  // Gruppe: Änderung an 1 betrifft auch 2, beide Bereiche grenzen aneinander und werden zusammengelegt
+  assert.deepEqual(captionFrameRanges(plan, [1], 25, 400), [[24, 76]]);
+  assert.deepEqual(captionFrameRanges(plan, null, 25, 400), [[0, 399]]);
+});

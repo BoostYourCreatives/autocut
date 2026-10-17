@@ -27,6 +27,8 @@ export interface JobOptions {
   brollOwn?: boolean;
   brollStock?: boolean;
   video?: string;
+  /** kind "recaption": geänderte Untertitel (nur deren Text-Ebene wird neu gerendert) */
+  captionIds?: number[];
 }
 
 export type JobEvent =
@@ -37,7 +39,7 @@ export type JobEvent =
 
 export interface Job {
   run: string;
-  kind: "pipeline" | "rerender" | "replan";
+  kind: "pipeline" | "rerender" | "replan" | "recaption";
   status: "running" | "done" | "error";
   current: string | null;
   error: string | null;
@@ -115,7 +117,7 @@ export class JobRunner {
       // rerender/pipeline/replan: Validator ist schon bestanden bzw. wird hier erneut geprüft
       const v = validatePlanFile(cfg, style, planFile).result;
       if (!v.ok) throw new Error(`Der Plan besteht den Validator nicht (${v.errors.length} Fehler), es wird nicht gerendert.`);
-      await step("render", () => deliver(cfg, style, planFile, { selfcheck: opts.selfcheck, llm: this.llm }));
+      await step("render", () => deliver(cfg, style, planFile, { selfcheck: opts.selfcheck, llm: this.llm, captionsPatch: job.kind === "recaption" ? { ids: opts.captionIds ?? null } : undefined }));
       job.status = "done";
       this.push(job, { type: "done", t: t() });
     } catch (e) {

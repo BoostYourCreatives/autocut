@@ -16,6 +16,8 @@ import { writeRunReport } from "./report.ts";
 export interface DeliverOptions {
   selfcheck: boolean;
   llm?: LlmClient;
+  /** Nur die Text-Ebene neu rendern (siehe renderPlan) */
+  captionsPatch?: { ids: number[] | null };
 }
 
 export interface DeliverResult {
@@ -34,7 +36,7 @@ export async function deliver(cfg: Config, style: Style, planFile: string, opts:
   const run = { dir: runDir, log: path.join(runDir, "run.log.json") } as unknown as RunPaths;
   const { result: validation } = validatePlanFile(cfg, style, planFile);
 
-  const render = await renderPlan(cfg, style, planFile);
+  const render = await renderPlan(cfg, style, planFile, { captionsPatch: opts.captionsPatch });
   const outDir = path.dirname(render.videoFile!);
 
   let sc: SelfcheckFile | null = null;
@@ -63,8 +65,9 @@ export async function deliver(cfg: Config, style: Style, planFile: string, opts:
     q.est_cost_usd = Math.round((q.est_cost_usd + (sc?.est_cost_usd ?? 0)) * 10000) / 10000;
     writeJson(qf, q);
   }
-  // Zwischendateien des Renderns (Zwischenvideo, Ton, x265-Dateien) werden nicht mehr gebraucht; beim nächsten Rendern entstehen sie neu
-  if (process.env.AUTOCUT_KEEP_RENDER_WORK !== "1") fs.rmSync(path.join(runDir, "render"), { recursive: true, force: true });
+  // Behalten: render/base.mp4 (Bild + Ton) und render/captions (Text-Ebene), damit Texte später ohne neues Bildrendern änderbar sind.
+  // Die x265-Zwischendateien sind wertlos.
+  if (process.env.AUTOCUT_KEEP_RENDER_WORK !== "1") for (const f of fs.readdirSync(path.join(runDir, "render"))) if (f.startsWith("x265_2pass")) fs.rmSync(path.join(runDir, "render", f), { force: true });
   writeRunReport(runDir);
   return { render, selfcheck: sc, attentionFile };
 }

@@ -15,6 +15,7 @@ import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type A
 import { pruneModelCache } from "../util/modelCache.ts";
 import { applyCaptionEdits } from "../steps/captionEdit.ts";
 import { approveRun } from "../steps/approve.ts";
+import { hasLayeredRender, baseVideoFile } from "../steps/render.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
@@ -122,6 +123,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       return { key, label: STEP_LABEL[key], status, seconds: Math.round(secs * 10) / 10 };
     });
     const out: Record<string, unknown> = { name, steps, job: job ? { status: job.status, current: job.current, error: job.error, kind: job.kind } : null };
+    out.layered = hasLayeredRender(dir) && !fs.existsSync(path.join(dir, "approved.json"));
     if (fs.existsSync(path.join(dir, "approved.json"))) out.approved = JSON.parse(fs.readFileSync(path.join(dir, "approved.json"), "utf8"));
     if (!job && fs.existsSync(path.join(dir, "job.json"))) out.interrupted = JSON.parse(fs.readFileSync(path.join(dir, "job.json"), "utf8"));
 
@@ -172,6 +174,15 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     out.summary = summarizeRun(dir);
     return out;
   };
+
+  let editorJs: Promise<string> | null = null;
+  const editorBundle = () => (editorJs ??= import("esbuild").then(async (esbuild) => {
+    const r = await esbuild.build({
+      entryPoints: [path.join(ROOT, "src", "ui", "editor", "preview.tsx")], bundle: true, write: false, format: "iife", platform: "browser", target: "es2020",
+      jsx: "automatic", minify: true, define: { "process.env.NODE_ENV": '"production"' }, logLevel: "silent",
+    });
+    return r.outputFiles[0]!.text;
+  }));
 
   const cleanup = () => {
     if (!fs.existsSync(cfg.runsPath)) return;
@@ -287,6 +298,49 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         const d = validName(mm[1]!) ? detail(mm[1]!) : null;
         return d ? json(res, 200, d) : json(res, 404, { error: "Run nicht gefunden" });
       }
+      if (req.method === "GET" && p === "/editor.js") {
+        res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
+        return res.end(await editorBundle());
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/fonts\/([^/]+)$/))) {
+        const file = path.basename(decodeURIComponent(mm[1]!));
+        const f = path.join(cfg.fontsDir, file);
+        if (!/\.(ttf|otf)$/i.test(file) || !fs.existsSync(f)) return json(res, 404, { error: "Schrift nicht gefunden" });
+        res.writeHead(200, { "content-type": /\.otf$/i.test(file) ? "font/otf" : "font/ttf", "cache-control": "max-age=86400" });
+        return fs.createReadStream(f).pipe(res);
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/preview-data$/))) {
+        const name = mm[1]!;
+        const planFile = planPaths(runPaths(cfg, name)).plan;
+        if (!validName(name) || !fs.existsSync(planFile) || !hasLayeredRender(runDir(name))) return json(res, 404, { error: "Keine Live-Vorschau für diesen Lauf" });
+        const plan = Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8")));
+        const info = JSON.parse(fs.readFileSync(path.join(runDir(name), "render", "render-info.json"), "utf8")) as { DY: number };
+        const fonts: Record<string, string> = {};
+        for (const key of ["weiss", "gold", "ki"] as const) {
+          const sch = style.params.layout.schrift[key];
+          if (fs.existsSync(path.join(cfg.fontsDir, sch.datei))) fonts[sch.familie] = sch.datei;
+        }
+        const total = plan.cut_segments.reduce((a, s) => a + (s.raw_out_s - s.raw_in_s), 0);
+        return json(res, 200, {
+          plan: { captions: plan.captions, overlays: plan.overlays }, L: style.params.layout, DY: info.DY, fps: plan.source.fps,
+          width: plan.source.width, height: plan.source.height, durationInFrames: Math.max(1, Math.round(total * plan.source.fps)), fonts,
+        });
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/base$/))) {
+        const name = mm[1]!;
+        const file = baseVideoFile(runDir(name));
+        if (!validName(name) || !fs.existsSync(file)) return json(res, 404, { error: "Keine Basis-Vorschau" });
+        const size = fs.statSync(file).size;
+        const range = req.headers.range?.match(/bytes=(\d*)-(\d*)/);
+        if (range) {
+          const start = range[1] ? parseInt(range[1]) : 0;
+          const end = range[2] ? Math.min(parseInt(range[2]), size - 1) : size - 1;
+          res.writeHead(206, { "content-type": "video/mp4", "content-range": `bytes ${start}-${end}/${size}`, "accept-ranges": "bytes", "content-length": end - start + 1 });
+          return fs.createReadStream(file, { start, end }).pipe(res);
+        }
+        res.writeHead(200, { "content-type": "video/mp4", "content-length": size, "accept-ranges": "bytes" });
+        return fs.createReadStream(file).pipe(res);
+      }
       if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/approve$/))) {
         const name = mm[1]!;
         if (!validName(name) || !fs.existsSync(path.join(runDir(name), "run.json"))) return json(res, 404, { error: "Run nicht gefunden" });
@@ -396,12 +450,14 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         }
         fs.copyFileSync(planFile, path.join(runDir(name), "plan.prev.json"));
         fs.renameSync(tmp, planFile);
+        // Mit getrennter Text-Ebene: nur die geänderten Texte neu rendern, Bild und Ton bleiben
+        const layered = hasLayeredRender(runDir(name));
         try {
-          jobs.start(name, "rerender", { precut: "auto", provider: "auto", selfcheck: false });
+          jobs.start(name, layered ? "recaption" : "rerender", { precut: "auto", provider: "auto", selfcheck: false, captionIds: edits.map((e) => e.id) });
         } catch (e) {
           return json(res, 409, { error: (e as Error).message });
         }
-        return json(res, 200, { ok: true, started: true, changed });
+        return json(res, 200, { ok: true, started: true, changed, fast: layered });
       }
       if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/replan$/))) {
         const name = mm[1]!;
