@@ -230,6 +230,15 @@ function render(d) {
     kids.push(el('div', { class: 'err' }, el('b', { text: 'Das hat nicht geklappt: ' }), d.job.error, att));
   }
 
+  if (d.approved) {
+    kids.push(el('div', { class: 'card', style: 'border-color:var(--ok,#2a7)' }, el('b', { text: 'Abgenommen. ' }), `Rohmaterial und Zwischendateien sind gelöscht (${(d.approved.freed_bytes / 1e6).toFixed(0)} MB frei). Das fertige Video, der Plan und die Berichte bleiben. Neu rendern ist nicht mehr möglich.`));
+  }
+  if (d.files && !running && !d.approved) {
+    kids.push(el('section', { class: 'card' }, el('div', { class: 'row', style: 'align-items:center' },
+      el('div', { style: 'flex:3' }, el('b', { text: 'Passt das Video?' }), el('div', { class: 'hint', text: 'Mit „Abnahme“ wird das Rohmaterial vom Server gelöscht. Das fertige Video bleibt. Lade es vorher herunter, wenn du es brauchst.' })),
+      el('button', { class: 'primary', style: 'margin:0;flex:1', text: 'Abnahme', onclick: approve }),
+      el('button', { style: 'margin:0 0 0 8px', text: 'Lauf löschen', onclick: delRun }))));
+  }
   if (d.files) {
     const hook = d.hook;
     kids.push(el('section', { class: 'card' }, el('h2', { text: 'Ergebnis' }),
@@ -280,7 +289,7 @@ function render(d) {
       q ? el('div', { style: 'margin-top:10px;font-size:14px' }, `Plan: ${q.attempts} Versuch(e), Validator-Fehler je Versuch [${q.validator_errors_per_attempt.join(', ')}]. Entfernt: ${q.removed.total_s.toFixed(1)} s. ${q.counts.captions} Untertitel, ${q.counts.gold} Gold, ${q.counts.zooms} Zooms, ${q.counts.broll} B-Roll-Slots, ${q.counts.sfx} Sounds.`) : null));
   }
 
-  if (d.files || d.validation) {
+  if ((d.files || d.validation) && !d.approved) {
     const ta = el('textarea', { id: 'planText', spellcheck: 'false' });
     const msg = el('div', { id: 'planMsg', class: 'hint' });
     const sc = el('input', { type: 'checkbox', id: 'sc2' }); sc.checked = true;
@@ -310,6 +319,14 @@ async function planCall(kind) {
     if (kind === 'save' && r.started) { msg.textContent = 'Gespeichert, Video wird neu gebaut.'; await select(current); return; }
     msg.textContent = r.ok ? `Plan ist in Ordnung (${r.warnings.length} Warnung(en)).` : `Nicht in Ordnung: ${r.errors.map((e) => e.message).slice(0, 5).join(' | ')}`;
   } catch (e) { msg.textContent = e.message; }
+}
+async function approve() {
+  if (!confirm('Video abnehmen? Das Rohmaterial und alle Zwischendateien werden gelöscht. Danach kann dieses Reel nicht mehr neu gerendert werden.')) return;
+  try { await api(`/api/runs/${current}/approve`, { method: 'POST' }); await refresh(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
+}
+async function delRun() {
+  if (!confirm('Den ganzen Lauf löschen, auch das fertige Video? Das kann nicht rückgängig gemacht werden.')) return;
+  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; $('detail').replaceChildren(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
 }
 async function replan() {
   if (!confirm('Claude erstellt den Plan neu und das Video wird neu gebaut. Deine Änderungen im Plan gehen verloren. Fortfahren?')) return;

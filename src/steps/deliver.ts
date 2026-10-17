@@ -63,6 +63,8 @@ export async function deliver(cfg: Config, style: Style, planFile: string, opts:
     q.est_cost_usd = Math.round((q.est_cost_usd + (sc?.est_cost_usd ?? 0)) * 10000) / 10000;
     writeJson(qf, q);
   }
+  // Zwischendateien des Renderns (Zwischenvideo, Ton, x265-Dateien) werden nicht mehr gebraucht; beim nächsten Rendern entstehen sie neu
+  if (process.env.AUTOCUT_KEEP_RENDER_WORK !== "1") fs.rmSync(path.join(runDir, "render"), { recursive: true, force: true });
   writeRunReport(runDir);
   return { render, selfcheck: sc, attentionFile };
 }

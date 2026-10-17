@@ -141,3 +141,26 @@ test("Upload-Limit: zu großes Video wird abgewiesen, kein Run bleibt zurück; f
   const runs = await (await raw("/api/runs", { headers: { cookie: c } })).json();
   assert.deepEqual(runs, []);
 });
+
+test("UI: Abnahme löscht Rohmaterial, behält fertiges Video und Plan; Lauf löschen entfernt alles", async () => {
+  const run = runPaths(cfg, "abn");
+  saveManifest(run, { name: "abn", created_at: new Date().toISOString(), style: "thorsten", clips: [{ id: "reel", role: "reel", source_path: "/x.mp4", precut: "auto" }] });
+  const w = (f: string) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, "x".repeat(1000)); };
+  w(path.join(run.dir, "input", "roh.mp4"));
+  w(path.join(run.dir, "render", "video.mp4"));
+  w(path.join(run.dir, "clips", "reel", "proxy.mp4"));
+  w(path.join(run.dir, "clips", "reel", "audio_16k.wav"));
+  w(path.join(run.dir, "clips", "reel", "transcript.json"));
+  w(path.join(run.dir, "plan.json"));
+  const noVideo = await fetch(`${srv.url}/api/runs/abn/approve`, { method: "POST" });
+  assert.equal(noVideo.status, 409);
+  w(path.join(run.dir, "out", "TW_Reel_abn.mp4"));
+  w(path.join(run.dir, "out", "f1.png"));
+  const ok = await fetch(`${srv.url}/api/runs/abn/approve`, { method: "POST" });
+  assert.equal(ok.status, 200);
+  for (const gone of ["input", "render", "clips/reel/proxy.mp4", "clips/reel/audio_16k.wav", "out/f1.png"]) assert.ok(!fs.existsSync(path.join(run.dir, gone)), gone);
+  for (const kept of ["plan.json", "clips/reel/transcript.json", "out/TW_Reel_abn.mp4", "approved.json"]) assert.ok(fs.existsSync(path.join(run.dir, kept)), kept);
+  const del = await fetch(`${srv.url}/api/runs/abn`, { method: "DELETE" });
+  assert.equal(del.status, 200);
+  assert.ok(!fs.existsSync(run.dir));
+});

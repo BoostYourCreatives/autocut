@@ -13,6 +13,7 @@ import { health } from "./health.ts";
 import { createAuth, loginPage } from "./auth.ts";
 import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { pruneModelCache } from "../util/modelCache.ts";
+import { approveRun } from "../steps/approve.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
@@ -118,6 +119,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       return { key, label: STEP_LABEL[key], status, seconds: Math.round(secs * 10) / 10 };
     });
     const out: Record<string, unknown> = { name, steps, job: job ? { status: job.status, current: job.current, error: job.error, kind: job.kind } : null };
+    if (fs.existsSync(path.join(dir, "approved.json"))) out.approved = JSON.parse(fs.readFileSync(path.join(dir, "approved.json"), "utf8"));
     if (!job && fs.existsSync(path.join(dir, "job.json"))) out.interrupted = JSON.parse(fs.readFileSync(path.join(dir, "job.json"), "utf8"));
 
     const planFile = planPaths(runPaths(cfg, name)).plan;
@@ -273,6 +275,22 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)$/))) {
         const d = validName(mm[1]!) ? detail(mm[1]!) : null;
         return d ? json(res, 200, d) : json(res, 404, { error: "Run nicht gefunden" });
+      }
+      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/approve$/))) {
+        const name = mm[1]!;
+        if (!validName(name) || !fs.existsSync(path.join(runDir(name), "run.json"))) return json(res, 404, { error: "Run nicht gefunden" });
+        if (jobs.busyRun === name) return json(res, 409, { error: "Der Lauf ist noch aktiv." });
+        const mp4s = fs.existsSync(path.join(runDir(name), "out")) ? fs.readdirSync(path.join(runDir(name), "out")).filter((f) => f.endsWith(".mp4")) : [];
+        if (!mp4s.length) return json(res, 409, { error: "Es gibt noch kein fertiges Video zum Abnehmen." });
+        return json(res, 200, approveRun(runDir(name)));
+      }
+      if (req.method === "DELETE" && (mm = m(/^\/api\/runs\/([^/]+)$/))) {
+        const name = mm[1]!;
+        if (!validName(name) || !fs.existsSync(path.join(runDir(name), "run.json"))) return json(res, 404, { error: "Run nicht gefunden" });
+        if (jobs.busyRun === name) return json(res, 409, { error: "Der Lauf ist noch aktiv." });
+        fs.rmSync(runDir(name), { recursive: true, force: true });
+        jobs.jobs.delete(name);
+        return json(res, 200, { deleted: true });
       }
       if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/events$/))) {
         const job = jobs.jobs.get(mm[1]!);
