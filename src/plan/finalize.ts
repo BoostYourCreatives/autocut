@@ -172,6 +172,19 @@ export function finalize(inp: FinalizeInput): FinalizeResult {
       usedSeg.add(o.seg.id);
       zooms.push({ segment_id: o.seg.id, start_s: quantize(start, fps), to_scale: z.to_scale, reason, confidence: conf });
     }
+    // Zooms sollen selten sein: Mindestabstand und Höchstzahl, bei Überzahl bleiben die sichersten
+    const rank = { hoch: 0, mittel: 1, niedrig: 2 } as const;
+    zooms.sort((x, y) => rank[x.confidence] - rank[y.confidence] || x.start_s - y.start_s);
+    const kept: Zoom[] = [];
+    for (const zm of zooms) {
+      if (kept.length >= params.zoom.anzahl.max) {
+        notes.push(`Zoom bei ${de2(zm.start_s)} s verworfen: höchstens ${params.zoom.anzahl.max} Zooms pro Reel.`);
+      } else if (kept.some((k) => Math.abs(k.start_s - zm.start_s) < params.zoom.mindestabstand_s)) {
+        notes.push(`Zoom bei ${de2(zm.start_s)} s verworfen: weniger als ${params.zoom.mindestabstand_s} s Abstand zum nächsten Zoom.`);
+      } else kept.push(zm);
+    }
+    zooms.length = 0;
+    zooms.push(...kept.sort((x, y) => x.start_s - y.start_s));
   }
 
   // ---- B-Roll ----
@@ -192,6 +205,11 @@ export function finalize(inp: FinalizeInput): FinalizeResult {
     const nextSame = z.seg.out_to_s - z.end > params.broll.nachlauf_s ? z.end + params.broll.nachlauf_s : z.seg.out_to_s;
     let end = Math.min(total, nextSame);
     if (end - start < params.captions.min_frames * frame) end = Math.min(total, start + params.captions.min_frames * frame);
+    const longOk = b.lange_einblendung || b.covers_ai_error;
+    if (!longOk && end - start > params.broll.max_s) {
+      end = start + params.broll.max_s;
+      notes.push(`B-Roll "${b.motif}" auf ${params.broll.max_s} s gekürzt (längere Einblendung nur als Ausnahme).`);
+    }
     broll.push({
       id: broll.length,
       start_s: quantize(start, fps),
@@ -201,6 +219,7 @@ export function finalize(inp: FinalizeInput): FinalizeResult {
       word_idx: Array.from({ length: Math.max(0, b.to_word_idx - b.from_word_idx + 1) }, (_, k) => b.from_word_idx + k),
       shade_alpha: params.broll.shade_alpha,
       covers_ai_error: b.covers_ai_error,
+      long_ok: longOk,
       reason: b.reason,
       confidence: b.confidence,
     });

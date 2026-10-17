@@ -164,3 +164,22 @@ test("UI: Abnahme löscht Rohmaterial, behält fertiges Video und Plan; Lauf lö
   assert.equal(del.status, 200);
   assert.ok(!fs.existsSync(run.dir));
 });
+
+test("Untertitel-Editor: geänderter Text wird übernommen, Validator akzeptiert ihn, leerer Text wird ignoriert", async () => {
+  const { applyCaptionEdits } = await import("../../src/steps/captionEdit.ts");
+  const { fixtureFromExample, EX53 } = await import("../helpers/reel.ts");
+  const { finalize } = await import("../../src/plan/finalize.ts");
+  const { draftReel53 } = await import("../fixtures/draft-reel53.ts");
+  const { validate } = await import("../../src/validate/validate.ts");
+  const f = fixtureFromExample(EX53, { silencesFromCuts: true, precut: false });
+  const r = finalize({ draft: structuredClone(draftReel53), transcript: f.transcript, analysis: f.analysis, meta: f.meta, params: f.params, sfxIndex: f.sfxIndex, style: "thorsten", video: "TW_Reel_53" });
+  const plan = r.plan!;
+  const c = plan.captions.find((x) => x.kind === "weiss")!;
+  const before = validate({ plan, transcript: f.transcript, analysis: f.analysis, params: f.params, sfxIndex: f.sfxIndex });
+  const out = applyCaptionEdits(plan, [{ id: c.id, text: "  Völlig anderer Text " }, { id: 9999, text: "x" }, { id: plan.captions[0]!.id, text: "   " }]);
+  assert.equal(out.changed, 1);
+  assert.equal(c.text, "Völlig anderer Text");
+  const after = validate({ plan, transcript: f.transcript, analysis: f.analysis, params: f.params, sfxIndex: f.sfxIndex });
+  assert.equal(after.errors.filter((e) => e.code === "caption_text").length, 0);
+  assert.equal(before.errors.length, after.errors.length);
+});

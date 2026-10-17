@@ -13,6 +13,7 @@ import { health } from "./health.ts";
 import { createAuth, loginPage } from "./auth.ts";
 import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { pruneModelCache } from "../util/modelCache.ts";
+import { applyCaptionEdits } from "../steps/captionEdit.ts";
 import { approveRun } from "../steps/approve.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
@@ -79,6 +80,8 @@ export interface ServerOptions {
   maxUploadMb?: number;
   /** Läufe älter als so viele Tage werden automatisch gelöscht (0 = nie) */
   retentionDays?: number;
+  /** Läufe ohne fertiges Video werden nach so vielen Tagen gelöscht (Standard 2) */
+  unfinishedDays?: number;
 }
 
 export function startServer(o: ServerOptions): Promise<{ server: http.Server; url: string; jobs: JobRunner }> {
@@ -144,6 +147,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         for (const z of plan.zooms) dec.push({ t_s: z.start_s, typ: "Zoom", text: `auf ${z.to_scale}`, reason: z.reason, confidence: z.confidence });
         for (const b of plan.broll) dec.push({ t_s: b.start_s, typ: "B-Roll", text: b.motif + (b.source.kind === "offen" ? " (kein Video)" : "info" in b.source && b.source.info ? ` (${b.source.info})` : ""), reason: b.reason, confidence: b.confidence });
         for (const s of plan.sfx) if (!["riser", "shutter"].includes(s.role)) dec.push({ t_s: Math.max(0, s.at_s), typ: "Sound", text: s.file, reason: s.reason, confidence: s.confidence });
+        out.captions = plan.captions.map((c) => ({ id: c.id, text: c.text, start_s: c.start_s, end_s: c.end_s, kind: c.kind }));
         out.decisions = dec.sort((a, b) => a.t_s - b.t_s);
         const outDir = path.join(runDir(name), "out");
         const j = (f: string) => (fs.existsSync(path.join(outDir, f)) ? JSON.parse(fs.readFileSync(path.join(outDir, f), "utf8")) : null);
@@ -170,12 +174,19 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
   };
 
   const cleanup = () => {
-    if (!o.retentionDays || !fs.existsSync(cfg.runsPath)) return;
-    const limit = Date.now() - o.retentionDays * 864e5;
+    if (!fs.existsSync(cfg.runsPath)) return;
+    const limit = o.retentionDays ? Date.now() - o.retentionDays * 864e5 : 0;
+    // Unfertige oder fehlgeschlagene Läufe (kein Video) räumen wir viel früher weg, sie belegen nur Platz
+    const unfinishedLimit = Date.now() - (o.unfinishedDays ?? 2) * 864e5;
     for (const d of fs.readdirSync(cfg.runsPath, { withFileTypes: true })) {
       if (!d.isDirectory() || jobs.busyRun === d.name) continue;
-      const f = path.join(cfg.runsPath, d.name, "run.json");
-      if (fs.existsSync(f) && fs.statSync(f).mtimeMs < limit) fs.rmSync(path.join(cfg.runsPath, d.name), { recursive: true, force: true });
+      const dir = path.join(cfg.runsPath, d.name);
+      const f = path.join(dir, "run.json");
+      if (!fs.existsSync(f)) continue;
+      const age = fs.statSync(f).mtimeMs;
+      const outDir = path.join(dir, "out");
+      const hasVideo = fs.existsSync(outDir) && fs.readdirSync(outDir).some((x) => x.endsWith(".mp4"));
+      if ((limit && age < limit) || (!hasVideo && age < unfinishedLimit)) fs.rmSync(dir, { recursive: true, force: true });
     }
   };
   cleanup();
@@ -184,7 +195,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
   } catch {
     /* nicht kritisch */
   }
-  const cleanupTimer = o.retentionDays ? setInterval(cleanup, 6 * 3600e3) : null;
+  const cleanupTimer = setInterval(cleanup, 6 * 3600e3);
   cleanupTimer?.unref();
 
   const server = http.createServer(async (req, res) => {
@@ -354,6 +365,43 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
           return json(res, 409, { error: (e as Error).message });
         }
         return json(res, 200, { ok: true, started: true });
+      }
+      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/captions$/))) {
+        const name = mm[1]!;
+        if (!validName(name) || !fs.existsSync(path.join(runDir(name), "run.json"))) return json(res, 404, { error: "Run nicht gefunden" });
+        if (fs.existsSync(path.join(runDir(name), "approved.json"))) return json(res, 409, { error: "Das Video ist schon abgenommen, das Rohmaterial ist gelöscht." });
+        const planFile = planPaths(runPaths(cfg, name)).plan;
+        if (!fs.existsSync(planFile)) return json(res, 404, { error: "Noch kein Plan" });
+        let edits: { id: number; text: string }[];
+        try {
+          edits = (JSON.parse(await readBody(req)) as { edits: { id: number; text: string }[] }).edits;
+          if (!Array.isArray(edits) || !edits.every((e) => Number.isInteger(e.id) && typeof e.text === "string")) throw new Error("edits fehlt");
+        } catch {
+          return json(res, 400, { error: "Bitte {edits:[{id,text}]} senden." });
+        }
+        const { plan, changed } = applyCaptionEdits(Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8"))), edits);
+        if (!changed) return json(res, 200, { ok: true, started: false, changed: 0 });
+        const tmp = path.join(runDir(name), "plan.edit.json");
+        fs.writeFileSync(tmp, JSON.stringify(plan, null, 2));
+        let v;
+        try {
+          v = validatePlanFile(cfg, style, tmp).result;
+        } catch (e) {
+          fs.rmSync(tmp, { force: true });
+          return json(res, 422, { ok: false, error: (e as Error).message.split("\n").slice(0, 3).join(" ") });
+        }
+        if (!v.ok) {
+          fs.rmSync(tmp, { force: true });
+          return json(res, 422, { ok: false, error: `Der geänderte Text verletzt eine Regel: ${v.errors.map((x) => x.message).slice(0, 3).join(" | ")}` });
+        }
+        fs.copyFileSync(planFile, path.join(runDir(name), "plan.prev.json"));
+        fs.renameSync(tmp, planFile);
+        try {
+          jobs.start(name, "rerender", { precut: "auto", provider: "auto", selfcheck: false });
+        } catch (e) {
+          return json(res, 409, { error: (e as Error).message });
+        }
+        return json(res, 200, { ok: true, started: true, changed });
       }
       if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/replan$/))) {
         const name = mm[1]!;

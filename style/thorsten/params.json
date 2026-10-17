@@ -173,12 +173,13 @@
     "rampe_frames": 24,
     "max_schritt_pro_frame": 0.0105,
     "anzahl": {
-      "min": 3,
-      "max": 6
+      "min": 1,
+      "max": 3
     },
+    "mindestabstand_s": 6,
     "hook_push_nach": 1.06,
     "_quelle": "regeln.md MUSS 2/3, STANDARD 3/4",
-    "_todo": "TODO(style): Anzahl 3-6 ist ein Toleranzband um 'fuenf pro Reel'; bei kurzen Reels sind weniger plausibel."
+    "_todo": "Vorgabe vom User (Oktober 2026): Zooms seltener als in regeln.md. Hoechstens 3 pro Reel, mindestens 6 s Abstand, nur bei echter Betonung."
   },
   "sfx": {
     "verboten_muster": [
@@ -242,6 +243,7 @@
     "shade_alpha_hell": 0.62,
     "vorlauf_frames": 1,
     "nachlauf_s": 0.18,
+    "max_s": 3,
     "_quelle": "style.json b_roll, regeln.md STANDARD 7"
   },
   "hook": {

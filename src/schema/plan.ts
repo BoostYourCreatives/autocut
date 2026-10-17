@@ -94,6 +94,8 @@ export const Caption = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   /** Nur animation "words": Frame-Offset je Wort relativ zum Start der Einblendung */
   word_offsets_frames: z.array(z.tuple([z.string(), z.number().int().nonnegative()])).optional(),
+  /** Text wurde von Hand im Editor geändert (darf vom Transkript abweichen) */
+  edited: z.boolean().optional(),
   ...decisionFields,
 });
 
@@ -163,6 +165,8 @@ export const BrollSlot = z.object({
   shade_alpha: z.number().min(0).max(1),
   /** Deckt einen KI-Fehler im Rohvideo ab (Pflichtabdeckung) */
   covers_ai_error: z.boolean().default(false),
+  /** Darf länger als broll.max_s stehen */
+  long_ok: z.boolean().default(false),
   ...decisionFields,
 });
 

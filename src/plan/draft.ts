@@ -62,6 +62,8 @@ export const DraftBroll = z.object({
   /** Was wörtlich im Bild zu sehen ist */
   motif: z.string(),
   covers_ai_error: z.boolean(),
+  /** Ausnahme: B-Roll darf länger als 3 s stehen (nur mit Grund in reason) */
+  lange_einblendung: z.boolean().optional(),
   ...decision,
 });
 

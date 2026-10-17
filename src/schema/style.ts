@@ -53,6 +53,7 @@ export const StyleParams = z.object({
     rampe_frames: z.number().int(),
     max_schritt_pro_frame: z.number(),
     anzahl: z.object({ min: z.number().int(), max: z.number().int() }),
+    mindestabstand_s: z.number().default(6),
     hook_push_nach: z.number(),
   }),
   sfx: z.object({
@@ -72,6 +73,8 @@ export const StyleParams = z.object({
     shade_alpha_hell: z.number(),
     vorlauf_frames: z.number().int(),
     nachlauf_s: z.number(),
+    /** Längste Einblendung einer B-Roll; Ausnahmen (lange_einblendung, KI-Fehler abdecken) sind erlaubt */
+    max_s: z.number().default(3),
   }),
   hook: z.object({
     zeilen: z.number().int(),

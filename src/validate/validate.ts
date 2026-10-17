@@ -187,7 +187,7 @@ export function validate(inp: ValidateInput): ValidationResult {
     for (const i of c.word_idx) coverage.set(i, (coverage.get(i) ?? 0) + 1);
     const expected = c.word_idx.map((i) => corr.get(i) ?? words[i]?.word ?? "?").join(" ");
     if (c.word_idx.some((i) => !words[i])) err("caption_index", `Untertitel #${c.id} verweist auf unbekannte Wörter`, c.start_s);
-    else if (norm(c.text) !== norm(expected)) err("caption_text", `Untertitel #${c.id} "${c.text}" weicht vom Transkript ab ("${expected}"). Korrekturen nur über text_corrections.`, c.start_s);
+    else if (!c.edited && norm(c.text) !== norm(expected)) err("caption_text", `Untertitel #${c.id} "${c.text}" weicht vom Transkript ab ("${expected}"). Korrekturen nur über text_corrections.`, c.start_s);
     if (c.word_idx.some((i) => removedWordIdx.has(i))) err("caption_entferntes_wort", `Untertitel #${c.id} "${c.text}" enthält entfernte Wörter`, c.start_s);
   }
   for (const w of keptWords) {
@@ -282,7 +282,7 @@ export function validate(inp: ValidateInput): ValidationResult {
     else if (seg.out_to_s - z.start_s < P.zoom.rampe_frames * frame - 0.002) err("zoom_rampe", `Zoom bei ${t(z.start_s)}: bis Segmentende nur ${de2(seg.out_to_s - z.start_s)} s, die Rampe braucht ${P.zoom.rampe_frames} Frames (${de2(P.zoom.rampe_frames * frame)} s). Sonst springt der Zoom.`, z.start_s);
   }
   for (const [id, n] of zoomSeg) if (n > 1) err("zoom_pro_segment", `Segment ${id} hat ${n} Zooms (höchstens 1)`);
-  if (!plan.precut && (plan.zooms.length < P.zoom.anzahl.min || plan.zooms.length > P.zoom.anzahl.max)) warn("zoom_anzahl", `${plan.zooms.length} Zooms (üblich ${P.zoom.anzahl.min}–${P.zoom.anzahl.max}, Standard: fünf)`);
+  if (!plan.precut && (plan.zooms.length < P.zoom.anzahl.min || plan.zooms.length > P.zoom.anzahl.max)) warn("zoom_anzahl", `${plan.zooms.length} Zooms (üblich ${P.zoom.anzahl.min}–${P.zoom.anzahl.max}, Zooms sollen selten sein)`);
 
   // ---------- B-Roll ----------
   const flashT = tl[1]?.out_from_s ?? 0;
@@ -293,6 +293,7 @@ export function validate(inp: ValidateInput): ValidationResult {
     if (b.end_s > total + 0.001) err("broll_ende", `B-Roll #${b.id} endet nach dem Videoende`, b.start_s);
     if (i > 0 && b.start_s < br[i - 1]!.end_s - 0.001) err("broll_ueberlappung", `B-Roll #${br[i - 1]!.id} und #${b.id} überlappen`, b.start_s);
     if (![P.broll.shade_alpha, P.broll.shade_alpha_hell].some((a) => Math.abs(a - b.shade_alpha) < 1e-6)) warn("broll_shade", `B-Roll #${b.id}: Abdunklung ${b.shade_alpha} unüblich (${P.broll.shade_alpha} oder ${P.broll.shade_alpha_hell})`, b.start_s);
+    if (!b.long_ok && b.end_s - b.start_s > P.broll.max_s + 0.05) warn("broll_lang", `B-Roll #${b.id} steht ${(b.end_s - b.start_s).toFixed(1)} s (üblich höchstens ${P.broll.max_s} s)`, b.start_s);
     if (b.source.kind === "offen") warn("broll_quelle_offen", `B-Roll #${b.id} "${b.motif}" hat noch keine Quelle (Upload-Funktion folgt)${b.covers_ai_error ? ": deckt einen KI-Fehler ab, Pflichtabdeckung!" : ""}`, b.start_s);
   });
   if (plan.broll.length < P.broll.anzahl.min || plan.broll.length > P.broll.anzahl.max) warn("broll_anzahl", `${plan.broll.length} B-Rolls (üblich ${P.broll.anzahl.min}–${P.broll.anzahl.max})`);

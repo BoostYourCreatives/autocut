@@ -237,7 +237,7 @@ program
     const retention = env.RETENTION_DAYS ? parseInt(env.RETENTION_DAYS, 10) : 0;
     const { url } = await startServer({
       cfg, style: loadStyle(cfg), host, port: parseInt(o.port ?? env.PORT ?? "3000", 10),
-      password, maxUploadMb: env.MAX_UPLOAD_MB ? parseInt(env.MAX_UPLOAD_MB, 10) : undefined, retentionDays: retention || undefined,
+      password, maxUploadMb: env.MAX_UPLOAD_MB ? parseInt(env.MAX_UPLOAD_MB, 10) : undefined, retentionDays: retention || undefined, unfinishedDays: env.UNFINISHED_DAYS ? parseInt(env.UNFINISHED_DAYS, 10) : undefined,
     });
     console.log(`\nautocut läuft: ${url}${password ? " (Passwortschutz an)" : ""}${retention ? `, Läufe werden nach ${retention} Tagen gelöscht` : ""}\nZum Beenden: Strg+C`);
   });
