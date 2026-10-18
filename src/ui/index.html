@@ -418,14 +418,21 @@ function progressPanel(d) {
   const steps = d.steps, done = steps.filter((x) => x.status === 'ok').length, run = steps.find((x) => x.status === 'running');
   const fast = d.job && (d.job.kind === 'recaption' || d.job.kind === 'rerender');
   const title = fast ? 'Dein Video wird neu gebaut' : run ? `${STEP_NAMES[run.key] || run.label} …` : 'Wird vorbereitet …';
-  return el('section', { class: 'progress' },
+  return el('section', { class: 'progress', id: 'progress' },
     el('h3', { text: title }), el('div', { id: 'liveLine', class: 'live' }),
     el('div', { class: 'bar' }, el('i', { style: `width:${Math.max(4, Math.round(((done + (run ? .5 : 0)) / steps.length) * 100))}%` })),
     fast ? null : el('div', { class: 'stepper' }, ...steps.map((x) => el('div', { class: `st ${x.status}` }, el('i'), el('span', { text: STEP_NAMES[x.key] || x.label })))),
     el('div', { class: 'hint', text: 'Das dauert einige Minuten. Du kannst die Seite offen lassen.' }));
 }
 
+let renderedRunning = false;
 function render(d) {
+  const running0 = !!(d.job && d.job.status === 'running');
+  // Läuft ein Job im Hintergrund, bleibt die Arbeitsfläche stehen (Video, Zeitleiste, Eingaben) und nur die Fortschrittsanzeige wird aktualisiert
+  if (running0 && renderedRunning && $('applybar') && curData && curData.name === d.name && d.files && !d.approved && $('progress')) {
+    const fresh = progressPanel(d); $('progress').replaceWith(fresh); paintLog(); return;
+  }
+  renderedRunning = running0;
   curData = d;
   const root = $('detail');
   const keepOpen = new Set([...root.querySelectorAll('details[open]')].map((x) => x.dataset.k));
