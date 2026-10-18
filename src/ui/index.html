@@ -203,6 +203,25 @@
   .panels { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 1.5fr); gap: 14px; align-items: start; }
   @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; } .stage { width: 100%; } .stage-frame { width: 100%; height: auto; min-height: 0; max-height: min(70vh, 640px); } .panels { grid-template-columns: 1fr; } }
   .hook-col { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ---------- Zeitleiste: Zeilen und Blöcke ---------- */
+  .tl-labels { position: relative; flex: none; }
+  .tl-labels div { position: absolute; left: 0; right: 8px; display: flex; align-items: center; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .tl-add { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tl-add .menu .pop { min-width: 200px; max-height: 280px; overflow: auto; left: 0; right: auto; }
+  .blk { position: absolute; height: 28px; line-height: 26px; padding: 0 8px; border-radius: 7px; font-size: 12.5px; font-weight: 550; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: grab; box-sizing: border-box; border: 1px solid var(--line); background: var(--panel); color: var(--ink); transition: box-shadow .15s ease; }
+  .blk:active { cursor: grabbing; }
+  .blk.gold { background: var(--gold); border-color: transparent; color: #231a00; }
+  .blk-sfx { height: 26px; line-height: 24px; background: color-mix(in srgb, var(--run) 16%, var(--panel)); border-color: color-mix(in srgb, var(--run) 55%, var(--line)); border-radius: 13px; padding: 0 10px; }
+  .blk-sfx.locked { border-style: dashed; cursor: default; opacity: .8; }
+  .blk-broll { background: color-mix(in srgb, var(--ok) 17%, var(--panel)); border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); }
+  .blk-broll.nosrc { border-style: dashed; color: var(--muted); }
+  .blk-zoom { height: 24px; line-height: 22px; background: color-mix(in srgb, var(--warn) 18%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
+  .blk.edited { box-shadow: 0 0 0 2px var(--edit); }
+  .blk.sel { box-shadow: 0 0 0 2px var(--run); }
+  .blk.sel.edited { box-shadow: 0 0 0 2px var(--run), 0 0 0 4px var(--edit); }
+  .panel select { font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+  .panel input[type=range] { width: 100%; accent-color: var(--ink); margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -389,7 +408,6 @@ async function refresh() {
   clearTimeout(pollTimer);
   if (d.job && d.job.status === 'running') pollTimer = setTimeout(refresh, 2500);
 }
-const editorBusy = () => !!$('applybar') && (Object.keys(pendingCaps).length > 0 || pendingHook !== null);
 
 const STEP_NAMES = { ingest: 'Einlesen', transcribe: 'Text erkennen', analyze: 'Analysieren', chin: 'Gesicht messen', plan: 'Schnittplan', broll: 'B-Rolls', render: 'Video bauen' };
 function banner(kind, title, text, icon) {
@@ -438,19 +456,55 @@ function render(d) {
   if (mount) mount();
 }
 
-// ---------- Arbeitsfläche: Video, Texte, Zeitleiste ----------
-let capsList = [], pendingCaps = {}, capPrev = null, capSeq = 0, capFps = 25, capDur = 0, capSel = null, capWave = null, capZoom = 1, rafId = 0;
-const capCur = (c) => ({ ...c, ...(pendingCaps[c.id] || {}) });
+// ---------- Arbeitsfläche: Video, Zeitleiste, Bedienfelder ----------
+// Datenmodell: origin = Stand vom Server, lanes = geänderte Felder je Element, adds = neue Elemente, dels = entfernte Elemente
+let origin = { cap: [], sfx: [], broll: [], zoom: [] }, lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }, adds = { sfx: [], broll: [], zoom: [] }, dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
+let capPrev = null, capSeq = 0, capFps = 25, capDur = 0, sel = null, capWave = null, capZoom = 1, rafId = 0, libs = { sfx: [], broll: [] }, zoomValues = [1.1, 1.12, 1.15], newSeq = 1;
+const LANE_NAME = { cap: 'Untertitel', sfx: 'Sound', broll: 'B-Roll', zoom: 'Zoom' };
+const keyOf = (t, k) => `${t}:${k}`;
+const baseName = (f) => (f || '').split('/').pop().replace(/\.[^.]+$/, '');
 const q = (t) => Math.round(t * capFps) / capFps;
+const r3 = (t) => Math.round(t * 1000) / 1000;
+
+function items(type) {
+  const idOf = (x) => (type === 'cap' ? x.id : type === 'sfx' || type === 'zoom' ? x.index : x.id);
+  const base = origin[type].filter((x) => !(dels[type] && dels[type].has(idOf(x)))).map((x) => ({ ...x, key: idOf(x), ...(lanes[type][idOf(x)] || {}), changed: !!lanes[type][idOf(x)] }));
+  return type === 'cap' ? base : [...base, ...adds[type].map((x) => ({ ...x, isNew: true, changed: true }))];
+}
+const getItem = (t, k) => items(t).find((x) => x.key === k);
+const endOf = (t, x) => (t === 'sfx' || t === 'zoom' ? x.at_s ?? x.start_s : x.end_s);
+function patchItem(type, key, patch) {
+  const add = adds[type] && adds[type].find((x) => x.key === key);
+  if (add) Object.assign(add, patch);
+  else {
+    const o = origin[type].find((x) => (type === 'cap' ? x.id : type === 'sfx' || type === 'zoom' ? x.index : x.id) === key); if (!o) return;
+    const cur = { ...(lanes[type][key] || {}), ...patch };
+    for (const f of Object.keys(cur)) if (cur[f] === undefined || (typeof cur[f] === 'number' && Math.abs(cur[f] - o[f]) < 1e-6) || (typeof cur[f] === 'string' && cur[f].trim() === (o[f] || '').trim())) delete cur[f];
+    if (Object.keys(cur).length) lanes[type][key] = cur; else delete lanes[type][key];
+  }
+  if (type === 'cap' && capPrev) { const p = lanes.cap[key]; capPrev.setEdit(key, p ? { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s } : null); }
+  afterChange();
+}
+function afterChange() { capCount(); paintTimeline(); syncSel(); }
+function pendingCount() {
+  return Object.keys(lanes.cap).length + (pendingHook ? 1 : 0) + ['sfx', 'broll', 'zoom'].reduce((n, t) => n + Object.keys(lanes[t]).length + adds[t].length + dels[t].size, 0);
+}
+function pendingKind() { // was muss neu gebaut werden?
+  const bild = Object.keys(lanes.broll).length + adds.broll.length + dels.broll.size + Object.keys(lanes.zoom).length + adds.zoom.length + dels.zoom.size > 0;
+  const ton = Object.keys(lanes.sfx).length + adds.sfx.length + dels.sfx.size > 0;
+  return bild ? 'bild' : ton ? 'ton' : 'texte';
+}
+const editorBusy = () => !!$('applybar') && pendingCount() > 0;
 
 function studio(d, running) {
-  capsList = d.captions || []; pendingCaps = {}; pendingHook = null; capSel = null; capWave = null;
+  origin = { cap: d.captions || [], sfx: d.sfx || [], broll: d.broll || [], zoom: d.zooms || [] };
+  lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }; adds = { sfx: [], broll: [], zoom: [] }; dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
+  pendingHook = null; sel = null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
   planHookLines = d.hook ? d.hook.lines.map((l) => l.toUpperCase()) : null;
   if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
   cancelAnimationFrame(rafId);
   const seq = ++capSeq, layered = !!d.layered;
 
-  // Bühne
   const frame = el('div', { class: 'stage-frame' },
     layered ? el('video', { id: 'vid', src: `/api/runs/${d.name}/base`, preload: 'auto', playsinline: '' }) : el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' }),
     layered ? el('div', { id: 'capOverlay', class: 'ov' }) : null);
@@ -464,7 +518,6 @@ function studio(d, running) {
       el('div', { id: 'capLive', class: 'live-note', text: 'Texte siehst du hier live. Neu gebaut wird erst beim Übernehmen.' }));
   }
 
-  // Bedienfelder neben dem Video
   const panels = el('div', { class: 'panels' });
   if (d.hook) {
     const h1 = el('input', { type: 'text', id: 'hookA', value: d.hook.lines[0], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 1' });
@@ -480,19 +533,21 @@ function studio(d, running) {
   }
   panels.append(el('section', { class: 'panel', id: 'selPanel' }));
 
+  const addMenu = (label, items2, onPick, id) => el('details', { class: 'menu', id }, el('summary', { class: 'btn sm' }, ico('plus', 15), el('span', { text: label })),
+    el('div', { class: 'pop' }, ...(items2.length ? items2.map((it) => el('button', { type: 'button', onclick: (e) => { e.currentTarget.closest('details').open = false; onPick(it); } }, el('span', { text: it.label }))) : [el('div', { class: 'muted', style: 'padding:8px 10px', text: 'Nichts in der Library.' })])));
   const timeline = layered ? el('section', { class: 'tl-card' },
     el('div', { class: 'tl-head' }, el('h3', { text: 'Zeitleiste' }),
-      el('div', { class: 'legend' }, el('span', {}, el('i', { style: 'background:var(--bg)' }), 'Untertitel'), el('span', {}, el('i', { style: 'background:var(--gold);border-color:var(--gold)' }), 'Gold'), el('span', {}, el('i', { style: 'border:2px solid var(--edit)' }), 'geändert')),
+      el('div', { class: 'tl-add', id: 'tlAdd' }),
       el('label', { class: 'zoom' }, 'Zoom', el('input', { type: 'range', id: 'zoomR', min: '1', max: '10', step: '0.5', value: String(capZoom) }))),
     el('div', { id: 'tlBox' }),
-    el('div', { class: 'hint', text: 'Block anklicken oder ziehen. Rand ziehen = Start oder Ende. Pfeiltasten: ein Bild verschieben (Umschalt: fünf).' })) : null;
+    el('div', { class: 'hint', text: 'Klicken zum Auswählen, ziehen zum Verschieben, Rand ziehen für Start oder Ende. Pfeiltasten: ein Bild (Umschalt: fünf). Entf löscht Sounds, B-Rolls und Zooms.' })) : null;
 
   const node = el('div', { class: 'studio' }, stage,
     el('div', { class: 'right' }, panels, timeline),
     el('div', { id: 'applybar', class: 'applybar', role: 'status', style: 'grid-column:1 / -1' },
       el('div', { class: 'msg' }, el('span', { id: 'capCountTxt', text: '' }), el('small', { id: 'capSmall', text: '' }), el('span', { id: 'capMsg', class: 'bad' })),
-      btn('ghost', 'undo', 'Verwerfen', resetCaps),
-      btn('primary', 'check', 'Übernehmen', sendCaps, { id: 'capGo' })));
+      btn('ghost', 'undo', 'Verwerfen', resetAll),
+      btn('primary', 'check', 'Übernehmen', sendEdits, { id: 'capGo' })));
 
   const mount = () => {
     const v = $('vid'); if (!v) return;
@@ -502,8 +557,18 @@ function studio(d, running) {
     v.addEventListener('seeked', () => autoSelect(v.currentTime));
     v.addEventListener('play', () => { setPlayIcon(); tickLoop(); });
     v.addEventListener('pause', () => { setPlayIcon(); cancelAnimationFrame(rafId); onTime(); autoSelect(v.currentTime); });
-    if (layered) { v.addEventListener('click', togglePlay); mountPreview(d.name, seq); }
-    else v.addEventListener('pause', () => autoSelect(v.currentTime));
+    if (layered) {
+      v.addEventListener('click', togglePlay); mountPreview(d.name, seq);
+      api('/api/assets').then((a) => {
+        if (seq !== capSeq) return;
+        libs = { sfx: a.sfx.map((x) => x.file), broll: a.broll.map((x) => x.file) };
+        const host = $('tlAdd'); if (!host) return;
+        host.replaceChildren(
+          addMenu('Sound', libs.sfx.map((f) => ({ file: f, label: baseName(f) })), (it) => addSfx(it.file), 'addSfx'),
+          btn('sm', 'plus', 'B-Roll', addBroll),
+          addMenu('Zoom', zoomValues.map((z) => ({ v: z, label: `${Math.round(z * 100)} %` })), (it) => addZoom(it.v), 'addZoom'));
+      }).catch(() => {});
+    } else v.addEventListener('pause', () => autoSelect(v.currentTime));
     if (running) { const g = $('capGo'); if (g) g.disabled = true; }
   };
   return { node, mount };
@@ -514,17 +579,10 @@ function stepFrame(n) { const v = $('vid'); if (!v) return; v.pause(); seekTo(v.
 function tickLoop() { const v = $('vid'); if (!v || v.paused) return; onTime(); rafId = requestAnimationFrame(tickLoop); }
 function onTime() { movePlayhead(); const v = $('vid'), l = $('timeLbl'); if (v && l) l.textContent = `${clock(v.currentTime)} / ${clock(capDur || v.duration || 0)}`; }
 document.addEventListener('keydown', (e) => {
-  if (e.code !== 'Space' || !$('playBtn') || /^(INPUT|TEXTAREA|SELECT|BUTTON|SUMMARY)$/.test(document.activeElement.tagName)) return;
-  e.preventDefault(); togglePlay();
+  if (!$('playBtn') || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  if (e.code === 'Space' && !/^(BUTTON|SUMMARY)$/.test(document.activeElement.tagName)) { e.preventDefault(); togglePlay(); }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && sel && sel.type !== 'cap') { e.preventDefault(); removeSel(); }
 });
-function setPending(id, patch) {
-  const c = capsList.find((x) => x.id === id); if (!c) return;
-  const cur = { ...(pendingCaps[id] || {}), ...patch };
-  const same = (cur.text === undefined || cur.text.trim() === c.text || !cur.text.trim()) && (cur.start_s === undefined || Math.abs(cur.start_s - c.start_s) < 1e-6) && (cur.end_s === undefined || Math.abs(cur.end_s - c.end_s) < 1e-6);
-  if (same) delete pendingCaps[id]; else pendingCaps[id] = cur;
-  if (capPrev) { const p = pendingCaps[id]; capPrev.setEdit(id, p ? { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s } : null); }
-  capCount(); paintTimeline(); syncSel();
-}
 async function mountPreview(name, seq) {
   try {
     const data = await api(`/api/runs/${name}/preview-data`);
@@ -535,98 +593,186 @@ async function mountPreview(name, seq) {
     if (seq !== capSeq) { ctl.destroy(); return; }
     capPrev = ctl; onTime();
     if (pendingHook) ctl.setHook(pendingHook);
-    for (const [id, p] of Object.entries(pendingCaps)) ctl.setEdit(Number(id), p);
+    for (const [id, p] of Object.entries(lanes.cap)) ctl.setEdit(Number(id), p);
     api(`/api/runs/${name}/waveform`).then((w) => { if (seq === capSeq) { capWave = w; buildTimeline(); } }).catch(() => { if (seq === capSeq) buildTimeline(); });
   } catch (e) { const note = $('capLive'); if (note) note.textContent = `Live-Vorschau nicht verfügbar (${e.message}).`; }
 }
 
-// ---------- Ausgewählter Untertitel ----------
+// ---------- Hinzufügen und Entfernen ----------
+function addSfx(file) { const v = $('vid'); const key = `n${newSeq++}`; adds.sfx.push({ key, role: 'sonstiges', file, at_s: r3(v.currentTime), gain_db: -18, locked: false }); selectItem('sfx', key); playSound(file); afterChange(); }
+function addBroll() {
+  const v = $('vid'), s = q(v.currentTime), end = Math.min(capDur, q(s + 3)); const key = `n${newSeq++}`;
+  adds.broll.push({ key, start_s: s, end_s: end, motif: 'B-Roll', source: 'offen', info: null }); selectItem('broll', key); afterChange();
+}
+function addZoom(scale) { const v = $('vid'); const key = `n${newSeq++}`; adds.zoom.push({ key, start_s: q(v.currentTime), to_scale: scale }); selectItem('zoom', key); afterChange(); }
+function removeSel() {
+  if (!sel || sel.type === 'cap') return;
+  const t = sel.type, k = sel.key, a = adds[t].findIndex((x) => x.key === k);
+  if (a >= 0) adds[t].splice(a, 1); else { dels[t].add(k); delete lanes[t][k]; }
+  sel = null; afterChange(); paintSel();
+}
+
+// ---------- Auswahl ----------
 function autoSelect(t) {
-  if (!capsList.length || (document.activeElement && document.activeElement.closest && document.activeElement.closest('#selPanel') && document.activeElement.tagName === 'INPUT')) return;
-  const act = capsList.map(capCur).filter((c) => c.start_s <= t + 0.02 && t < c.end_s).sort((a, b) => Math.abs(a.start_s - t) - Math.abs(b.start_s - t));
-  const id = act.length ? act[0].id : capSel;
-  if (id !== capSel) { capSel = id; paintTimeline(); }
+  if (!origin.cap.length || (sel && sel.type !== 'cap') || (document.activeElement && document.activeElement.closest && document.activeElement.closest('#selPanel') && document.activeElement.tagName === 'INPUT')) return;
+  const act = items('cap').filter((c) => c.start_s <= t + 0.02 && t < c.end_s).sort((a, b) => Math.abs(a.start_s - t) - Math.abs(b.start_s - t));
+  const next = act.length ? { type: 'cap', key: act[0].key } : sel;
+  if (!sel || !next || sel.key !== next.key || sel.type !== next.type) { sel = next; paintTimeline(); }
   paintSel();
 }
-function selectCap(id, seek) {
-  capSel = id; paintTimeline(); paintSel();
-  const c = capsList.find((x) => x.id === id);
-  if (seek && c) seekTo(capCur(c).start_s + 0.02);
+function selectItem(type, key, seek) {
+  sel = { type, key }; paintTimeline(); paintSel();
+  if (seek) { const x = getItem(type, key); if (x) seekTo((x.start_s ?? x.at_s) + 0.02); }
 }
+const playSound = (file) => { try { const a = new Audio(`/api/sfx?file=${encodeURIComponent(file)}`); a.volume = .8; a.play().catch(() => {}); } catch (e) {} };
+
+// ---------- Bedienfeld für die Auswahl ----------
+function nudgeBox(label, valueId, onMinus, onPlus, onNow, step) {
+  return el('div', { class: 'tbox' }, el('span', { class: 'field-label', text: label }), el('div', { class: 'tv', id: valueId }),
+    el('div', { class: 'tb' }, btn('', null, `−${step}`, onMinus, { title: 'Früher' }), btn('', null, `+${step}`, onPlus, { title: 'Später' }), btn('', 'target', 'Jetzt', onNow, { title: 'Auf die aktuelle Position setzen' })));
+}
+const put = (host, ...kids) => host.replaceChildren(...kids.filter((x) => x != null && x !== false));
 function paintSel() {
   const host = $('selPanel'); if (!host) return;
-  if (capSel === null) { host.replaceChildren(el('h3', { text: 'Untertitel' }), el('div', { class: 'empty-sel', text: $('tlBox') ? 'Klicke einen Block in der Zeitleiste oder halte das Video an der Stelle an.' : 'Halte das Video an der Stelle an, die du ändern willst.' })); return; }
-  const c = capsList.find((x) => x.id === capSel);
-  const inp = el('input', { type: 'text', id: 'selText', class: 'big', autocomplete: 'off', 'aria-label': 'Text des Untertitels' });
-  inp.addEventListener('input', () => setPending(c.id, { text: inp.value }));
-  const tb = (which, label) => el('div', { class: 'tbox' }, el('span', { class: 'field-label', text: label }), el('div', { class: 'tv', id: `tv_${which}` }),
-    el('div', { class: 'tb' }, btn('', null, '−1', () => nudge(c.id, -1, which), { title: 'Ein Bild früher' }), btn('', null, '+1', () => nudge(c.id, 1, which), { title: 'Ein Bild später' }), btn('', 'target', 'Jetzt', () => setToPlayhead(c.id, which), { title: 'Auf die aktuelle Position setzen' })));
-  host.replaceChildren(el('h3', {}, 'Untertitel', el('button', { class: 'btn ghost sm', type: 'button', style: 'margin-left:auto', onclick: () => { delete pendingCaps[c.id]; if (capPrev) capPrev.setEdit(c.id, null); capCount(); paintTimeline(); paintSel(); } }, ico('undo', 15), el('span', { text: 'Zurücksetzen' }))),
-    el('label', { class: 'field-label', for: 'selText', text: 'Text' }), inp, el('div', { class: 'timing' }, tb('start_s', 'Beginn'), tb('end_s', 'Ende')));
+  if (!sel || !getItem(sel.type, sel.key)) { host.replaceChildren(el('h3', { text: 'Auswahl' }), el('div', { class: 'empty-sel', text: $('tlBox') ? 'Klicke einen Block in der Zeitleiste oder halte das Video an der Stelle an.' : 'Halte das Video an der Stelle an, die du ändern willst.' })); return; }
+  const { type, key } = sel, x = getItem(type, key);
+  const head = (title, extra) => el('h3', {}, title, extra || null);
+  const reset = () => el('button', { class: 'btn ghost sm', type: 'button', style: 'margin-left:auto', onclick: () => { delete lanes[type][key]; if (type === 'cap' && capPrev) capPrev.setEdit(key, null); afterChange(); paintSel(); } }, ico('undo', 15), el('span', { text: 'Zurücksetzen' }));
+  const del = () => el('button', { class: 'btn ghost sm', type: 'button', onclick: removeSel }, ico('trash', 15), el('span', { text: 'Entfernen' }));
+  const note = (t) => el('div', { class: 'hint', text: t });
+  if (type === 'cap') {
+    const inp = el('input', { type: 'text', id: 'selText', class: 'big', autocomplete: 'off', 'aria-label': 'Text des Untertitels' });
+    inp.addEventListener('input', () => patchItem('cap', key, { text: inp.value }));
+    put(host, head('Untertitel', lanes.cap[key] ? reset() : null), el('label', { class: 'field-label', for: 'selText', text: 'Text' }), inp,
+      el('div', { class: 'timing' }, nudgeBox('Beginn', 'tv_a', () => nudge('cap', key, 'start_s', -1), () => nudge('cap', key, 'start_s', 1), () => setNow('cap', key, 'start_s'), '1'), nudgeBox('Ende', 'tv_b', () => nudge('cap', key, 'end_s', -1), () => nudge('cap', key, 'end_s', 1), () => setNow('cap', key, 'end_s'), '1')));
+  } else if (type === 'sfx') {
+    const sound = el('select', { id: 'selFile', 'aria-label': 'Sound' }, ...libs.sfx.map((f) => el('option', { value: f, text: baseName(f) })));
+    sound.addEventListener('change', () => { patchItem('sfx', key, { file: sound.value }); playSound(sound.value); });
+    const vol = el('input', { type: 'range', id: 'selVol', min: '-40', max: '-9', step: '1' }); const volL = el('span', { id: 'selVolL', class: 'muted' });
+    vol.addEventListener('input', () => patchItem('sfx', key, { gain_db: parseFloat(vol.value) }));
+    put(host, head('Sound', x.isNew || lanes.sfx[key] ? reset() : null),
+      x.locked ? note('Riser und Camera Shutter gehören zum Hook-Übergang und lassen sich hier nicht ändern.') : null,
+      el('label', { class: 'field-label', for: 'selFile', text: 'Soundeffekt' }), el('div', { style: 'display:flex;gap:8px' }, sound, btn('sm', 'play', 'Anhören', () => playSound(getItem('sfx', key).file))),
+      el('div', { class: 'timing' }, nudgeBox('Zeitpunkt', 'tv_a', () => nudgeSfx(key, -0.04), () => nudgeSfx(key, 0.04), () => patchItem('sfx', key, { at_s: r3($('vid').currentTime) }), '1 Bild'), el('div', { class: 'tbox' }, el('span', { class: 'field-label', text: 'Lautstärke' }), vol, volL)),
+      x.locked ? null : el('div', { style: 'margin-top:10px' }, del()), note('Der Ton wird beim Übernehmen neu gemischt (schnell).'));
+    sound.value = x.file; sound.disabled = !!x.locked; vol.disabled = !!x.locked;
+  } else if (type === 'broll') {
+    const motif = el('input', { type: 'text', id: 'selMotif', autocomplete: 'off', 'aria-label': 'Beschreibung der B-Roll' });
+    motif.addEventListener('input', () => patchItem('broll', key, { motif: motif.value }));
+    const lib = el('select', { id: 'selLib', 'aria-label': 'Eigene Bibliothek' }, el('option', { value: '', text: libs.broll.length ? 'Aus deiner Bibliothek wählen …' : 'Bibliothek ist leer' }), ...libs.broll.map((f) => el('option', { value: f, text: f })));
+    lib.addEventListener('change', () => { if (lib.value) { patchItem('broll', key, { pick: { lib: lib.value }, source: 'user_clip', info: `eigene Bibliothek: ${lib.value}` }); paintSel(); } });
+    const qIn = el('input', { type: 'text', id: 'selQuery', value: x.motif, placeholder: 'Suchbegriff, am besten Englisch', autocomplete: 'off' }), res = el('div', { id: 'selRes', class: 'hint' });
+    const go = btn('sm', null, 'Stock suchen', async () => {
+      res.textContent = 'Suche …'; go.disabled = true;
+      try {
+        const r = await api(`/api/runs/${current}/broll/find`, { method: 'POST', body: JSON.stringify({ query: qIn.value, seconds: Math.max(1, getItem('broll', key).end_s - getItem('broll', key).start_s) }) });
+        patchItem('broll', key, { pick: { stock: r.stock, info: r.info }, source: 'stock_ordner', info: r.info }); paintSel();
+        const pv = $('selRes'); if (pv) pv.replaceChildren(el('video', { src: `/api/runs/${current}/broll/clip/${r.stock}`, muted: '', autoplay: '', loop: '', playsinline: '', style: 'width:120px;border-radius:8px;display:block;margin-top:6px' }));
+      } catch (e) { res.textContent = e.message; } finally { go.disabled = false; }
+    });
+    const srcTxt = x.source === 'offen' ? 'Noch kein Video gewählt. Ohne Video wird die Stelle nicht eingeblendet.' : x.source === 'user_clip' ? `Eigenes Video: ${(x.info || '').replace('eigene Bibliothek: ', '')}` : `Stock-Video: ${x.info || ''}`;
+    put(host, head('B-Roll', x.isNew || lanes.broll[key] ? reset() : null),
+      el('label', { class: 'field-label', for: 'selMotif', text: 'Beschreibung' }), motif,
+      el('div', { class: 'hint', style: 'margin:8px 0 4px', text: srcTxt }), lib,
+      el('div', { style: 'display:flex;gap:8px;margin-top:8px' }, qIn, go), res,
+      el('div', { class: 'timing' }, nudgeBox('Beginn', 'tv_a', () => nudge('broll', key, 'start_s', -1), () => nudge('broll', key, 'start_s', 1), () => setNow('broll', key, 'start_s'), '1'), nudgeBox('Ende', 'tv_b', () => nudge('broll', key, 'end_s', -1), () => nudge('broll', key, 'end_s', 1), () => setNow('broll', key, 'end_s'), '1')),
+      el('div', { style: 'margin-top:10px' }, del()), note('B-Roll-Änderungen bauen das Bild neu (einige Minuten). Eine Vorschau gibt es erst danach.'));
+  } else {
+    const scale = el('select', { id: 'selScale', 'aria-label': 'Stärke des Zooms' }, ...zoomValues.map((z) => el('option', { value: String(z), text: `${Math.round(z * 100)} %` })));
+    scale.addEventListener('change', () => patchItem('zoom', key, { to_scale: parseFloat(scale.value) }));
+    put(host, head('Zoom', x.isNew || lanes.zoom[key] ? reset() : null), el('label', { class: 'field-label', for: 'selScale', text: 'Stärke' }), scale,
+      el('div', { class: 'timing' }, nudgeBox('Beginn', 'tv_a', () => nudge('zoom', key, 'start_s', -1), () => nudge('zoom', key, 'start_s', 1), () => setNow('zoom', key, 'start_s'), '1')),
+      el('div', { style: 'margin-top:10px' }, del()), note('Zoom-Änderungen bauen das Bild neu (einige Minuten). Der Zoom braucht bis zum Schnitt mindestens eine Sekunde Platz.'));
+    scale.value = String(x.to_scale);
+  }
   syncSel();
 }
 function syncSel() {
-  const c = capsList.find((x) => x.id === capSel); if (!c || !$('selText')) return;
-  const cur = capCur(c), inp = $('selText');
-  if (document.activeElement !== inp) inp.value = cur.text !== undefined && pendingCaps[c.id] && pendingCaps[c.id].text !== undefined ? pendingCaps[c.id].text : c.text;
-  const a = $('tv_start_s'), b = $('tv_end_s'); if (a) a.textContent = `${cur.start_s.toFixed(2)} s`; if (b) b.textContent = `${cur.end_s.toFixed(2)} s`;
+  if (!sel) return; const x = getItem(sel.type, sel.key); if (!x || !$('selPanel')) return;
+  const set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+  if (sel.type === 'cap') { const i = $('selText'); if (i && document.activeElement !== i) i.value = x.text; set('tv_a', `${x.start_s.toFixed(2)} s`); set('tv_b', `${x.end_s.toFixed(2)} s`); }
+  else if (sel.type === 'sfx') { set('tv_a', `${x.at_s.toFixed(2)} s`); set('selVolL', `${Math.round(x.gain_db)} dB`); const v = $('selVol'); if (v && document.activeElement !== v) v.value = x.gain_db; }
+  else if (sel.type === 'broll') { const i = $('selMotif'); if (i && document.activeElement !== i) i.value = x.motif; set('tv_a', `${x.start_s.toFixed(2)} s`); set('tv_b', `${x.end_s.toFixed(2)} s`); }
+  else set('tv_a', `${x.start_s.toFixed(2)} s`);
 }
-function setToPlayhead(id, which) {
-  const v = $('vid'), t = q(v.currentTime), c = capCur(capsList.find((x) => x.id === id)), min = 2 / capFps;
-  if (which === 'start_s') setPending(id, { start_s: Math.min(t, c.end_s - min), end_s: c.end_s }); else setPending(id, { start_s: c.start_s, end_s: Math.max(t, c.start_s + min) });
+const minDur = () => 2 / capFps;
+function setNow(type, key, field) {
+  const t = q($('vid').currentTime), x = getItem(type, key);
+  if (type === 'zoom') return patchItem(type, key, { start_s: t });
+  if (field === 'start_s') patchItem(type, key, { start_s: Math.min(t, x.end_s - minDur()) }); else patchItem(type, key, { end_s: Math.max(t, x.start_s + minDur()) });
 }
-function nudge(id, frames, which) {
-  const c = capCur(capsList.find((x) => x.id === id)), d = frames / capFps, min = 2 / capFps;
-  let s = c.start_s, en = c.end_s;
-  if (which === 'start_s') s = Math.min(en - min, Math.max(0, s + d)); else if (which === 'end_s') en = Math.min(capDur || 1e9, Math.max(s + min, en + d)); else { const len = en - s; s = Math.max(0, Math.min((capDur || 1e9) - len, s + d)); en = s + len; }
-  setPending(id, { start_s: q(s), end_s: q(en) }); seekTo(which === 'end_s' ? en - 1 / capFps : s + 0.02);
+function nudge(type, key, field, frames) {
+  const x = getItem(type, key), d = frames / capFps;
+  if (type === 'zoom') { patchItem(type, key, { start_s: q(Math.max(0, x.start_s + d)) }); seekTo(x.start_s + d + 0.02); return; }
+  if (field === 'start_s') patchItem(type, key, { start_s: q(Math.max(0, Math.min(x.end_s - minDur(), x.start_s + d))) });
+  else if (field === 'end_s') patchItem(type, key, { end_s: q(Math.min(capDur || 1e9, Math.max(x.start_s + minDur(), x.end_s + d))) });
+  else { const len = x.end_s - x.start_s, s = Math.max(0, Math.min((capDur || 1e9) - len, x.start_s + d)); patchItem(type, key, { start_s: q(s), end_s: q(s + len) }); }
+  const n = getItem(type, key); seekTo(field === 'end_s' ? n.end_s - 1 / capFps : n.start_s + 0.02);
 }
+function nudgeSfx(key, dt) { const x = getItem('sfx', key); patchItem('sfx', key, { at_s: r3(Math.max(0, x.at_s + dt)) }); seekTo(x.at_s + dt); }
 
 // ---------- Zeitleiste ----------
-const TL_WAVE_H = 96, TL_LANE_H = 34;
+const H = { wave: 92, cap: 34, capN: 3, row: 34, zoom: 30, gap: 6 };
+const Y = { cap: H.wave + 4, sfx: H.wave + 4 + 3 * 34 + 6, broll: H.wave + 4 + 3 * 34 + 6 + 62, zoom: H.wave + 4 + 3 * 34 + 6 + 62 + 34 };
+const TL_H = Y.zoom + H.zoom + 8;
 let tlPps = 40, tlBlocks = {};
 function buildTimeline() {
   const host = $('tlBox'); if (!host || !capDur) return;
-  tlPps = Math.max(20, (host.clientWidth - 2) / capDur) * capZoom;
+  const gutter = 66;
+  tlPps = Math.max(20, (host.clientWidth - gutter - 2) / capDur) * capZoom;
   const W = Math.ceil(capDur * tlPps), dpr = window.devicePixelRatio || 1;
-  const scroller = el('div', { id: 'tlScroll', tabindex: '0', 'aria-label': 'Zeitleiste der Untertitel' });
-  const inner = el('div', { id: 'tlInner', style: `position:relative;width:${W}px;height:${TL_WAVE_H + 3 * TL_LANE_H + 12}px;user-select:none;touch-action:none` });
-  const cv = el('canvas', { style: `position:absolute;left:0;top:0;height:${TL_WAVE_H}px;width:${W}px` });
-  cv.width = W * dpr; cv.height = TL_WAVE_H * dpr;
+  const scroller = el('div', { id: 'tlScroll', tabindex: '0', 'aria-label': 'Zeitleiste' });
+  const inner = el('div', { id: 'tlInner', style: `position:relative;width:${W}px;height:${TL_H}px;user-select:none;touch-action:none` });
+  // Zeilen-Hintergründe
+  for (const [y, h, bg] of [[Y.sfx - 3, 60, 1], [Y.zoom - 2, H.zoom + 2, 1]]) inner.append(el('div', { style: `position:absolute;left:0;right:0;top:${y}px;height:${h}px;background:color-mix(in srgb, var(--ink) 4%, transparent)` }));
+  const cv = el('canvas', { style: `position:absolute;left:0;top:0;height:${H.wave}px;width:${W}px` });
+  cv.width = W * dpr; cv.height = H.wave * dpr;
   const g = cv.getContext('2d'); g.scale(dpr, dpr); g.fillStyle = getComputedStyle(document.body).getPropertyValue('--muted').trim() || '#888'; g.globalAlpha = .5;
-  if (capWave) for (let x = 0; x < W; x++) { const pk = (capWave.peaks[Math.floor((x / tlPps) * capWave.peaksPerSec)] || 0) / 255, h = Math.max(1, pk * (TL_WAVE_H - 14)); g.fillRect(x, (TL_WAVE_H - h) / 2 + 6, 1, h); }
+  if (capWave) for (let x = 0; x < W; x++) { const pk = (capWave.peaks[Math.floor((x / tlPps) * capWave.peaksPerSec)] || 0) / 255, h = Math.max(1, pk * (H.wave - 16)); g.fillRect(x, (H.wave - h) / 2 + 7, 1, h); }
   inner.append(cv);
   for (let t = 0; t <= capDur; t++) { const major = t % 5 === 0; inner.append(el('div', { style: `position:absolute;left:${t * tlPps}px;top:0;height:${major ? 12 : 6}px;border-left:1px solid var(--line)` })); if (major) inner.append(el('div', { style: `position:absolute;left:${t * tlPps + 4}px;top:0;font-size:10.5px;color:var(--muted)`, text: mmss(t) })); }
+  for (const c of (curData.cuts || [])) inner.append(el('div', { title: 'Schnitt', style: `position:absolute;left:${c * tlPps}px;top:14px;bottom:0;border-left:1px dashed color-mix(in srgb, var(--muted) 55%, transparent);pointer-events:none` }));
+  if (curData.hookRange) inner.append(el('div', { style: `position:absolute;left:${curData.hookRange[0] * tlPps}px;width:${(curData.hookRange[1] - curData.hookRange[0]) * tlPps}px;top:0;height:3px;background:var(--gold);border-radius:2px;pointer-events:none`, title: 'Hook' }));
   tlBlocks = {};
-  for (const c of capsList) {
-    const b = el('div', { 'data-id': String(c.id), style: 'position:absolute;height:28px;border-radius:7px;font-size:12.5px;font-weight:550;line-height:28px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:grab;box-sizing:border-box;transition:box-shadow .15s ease' });
-    b.addEventListener('pointerdown', (ev) => blockDown(ev, c.id, b));
-    tlBlocks[c.id] = b; inner.append(b);
-  }
-  inner.append(el('div', { id: 'tlHead', style: 'position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--playhead);pointer-events:none;border-radius:2px' }));
-  inner.addEventListener('pointerdown', (ev) => { if (ev.target.closest('[data-id]')) return; seekTo((ev.clientX - inner.getBoundingClientRect().left) / tlPps); });
+  inner.append(el('div', { id: 'tlHead', style: 'position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--playhead);pointer-events:none;border-radius:2px;z-index:5' }));
+  inner.addEventListener('pointerdown', (ev) => { if (ev.target.closest('[data-k]')) return; seekTo((ev.clientX - inner.getBoundingClientRect().left) / tlPps); });
   scroller.append(inner); scroller.addEventListener('keydown', tlKey);
-  host.replaceChildren(scroller);
+  const labels = el('div', { class: 'tl-labels', style: `width:${gutter}px;height:${TL_H}px` },
+    ...[['Ton', 0, H.wave], ['Untertitel', Y.cap, 3 * 34], ['Sound', Y.sfx - 3, 60], ['B-Roll', Y.broll - 3, H.row], ['Zoom', Y.zoom - 2, H.zoom]].map(([t, y, h]) => el('div', { style: `top:${y}px;height:${h}px`, text: t })));
+  host.replaceChildren(el('div', { style: 'display:flex' }, labels, scroller));
   paintTimeline(); movePlayhead();
 }
 function lanesFor(list) {
   const ends = [], out = {};
-  for (const c of [...list].sort((a, b) => a.start_s - b.start_s)) { let l = ends.findIndex((e) => e <= c.start_s + 1e-6); if (l < 0) { l = ends.length; ends.push(0); } ends[l] = c.end_s; out[c.id] = Math.min(l, 2); }
+  for (const c of [...list].sort((a, b) => a.start_s - b.start_s)) { let l = ends.findIndex((e) => e <= c.start_s + 1e-6); if (l < 0) { l = ends.length; ends.push(0); } ends[l] = c.end_s; out[c.key] = Math.min(l, 2); }
   return out;
+}
+function ensureBlock(type, key) {
+  const id = keyOf(type, key); let b = tlBlocks[id];
+  if (!b) {
+    b = el('div', { 'data-k': id, class: `blk blk-${type}` }); b.addEventListener('pointerdown', (ev) => blockDown(ev, type, key, b));
+    $('tlInner').append(b); tlBlocks[id] = b;
+  }
+  return b;
 }
 function paintTimeline() {
   if (!$('tlInner')) return;
-  const cur = capsList.map(capCur), lanes = lanesFor(cur);
-  for (const c of cur) {
-    const b = tlBlocks[c.id]; if (!b) continue;
-    const edited = !!pendingCaps[c.id], gold = c.kind === 'gold' || c.kind === 'cta', sel = c.id === capSel;
-    b.style.left = (c.start_s * tlPps) + 'px'; b.style.width = Math.max(10, (c.end_s - c.start_s) * tlPps - 1) + 'px'; b.style.top = (TL_WAVE_H + 4 + lanes[c.id] * TL_LANE_H) + 'px';
-    b.style.background = gold ? 'var(--gold)' : 'var(--panel)'; b.style.color = gold ? '#231a00' : 'var(--ink)';
-    b.style.border = `1px solid ${gold ? 'transparent' : 'var(--line)'}`;
-    b.style.boxShadow = sel ? '0 0 0 2px var(--run)' : edited ? '0 0 0 2px var(--edit)' : 'none';
-    b.style.zIndex = sel ? '2' : '1';
-    b.textContent = pendingCaps[c.id] && pendingCaps[c.id].text !== undefined && pendingCaps[c.id].text.trim() ? pendingCaps[c.id].text : c.text;
-  }
+  const seen = new Set();
+  const place = (type, x, left, width, top, text, extra) => {
+    const b = ensureBlock(type, x.key); seen.add(keyOf(type, x.key));
+    const selected = sel && sel.type === type && sel.key === x.key;
+    b.style.left = left + 'px'; b.style.width = Math.max(12, width) + 'px'; b.style.top = top + 'px';
+    b.classList.toggle('sel', !!selected); b.classList.toggle('edited', !!x.changed); b.classList.toggle('locked', !!x.locked);
+    b.style.zIndex = selected ? '4' : '2'; b.textContent = text; if (extra) extra(b);
+  };
+  const caps = items('cap'), ln = lanesFor(caps);
+  for (const c of caps) place('cap', c, c.start_s * tlPps, (c.end_s - c.start_s) * tlPps - 1, Y.cap + ln[c.key] * 34, c.text, (b) => b.classList.toggle('gold', c.kind === 'gold' || c.kind === 'cta'));
+  const sw = (s) => Math.max(58, baseName(s.file).length * 7 + 18), sf = items('sfx');
+  const sl = lanesFor(sf.map((s) => ({ key: s.key, start_s: s.at_s, end_s: s.at_s + sw(s) / tlPps })));
+  for (const s of sf) place('sfx', s, s.at_s * tlPps, sw(s), Y.sfx + Math.min(sl[s.key], 1) * 29, baseName(s.file));
+  for (const r of items('broll')) place('broll', r, r.start_s * tlPps, (r.end_s - r.start_s) * tlPps - 1, Y.broll, r.source === 'offen' ? `${r.motif} (kein Video)` : r.motif, (b) => b.classList.toggle('nosrc', r.source === 'offen'));
+  for (const z of items('zoom')) place('zoom', z, z.start_s * tlPps, Math.max(46, 0.96 * tlPps), Y.zoom, `${Math.round(z.to_scale * 100)} %`);
+  for (const id of Object.keys(tlBlocks)) if (!seen.has(id)) { tlBlocks[id].remove(); delete tlBlocks[id]; }
 }
 function movePlayhead() {
   const h = $('tlHead'), v = $('vid'); if (!h || !v) return;
@@ -634,57 +780,81 @@ function movePlayhead() {
   const sc = $('tlScroll'); if (sc && !v.paused) { const x = v.currentTime * tlPps; if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 40) sc.scrollLeft = Math.max(0, x - 60); }
 }
 function seekTo(t) { const v = $('vid'); if (!v) return; v.pause(); v.currentTime = Math.max(0, Math.min(capDur || v.duration || 0, t)); onTime(); }
-function blockDown(ev, id, b) {
-  ev.preventDefault(); b.setPointerCapture(ev.pointerId);
-  const c = capsList.find((x) => x.id === id), start = capCur(c), r = b.getBoundingClientRect(), x0 = ev.clientX;
-  const mode = ev.clientX - r.left < 7 ? 'l' : r.right - ev.clientX < 7 ? 'r' : 'm', minDur = 2 / capFps; let moved = false;
-  selectCap(id, false);
+function blockDown(ev, type, key, b) {
+  ev.preventDefault();
+  const start = { ...getItem(type, key) }, r = b.getBoundingClientRect(), x0 = ev.clientX, sc = $('tlScroll'), sl0 = sc.scrollLeft;
+  const resizable = type === 'cap' || type === 'broll', locked = type === 'sfx' && start.locked;
+  const mode = resizable && ev.clientX - r.left < 7 ? 'l' : resizable && r.right - ev.clientX < 7 ? 'r' : 'm'; let moved = false;
+  selectItem(type, key, false);
+  if (type === 'sfx') playSound(start.file);
+  if (locked) return;
   const move = (e) => {
-    const dt = (e.clientX - x0) / tlPps; if (Math.abs(e.clientX - x0) > 2) moved = true; if (!moved) return;
+    const px = e.clientX - x0 + (sc.scrollLeft - sl0); if (Math.abs(e.clientX - x0) > 2) moved = true; if (!moved) return;
+    const dt = px / tlPps;
+    if (type === 'sfx') { patchItem('sfx', key, { at_s: r3(Math.max(0, Math.min(capDur, start.at_s + dt))) }); seekTo(getItem('sfx', key).at_s); return; }
+    if (type === 'zoom') { const s = Math.max(0, Math.min(capDur, q(start.start_s + dt))); patchItem('zoom', key, { start_s: s }); seekTo(s + 0.02); return; }
     let s = start.start_s, en = start.end_s;
     if (mode === 'm') { const len = en - s; s = Math.max(0, Math.min(capDur - len, q(s + dt))); en = s + len; }
-    else if (mode === 'l') s = Math.max(0, Math.min(en - minDur, q(s + dt)));
-    else en = Math.min(capDur, Math.max(s + minDur, q(en + dt)));
-    setPending(id, { start_s: q(s), end_s: q(en) });
+    else if (mode === 'l') s = Math.max(0, Math.min(en - minDur(), q(s + dt)));
+    else en = Math.min(capDur, Math.max(s + minDur(), q(en + dt)));
+    patchItem(type, key, { start_s: q(s), end_s: q(en) });
     seekTo(mode === 'r' ? en - 1 / capFps : s + 0.02);
   };
-  const up = () => { b.removeEventListener('pointermove', move); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up); if (!moved) seekTo(capCur(c).start_s + 0.02); const sc = $('tlScroll'); if (sc) sc.focus({ preventScroll: true }); };
-  b.addEventListener('pointermove', move); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+  const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); if (!moved && type !== 'sfx') { const x = getItem(type, key); if (x) seekTo((x.start_s ?? x.at_s) + 0.02); } const s2 = $('tlScroll'); if (s2) s2.focus({ preventScroll: true }); };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
 }
 function tlKey(e) {
-  if (capSel === null || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-  e.preventDefault(); nudge(capSel, (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1), 'move');
+  if (!sel || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+  e.preventDefault(); const f = (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1);
+  if (sel.type === 'sfx') { if (!getItem('sfx', sel.key).locked) nudgeSfx(sel.key, f / capFps); return; }
+  nudge(sel.type, sel.key, 'move', f);
 }
 
 // ---------- Übernehmen ----------
 function capCount() {
-  const n = Object.keys(pendingCaps).length + (pendingHook ? 1 : 0), bar = $('applybar'); if (!bar) return;
+  const n = pendingCount(), bar = $('applybar'); if (!bar) return;
   bar.classList.toggle('on', n > 0);
   $('capCountTxt').textContent = n === 1 ? '1 Änderung' : `${n} Änderungen`;
-  $('capSmall').textContent = 'Bild und Ton bleiben, nur die Texte werden neu gebaut.';
+  $('capSmall').textContent = { texte: 'Bild und Ton bleiben, nur die Texte werden neu gebaut.', ton: 'Der Ton wird neu gemischt, das Bild bleibt.', bild: 'Das Bild wird neu gebaut, das dauert einige Minuten.' }[pendingKind()];
   if (!n) $('capMsg').textContent = '';
 }
-function resetCaps() {
-  for (const id of Object.keys(pendingCaps)) if (capPrev) capPrev.setEdit(Number(id), null);
-  pendingCaps = {}; if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hookA') && planHookLines) { $('hookA').value = curData.hook.lines[0]; $('hookB').value = curData.hook.lines[1]; } }
+function resetAll() {
+  for (const id of Object.keys(lanes.cap)) if (capPrev) capPrev.setEdit(Number(id), null);
+  lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }; adds = { sfx: [], broll: [], zoom: [] }; dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
+  if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hookA') && planHookLines) { $('hookA').value = curData.hook.lines[0]; $('hookB').value = curData.hook.lines[1]; } }
+  if (sel && !getItem(sel.type, sel.key)) sel = null;
   capCount(); paintTimeline(); paintSel();
 }
-async function sendCaps() {
-  const edits = Object.entries(pendingCaps).map(([id, p]) => ({ id: Number(id), ...(p.text !== undefined && p.text.trim() ? { text: p.text } : {}), ...(p.start_s !== undefined ? { start_s: p.start_s } : {}), ...(p.end_s !== undefined ? { end_s: p.end_s } : {}) }));
+function buildBody() {
+  const edits = Object.entries(lanes.cap).map(([id, p]) => ({ id: Number(id), ...(p.text !== undefined && p.text.trim() ? { text: p.text } : {}), ...(p.start_s !== undefined ? { start_s: p.start_s } : {}), ...(p.end_s !== undefined ? { end_s: p.end_s } : {}) }));
+  const body = { edits };
+  if (pendingHook) body.hook = pendingHook;
+  const sfx = { change: Object.entries(lanes.sfx).map(([i, p]) => ({ index: Number(i), ...p })), remove: [...dels.sfx], add: adds.sfx.map((a) => ({ file: a.file, at_s: a.at_s, gain_db: a.gain_db })) };
+  if (sfx.change.length || sfx.remove.length || sfx.add.length) body.sfx = sfx;
+  const br = {
+    change: Object.entries(lanes.broll).map(([i, p]) => ({ id: Number(i), start_s: p.start_s, end_s: p.end_s, motif: p.motif, source: p.pick })),
+    remove: [...dels.broll], add: adds.broll.map((a) => ({ start_s: a.start_s, end_s: a.end_s, motif: a.motif, source: a.pick })),
+  };
+  if (br.change.length || br.remove.length || br.add.length) body.broll = br;
+  const zm = { change: Object.entries(lanes.zoom).map(([i, p]) => ({ index: Number(i), ...p })), remove: [...dels.zoom], add: adds.zoom.map((a) => ({ start_s: a.start_s, to_scale: a.to_scale })) };
+  if (zm.change.length || zm.remove.length || zm.add.length) body.zooms = zm;
+  return body;
+}
+async function sendEdits() {
   const g = $('capGo'); if (g) g.disabled = true; $('capMsg').textContent = '';
   try {
-    const r = await api(`/api/runs/${current}/captions`, { method: 'POST', body: JSON.stringify({ edits, ...(pendingHook ? { hook: pendingHook } : {}) }) });
-    if (r.started) { pendingCaps = {}; pendingHook = null; await select(current); }
+    const r = await api(`/api/runs/${current}/edit`, { method: 'POST', body: JSON.stringify(buildBody()) });
+    if (r.started) { resetAll(); pendingHook = null; await select(current); }
     else { $('capMsg').textContent = 'Nichts geändert.'; if (g) g.disabled = false; }
   } catch (e) { $('capMsg').textContent = e.message; if (g) g.disabled = false; }
 }
 async function approve() {
   if (!confirm('Video abnehmen? Das Rohmaterial und alle Zwischendateien werden gelöscht. Danach kann dieses Reel nicht mehr geändert werden.')) return;
-  try { await api(`/api/runs/${current}/approve`, { method: 'POST' }); pendingCaps = {}; pendingHook = null; await refresh(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
+  try { await api(`/api/runs/${current}/approve`, { method: 'POST' }); resetAll(); await refresh(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
 }
 async function delRun() {
   if (!confirm('Den ganzen Lauf löschen, auch das fertige Video? Das kann nicht rückgängig gemacht werden.')) return;
-  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; pendingCaps = {}; pendingHook = null; $('detail').replaceChildren(); await loadRuns(); showEmpty(true); loadHealth(); } catch (e) { alert(e.message); }
+  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; resetAll(); $('detail').replaceChildren(); await loadRuns(); showEmpty(true); } catch (e) { alert(e.message); }
 }
 
 // ---------- Technische Details (eingeklappt) ----------

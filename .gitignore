@@ -10,3 +10,4 @@ runs/
 tests/videos/*.mp4
 tests/videos/*.mov
 tests/e2e/report.md
+assets/broll/

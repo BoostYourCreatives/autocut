@@ -26,7 +26,7 @@ export interface RenderOptions {
    * Nur die Text-Ebene neu rendern (Bild und Ton bleiben aus dem letzten Lauf: render/base.mp4).
    * ids = geänderte Untertitel; null = alle Texte neu.
    */
-  captionsPatch?: { ids: number[] | null; /** zusätzliche alte Zeitbereiche in Sekunden (verschobene Untertitel) */ extraRangesS?: [number, number][] };
+  captionsPatch?: { ids: number[] | null; /** zusätzliche alte Zeitbereiche in Sekunden (verschobene Untertitel) */ extraRangesS?: [number, number][]; /** Ton neu mischen (Soundeffekte geändert), Bild bleibt */ remixAudio?: boolean };
 }
 
 /** Ordner mit den Text-Einzelbildern (PNG mit Transparenz), eines pro Videobild */
@@ -221,6 +221,23 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
     },
   };
 
+  /** Ton mischen (Stimme + Soundeffekte), normalisieren und mit dem Bild von videoSrc zu dest zusammenfügen */
+  const buildSound = async (videoSrc: string, dest: string) => {
+    const sfxPaths = plan.sfx.map((s) => {
+      const e = findSfx(sfxIndex, s.file);
+      if (!e) throw new Error(`SFX "${s.file}" nicht in der Library ${cfg.sfxLibrary}`);
+      return path.join(cfg.sfxLibrary, e.file);
+    });
+    const finalWav = path.join(work, "audio.wav");
+    const m = await timed(runLike, "render-audio", undefined, async () => ({ value: await renderAudio(plan, P, voice, sfxPaths, work, finalWav) }));
+    log.info(`ton: Eingang ${m.measured.input_i} LUFS → Ziel ${P.export.lautheit.i} LUFS`);
+    await timed(runLike, "render-basis", undefined, async () => {
+      await execOk("ffmpeg", ["-hide_banner", "-nostdin", "-y", "-i", videoSrc, "-i", finalWav, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", P.export.final.audio_codec, "-b:a", `${P.export.final.audio_kbps}k`, "-ar", "48000", "-ac", "2", "-movflags", "+faststart", "-shortest", dest]);
+      fs.rmSync(finalWav, { force: true });
+      return { value: null };
+    });
+  };
+
   if (!patch) {
     // ---- Bild (ohne Texte) ----
     const baseProps = { ...props, layer: "base" } as unknown as Record<string, unknown>;
@@ -238,22 +255,13 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
       clearInterval(beat);
     }
 
-    // ---- Ton ----
-    const sfxPaths = plan.sfx.map((s) => {
-      const e = findSfx(sfxIndex, s.file);
-      if (!e) throw new Error(`SFX "${s.file}" nicht in der Library ${cfg.sfxLibrary}`);
-      return path.join(cfg.sfxLibrary, e.file);
-    });
-    const finalWav = path.join(work, "audio.wav");
-    const m = await timed(runLike, "render-audio", undefined, async () => ({ value: await renderAudio(plan, P, voice, sfxPaths, work, finalWav) }));
-    log.info(`ton: Eingang ${m.measured.input_i} LUFS → Ziel ${P.export.lautheit.i} LUFS`);
-    // Bild und Ton zusammen: so lässt sich die Basis auch im Browser abspielen, und der Export übernimmt den Ton unverändert
-    await timed(runLike, "render-basis", undefined, async () => {
-      await execOk("ffmpeg", ["-hide_banner", "-nostdin", "-y", "-i", silent, "-i", finalWav, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", P.export.final.audio_codec, "-b:a", `${P.export.final.audio_kbps}k`, "-ar", "48000", "-ac", "2", "-movflags", "+faststart", "-shortest", baseFile]);
-      fs.rmSync(silent, { force: true });
-      fs.rmSync(finalWav, { force: true });
-      return { value: null };
-    });
+    await buildSound(silent, baseFile);
+    fs.rmSync(silent, { force: true });
+  } else if (patch.remixAudio) {
+    // Soundeffekte geändert: nur den Ton neu mischen und unter das vorhandene Bild legen
+    const tmp = path.join(work, "base_new.mp4");
+    await buildSound(baseFile, tmp);
+    fs.renameSync(tmp, baseFile);
   }
 
   // ---- Texte (eigene Ebene, PNG mit Transparenz) ----
@@ -286,7 +294,7 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
     }
     return { value: null };
   });
-  if (patch) log.info(`Texte: ${ranges.map(([a, b]) => `${(a / fps).toFixed(1)}–${(b / fps).toFixed(1)} s`).join(", ")} neu gerendert, Bild und Ton bleiben`);
+  if (patch && ranges.length) log.info(`Texte: ${ranges.map(([a, b]) => `${(a / fps).toFixed(1)}–${(b / fps).toFixed(1)} s`).join(", ")} neu gerendert, Bild und Ton bleiben`);
 
   // ---- Export ----
   const outFile = path.join(outDir, `${plan.video}.mp4`);

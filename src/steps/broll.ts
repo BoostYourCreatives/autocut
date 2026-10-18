@@ -110,6 +110,23 @@ const SYSTEM = `Du hilfst beim Belegen von B-Roll-Stellen in einem Instagram-Ree
 - eigene_datei: der Dateiname aus der Liste der eigenen Videos, der das Motiv wörtlich und eindeutig zeigt, sonst null. Rate nicht: Im Zweifel null.
 - suchbegriff_englisch: ein kurzer englischer Suchbegriff (2–4 Wörter) für eine Stock-Video-Suche, der genau das Motiv trifft.`;
 
+/** Sucht bei Pexels und Pixabay ein Video (mindestens needS Sekunden, hochkant bevorzugt) und lädt es nach dest. */
+export async function findStockClip(query: string, needS: number, dest: string, f: typeof fetch = fetch): Promise<{ path: string; info: string } | null> {
+  try {
+    const settled = await Promise.allSettled([searchPexels(query, f), searchPixabay(query, f)]);
+    for (const s of settled) if (s.status === "rejected") log.warn(`B-Roll-Suche: ${(s.reason as Error).message}`);
+    const cands = settled.flatMap((s) => (s.status === "fulfilled" ? s.value : [])).filter((c) => c.duration >= needS);
+    const pick = cands.find((c) => c.portrait) ?? cands[0];
+    if (!pick) return null;
+    ensureDir(path.dirname(dest));
+    await download(pick.url, dest, f);
+    return { path: dest, info: `${pick.credit} (Suche: ${query})` };
+  } catch (e) {
+    log.warn(`Stock-Suche fehlgeschlagen (${(e as Error).message.split("\n")[0]})`);
+    return null;
+  }
+}
+
 export interface BrollResult {
   slots: number;
   own: number;
@@ -173,23 +190,14 @@ export async function sourceBroll(cfg: Config, run: RunPaths, planFile: string, 
     }
     if (opts.stock) {
       const q = queries.get(b.id) ?? b.motif;
-      try {
-        const settled = await Promise.allSettled([searchPexels(q, f), searchPixabay(q, f)]);
-        for (const s of settled) if (s.status === "rejected") log.warn(`B-Roll-Suche: ${(s.reason as Error).message}`);
-        const cands = settled.flatMap((s) => (s.status === "fulfilled" ? s.value : [])).filter((c) => c.duration >= need);
-        const pick = cands.find((c) => c.portrait) ?? cands[0];
-        if (pick) {
-          const dest = path.join(dir, `stock-${b.id}.mp4`);
-          await download(pick.url, dest, f);
-          slot.source = { kind: "stock_ordner", path: dest, info: `${pick.credit} (Suche: ${q})` };
-          res.stock++;
-          log.info(`B-Roll #${b.id} "${b.motif}": ${pick.provider}-Video (Suche: ${q})`);
-          continue;
-        }
-        log.warn(`B-Roll #${b.id} "${b.motif}": kein passendes Stock-Video gefunden (Suche: ${q})`);
-      } catch (e) {
-        log.warn(`B-Roll #${b.id}: Stock-Suche fehlgeschlagen (${(e as Error).message.split("\n")[0]})`);
+      const hit = await findStockClip(q, need, path.join(dir, `stock-${b.id}.mp4`), f);
+      if (hit) {
+        slot.source = { kind: "stock_ordner", path: hit.path, info: hit.info };
+        res.stock++;
+        log.info(`B-Roll #${b.id} "${b.motif}": Stock-Video (Suche: ${q})`);
+        continue;
       }
+      log.warn(`B-Roll #${b.id} "${b.motif}": kein passendes Stock-Video gefunden (Suche: ${q})`);
     }
     res.open++;
   }

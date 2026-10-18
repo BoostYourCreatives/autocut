@@ -17,7 +17,7 @@ export interface DeliverOptions {
   selfcheck: boolean;
   llm?: LlmClient;
   /** Nur die Text-Ebene neu rendern (siehe renderPlan) */
-  captionsPatch?: { ids: number[] | null; extraRangesS?: [number, number][] };
+  captionsPatch?: { ids: number[] | null; extraRangesS?: [number, number][]; remixAudio?: boolean };
 }
 
 export interface DeliverResult {

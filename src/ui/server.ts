@@ -14,8 +14,12 @@ import { createAuth, loginPage } from "./auth.ts";
 import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { pruneModelCache } from "../util/modelCache.ts";
 import { applyCaptionEdits, applyHookEdit, type CaptionEdit } from "../steps/captionEdit.ts";
+import { applyBrollEdits, applySfxEdits, applyZoomEdits, type BrollEdits, type SfxEdits, type ZoomEdits } from "../steps/planEdit.ts";
+import { buildSfxIndex, findSfx } from "../lib/sfxIndex.ts";
 import { approveRun } from "../steps/approve.ts";
 import { hasLayeredRender, baseVideoFile } from "../steps/render.ts";
+import { buildTimeline, outDuration } from "../plan/timeline.ts";
+import { findStockClip } from "../steps/broll.ts";
 import { waveformPeaks } from "../lib/waveform.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
@@ -150,6 +154,15 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         for (const z of plan.zooms) dec.push({ t_s: z.start_s, typ: "Zoom", text: `auf ${z.to_scale}`, reason: z.reason, confidence: z.confidence });
         for (const b of plan.broll) dec.push({ t_s: b.start_s, typ: "B-Roll", text: b.motif + (b.source.kind === "offen" ? " (kein Video)" : "info" in b.source && b.source.info ? ` (${b.source.info})` : ""), reason: b.reason, confidence: b.confidence });
         for (const s of plan.sfx) if (!["riser", "shutter"].includes(s.role)) dec.push({ t_s: Math.max(0, s.at_s), typ: "Sound", text: s.file, reason: s.reason, confidence: s.confidence });
+        const tlSegs = buildTimeline(plan.cut_segments);
+        out.duration_s = outDuration(tlSegs);
+        const hb = plan.overlays.find((o) => o.type === "hook_box");
+        out.hookRange = hb ? [hb.start_s, hb.end_s] : null;
+        out.cuts = tlSegs.slice(1).map((s) => s.out_from_s);
+        out.sfx = plan.sfx.map((s, index) => ({ index, role: s.role, file: s.file, at_s: s.at_s, gain_db: s.gain_db, locked: s.role === "riser" || s.role === "shutter" }));
+        out.broll = plan.broll.map((b) => ({ id: b.id, start_s: b.start_s, end_s: b.end_s, motif: b.motif, source: b.source.kind, info: "info" in b.source ? b.source.info ?? null : null }));
+        out.zooms = plan.zooms.map((z, index) => ({ index, start_s: z.start_s, to_scale: z.to_scale }));
+        out.zoomValues = style.params.zoom.erlaubte_werte;
         out.captions = plan.captions.map((c) => ({ id: c.id, text: c.text, start_s: c.start_s, end_s: c.end_s, kind: c.kind }));
         out.decisions = dec.sort((a, b) => a.t_s - b.t_s);
         const outDir = path.join(runDir(name), "out");
@@ -299,6 +312,32 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         const d = validName(mm[1]!) ? detail(mm[1]!) : null;
         return d ? json(res, 200, d) : json(res, 404, { error: "Run nicht gefunden" });
       }
+      if (req.method === "GET" && p === "/api/sfx") {
+        const e = findSfx(buildSfxIndex(cfg.sfxLibrary), url.searchParams.get("file") ?? "");
+        if (!e) return json(res, 404, { error: "Sound nicht gefunden" });
+        const f = path.join(cfg.sfxLibrary, e.file);
+        const ext = path.extname(f).toLowerCase();
+        res.writeHead(200, { "content-type": ext === ".wav" ? "audio/wav" : ext === ".mp3" ? "audio/mpeg" : "application/octet-stream", "content-length": fs.statSync(f).size, "cache-control": "max-age=3600" });
+        return fs.createReadStream(f).pipe(res);
+      }
+      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/broll\/find$/))) {
+        const name = mm[1]!;
+        if (!validName(name) || !fs.existsSync(path.join(runDir(name), "run.json"))) return json(res, 404, { error: "Run nicht gefunden" });
+        const b = JSON.parse((await readBody(req)) || "{}") as { query?: string; seconds?: number };
+        if (!b.query?.trim()) return json(res, 400, { error: "Bitte einen Suchbegriff eingeben." });
+        if (!process.env.PEXELS_API_KEY && !process.env.PIXABAY_API_KEY) return json(res, 409, { error: "Für Stock-Videos fehlt ein Zugang (PIXABAY_API_KEY oder PEXELS_API_KEY bei Railway)." });
+        const file = `stock-manual-${Date.now()}.mp4`;
+        const hit = await findStockClip(b.query.trim(), Math.max(1, Math.min(10, b.seconds ?? 3)), path.join(runDir(name), "broll", file));
+        if (!hit) return json(res, 404, { error: "Dazu wurde kein passendes Video gefunden. Versuch einen anderen Suchbegriff, am besten auf Englisch." });
+        return json(res, 200, { stock: file, info: hit.info });
+      }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/broll\/clip\/([^/]+)$/))) {
+        const f = path.join(runDir(mm[1]!), "broll", path.basename(decodeURIComponent(mm[2]!)));
+        if (!validName(mm[1]!) || !fs.existsSync(f)) return json(res, 404, { error: "Clip nicht gefunden" });
+        const size = fs.statSync(f).size;
+        res.writeHead(200, { "content-type": "video/mp4", "content-length": size, "accept-ranges": "bytes" });
+        return fs.createReadStream(f).pipe(res);
+      }
       if (req.method === "GET" && p === "/editor.js") {
         res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
         return res.end(await editorBundle());
@@ -430,16 +469,18 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         }
         return json(res, 200, { ok: true, started: true });
       }
-      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/captions$/))) {
+      if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/(captions|edit)$/))) {
         const name = mm[1]!;
         if (!validName(name) || !fs.existsSync(path.join(runDir(name), "run.json"))) return json(res, 404, { error: "Run nicht gefunden" });
         if (fs.existsSync(path.join(runDir(name), "approved.json"))) return json(res, 409, { error: "Das Video ist schon abgenommen, das Rohmaterial ist gelöscht." });
+        if (jobs.busyRun) return json(res, 409, { error: `Es läuft gerade ein Lauf (${jobs.busyRun}). Bitte warten, bis er fertig ist.` });
         const planFile = planPaths(runPaths(cfg, name)).plan;
         if (!fs.existsSync(planFile)) return json(res, 404, { error: "Noch kein Plan" });
         let edits: CaptionEdit[];
         let hookLines: [string, string] | null = null;
+        let body: { edits?: CaptionEdit[]; hook?: string[]; sfx?: SfxEdits; broll?: BrollEdits; zooms?: ZoomEdits };
         try {
-          const body = JSON.parse(await readBody(req)) as { edits?: CaptionEdit[]; hook?: string[] };
+          body = JSON.parse(await readBody(req));
           edits = body.edits ?? [];
           if (body.hook !== undefined) {
             if (!Array.isArray(body.hook) || body.hook.length !== 2 || !body.hook.every((l) => typeof l === "string")) throw new Error("hook");
@@ -448,12 +489,22 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
           const num = (x: unknown) => x === undefined || (typeof x === "number" && Number.isFinite(x));
           if (!Array.isArray(edits) || !edits.every((e) => Number.isInteger(e.id) && (e.text === undefined || typeof e.text === "string") && num(e.start_s) && num(e.end_s))) throw new Error("edits fehlt");
         } catch {
-          return json(res, 400, { error: "Bitte {edits:[{id,text?,start_s?,end_s?}]} senden." });
+          return json(res, 400, { error: "Die Änderungen konnten nicht gelesen werden." });
         }
-        const { plan, changed: capChanged, oldRangesS } = applyCaptionEdits(Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8"))), edits);
-        const hookRange = hookLines ? applyHookEdit(plan, hookLines) : null;
-        if (hookRange) oldRangesS.push(hookRange);
-        const changed = capChanged + (hookRange ? 1 : 0);
+        const plan0 = Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8")));
+        let plan = plan0, changed = 0, oldRangesS: [number, number][] = [], needsBase = false, needsAudio = false;
+        try {
+          const caps = applyCaptionEdits(plan0, edits);
+          plan = caps.plan; changed += caps.changed; oldRangesS = caps.oldRangesS;
+          const hookRange = hookLines ? applyHookEdit(plan, hookLines) : null;
+          if (hookRange) { oldRangesS.push(hookRange); changed++; }
+          const ctx = { params: style.params, sfxIndex: buildSfxIndex(cfg.sfxLibrary), brollLibrary: cfg.brollLibrary, runDir: runDir(name) };
+          if (body.sfx && applySfxEdits(plan, body.sfx, ctx)) { needsAudio = true; changed++; }
+          if (body.broll && applyBrollEdits(plan, body.broll, ctx)) { needsBase = true; changed++; }
+          if (body.zooms && applyZoomEdits(plan, body.zooms)) { needsBase = true; changed++; }
+        } catch (e) {
+          return json(res, 422, { ok: false, error: (e as Error).message.split("\n")[0] });
+        }
         if (!changed) return json(res, 200, { ok: true, started: false, changed: 0 });
         const tmp = path.join(runDir(name), "plan.edit.json");
         fs.writeFileSync(tmp, JSON.stringify(plan, null, 2));
@@ -466,18 +517,19 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         }
         if (!v.ok) {
           fs.rmSync(tmp, { force: true });
-          return json(res, 422, { ok: false, error: `Der geänderte Text verletzt eine Regel: ${v.errors.map((x) => x.message).slice(0, 3).join(" | ")}` });
+          return json(res, 422, { ok: false, error: `Das geht so nicht: ${v.errors.map((x) => x.message).slice(0, 3).join(" | ")}` });
         }
         fs.copyFileSync(planFile, path.join(runDir(name), "plan.prev.json"));
         fs.renameSync(tmp, planFile);
-        // Mit getrennter Text-Ebene: nur die geänderten Texte neu rendern, Bild und Ton bleiben
+        // Möglichst wenig neu bauen: nur Texte, Texte + Ton, oder (bei B-Roll/Zoom) das Bild komplett
         const layered = hasLayeredRender(runDir(name));
+        const full = needsBase || !layered;
         try {
-          jobs.start(name, layered ? "recaption" : "rerender", { precut: "auto", provider: "auto", selfcheck: false, captionIds: edits.map((e) => e.id), captionOldRangesS: oldRangesS });
+          jobs.start(name, full ? "rerender" : "recaption", { precut: "auto", provider: "auto", selfcheck: false, captionIds: edits.map((e) => e.id), captionOldRangesS: oldRangesS, remixAudio: needsAudio });
         } catch (e) {
           return json(res, 409, { error: (e as Error).message });
         }
-        return json(res, 200, { ok: true, started: true, changed, fast: layered });
+        return json(res, 200, { ok: true, started: true, changed, fast: !full, mode: full ? "bild" : needsAudio ? "ton" : "texte" });
       }
       if (req.method === "POST" && (mm = m(/^\/api\/runs\/([^/]+)\/replan$/))) {
         const name = mm[1]!;

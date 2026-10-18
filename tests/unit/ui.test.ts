@@ -254,3 +254,55 @@ test("Hook-Text ändern: Versalien, Plan und Hook-Box gleichzeitig, Zeitbereich 
   assert.notEqual(before, plan.hook!.lines.join("|"));
   assert.equal(validate({ plan, transcript: f.transcript, analysis: f.analysis, params: f.params, sfxIndex: f.sfxIndex }).errors.filter((e) => e.code.startsWith("hook")).length, 0);
 });
+
+test("Editor-Änderungen: Sounds, B-Rolls und Zooms werden geprüft angewendet", async () => {
+  const { applySfxEdits, applyBrollEdits, applyZoomEdits } = await import("../../src/steps/planEdit.ts");
+  const { fixtureFromExample, EX53 } = await import("../helpers/reel.ts");
+  const { finalize } = await import("../../src/plan/finalize.ts");
+  const { draftReel53 } = await import("../fixtures/draft-reel53.ts");
+  const { validate } = await import("../../src/validate/validate.ts");
+  const f = fixtureFromExample(EX53, { silencesFromCuts: true, precut: false });
+  const mk = () => finalize({ draft: structuredClone(draftReel53), transcript: f.transcript, analysis: f.analysis, meta: f.meta, params: f.params, sfxIndex: f.sfxIndex, style: "thorsten", video: "TW_Reel_53" }).plan!;
+  const v = (plan: unknown) => validate({ plan, transcript: f.transcript, analysis: f.analysis, params: f.params, sfxIndex: f.sfxIndex });
+  const ctx = { params: f.params, sfxIndex: f.sfxIndex, brollLibrary: path.join(TMP, "blib"), runDir: path.join(TMP, "brun") };
+  fs.mkdirSync(ctx.brollLibrary, { recursive: true });
+  fs.writeFileSync(path.join(ctx.brollLibrary, "kran.mp4"), "x");
+  const baseErrors = v(mk()).errors.length;
+
+  // Sound verschieben, leiser machen, hinzufügen, entfernen. Riser/Shutter sind gesperrt.
+  const p = mk();
+  const fuwa = p.sfx.findIndex((s) => s.role === "fuwa");
+  const riser = p.sfx.findIndex((s) => s.role === "riser");
+  assert.throws(() => applySfxEdits(mk(), { remove: [riser] }, ctx), /Hook-Übergang/);
+  assert.throws(() => applySfxEdits(mk(), { add: [{ file: "gibt-es-nicht.mp3", at_s: 5 }] }, ctx), /Library/);
+  const n0 = p.sfx.length, at0 = p.sfx[fuwa]!.at_s;
+  assert.ok(applySfxEdits(p, { change: [{ index: fuwa, at_s: at0 + 0.2, gain_db: -25 }], add: [{ file: p.sfx[fuwa]!.file, at_s: 12 }] }, ctx));
+  assert.equal(p.sfx.length, n0 + 1);
+  assert.ok(p.sfx.some((s) => Math.abs(s.at_s - (at0 + 0.2)) < 1e-6 && s.gain_db === -25));
+  assert.equal(v(p).errors.length, baseErrors);
+
+  // B-Roll: hinzufügen mit eigenem Clip, Länge über 3 s wird als Ausnahme gemerkt, Überlappung wird vom Validator abgelehnt
+  const b = mk();
+  assert.throws(() => applyBrollEdits(b, { add: [{ start_s: 14, end_s: 17, motif: "Kran", source: { lib: "../x.mp4" } }] }, ctx), /nicht in der eigenen Bibliothek/);
+  assert.ok(applyBrollEdits(b, { add: [{ start_s: 14.04, end_s: 18.04, motif: "Kran", source: { lib: "kran.mp4" } }] }, ctx));
+  const added = b.broll.find((x) => x.motif === "Kran")!;
+  assert.equal(added.source.kind, "user_clip");
+  assert.equal(added.long_ok, true);
+  const overlap = mk();
+  const first = overlap.broll[0]!;
+  applyBrollEdits(overlap, { add: [{ start_s: first.start_s + 0.5, end_s: first.start_s + 2, motif: "doppelt" }] }, ctx);
+  assert.ok(v(overlap).errors.some((e) => e.code === "broll_ueberlappung"));
+  const gone = mk();
+  applyBrollEdits(gone, { remove: gone.broll.map((x) => x.id) }, ctx);
+  assert.equal(gone.broll.length, 0);
+
+  // Zoom: Segment wird aus der Zeit abgeleitet, Zoom im Hook-Segment wird abgelehnt
+  const z = mk();
+  const zi = z.zooms.length;
+  applyZoomEdits(z, { add: [{ start_s: 0.2, to_scale: 1.1 }] });
+  assert.equal(z.zooms.length, zi + 1);
+  assert.ok(v(z).errors.some((e) => e.code === "zoom_im_hook"));
+  const z2 = mk();
+  applyZoomEdits(z2, { remove: z2.zooms.map((_, i) => i) });
+  assert.equal(z2.zooms.length, 0);
+});
