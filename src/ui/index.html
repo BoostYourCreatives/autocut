@@ -306,7 +306,8 @@ async function api(path, opts) {
 
 // ---------- System-Check ----------
 async function loadHealth() {
-  const { items, busy, auth } = await api('/api/health');
+  const { items, busy, auth, style } = await api('/api/health');
+  const sub = document.querySelector('header .sub'); if (sub && style) sub.textContent = `Rohvideo rein, fertig geschnittenes Reel raus. Stil: ${style}`;
   $('logout').style.display = auth ? '' : 'none';
   const ul = $('health'); ul.replaceChildren();
   for (const i of items) {

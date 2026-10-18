@@ -48,6 +48,7 @@ export function loadConfig(file = path.join(ROOT, "config", "autocut.config.json
   const env = process.env;
   const cfg = {
     ...parsed,
+    style: env.AUTOCUT_STYLE ?? parsed.style,
     sfxLibrary: env.AUTOCUT_SFX_LIBRARY ?? parsed.sfxLibrary,
     musicLibrary: env.AUTOCUT_MUSIC_LIBRARY ?? parsed.musicLibrary,
     stockBrollDir: env.AUTOCUT_STOCK_BROLL_DIR ?? parsed.stockBrollDir,

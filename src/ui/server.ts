@@ -265,7 +265,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
         return res.end(fs.readFileSync(path.join(ROOT, "src", "ui", "index.html")));
       }
-      if (req.method === "GET" && p === "/api/health") return json(res, 200, { items: await health(cfg, style), busy: jobs.busyRun, auth: auth.enabled });
+      if (req.method === "GET" && p === "/api/health") return json(res, 200, { items: await health(cfg, style), busy: jobs.busyRun, auth: auth.enabled, style: cfg.style });
       if (req.method === "GET" && p === "/api/runs") return json(res, 200, listRuns());
 
       if (req.method === "POST" && p === "/api/upload") {

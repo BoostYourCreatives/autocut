@@ -306,3 +306,17 @@ test("Editor-Änderungen: Sounds, B-Rolls und Zooms werden geprüft angewendet",
   applyZoomEdits(z2, { remove: z2.zooms.map((_, i) => i) });
   assert.equal(z2.zooms.length, 0);
 });
+
+test("Neuer Stil: Kopie eines bestehenden Stils mit Checkliste, ungültige und doppelte Namen werden abgelehnt", async () => {
+  const { createStyle } = await import("../../src/steps/newStyle.ts");
+  const root = path.join(TMP, "stile");
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.mkdirSync(path.join(root, "alt"), { recursive: true });
+  fs.writeFileSync(path.join(root, "alt", "params.json"), "{}");
+  const c = { ...cfg, style: "alt", stylePath: path.join(root, "alt") };
+  const dir = createStyle(c, "neu-kunde");
+  assert.ok(fs.existsSync(path.join(dir, "params.json")) && fs.existsSync(path.join(dir, "NEUER-STIL.md")));
+  assert.throws(() => createStyle(c, "neu-kunde"), /gibt es schon/);
+  assert.throws(() => createStyle(c, "Ungültig Name"), /Kleinbuchstaben/);
+  assert.throws(() => createStyle(c, "x", "gibt-es-nicht"), /existiert nicht/);
+});

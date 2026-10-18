@@ -10,6 +10,7 @@ import { plan, planPaths, PlanFailedError } from "./steps/plan.ts";
 import { validatePlanFile } from "./steps/check.ts";
 import { measureChin } from "./steps/chin.ts";
 import { renderPlan } from "./steps/render.ts";
+import { createStyle } from "./steps/newStyle.ts";
 import { deliver } from "./steps/deliver.ts";
 import { startServer } from "./ui/server.ts";
 import { formatRunReport, summarizeRun, writeRunReport } from "./steps/report.ts";
@@ -240,6 +241,16 @@ program
       password, maxUploadMb: env.MAX_UPLOAD_MB ? parseInt(env.MAX_UPLOAD_MB, 10) : undefined, retentionDays: retention || undefined, unfinishedDays: env.UNFINISHED_DAYS ? parseInt(env.UNFINISHED_DAYS, 10) : undefined,
     });
     console.log(`\nautocut läuft: ${url}${password ? " (Passwortschutz an)" : ""}${retention ? `, Läufe werden nach ${retention} Tagen gelöscht` : ""}\nZum Beenden: Strg+C`);
+  });
+
+program
+  .command("new-style <name>")
+  .description("Legt einen neuen Editing-Stil als Kopie eines bestehenden an (z. B. für einen weiteren Kunden)")
+  .option("--from <stil>", "Vorlage (Standard: der aktuelle Stil)")
+  .action((name: string, o: { from?: string }) => {
+    const cfg = loadConfig();
+    const dir = createStyle(cfg, name, o.from);
+    console.log(`Neuer Stil angelegt: ${dir}\nDie nächsten Schritte stehen in ${path.join(dir, "NEUER-STIL.md")}.`);
   });
 
 program
