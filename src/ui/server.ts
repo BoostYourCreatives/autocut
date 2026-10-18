@@ -159,7 +159,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         const hb = plan.overlays.find((o) => o.type === "hook_box");
         out.hookRange = hb ? [hb.start_s, hb.end_s] : null;
         out.cuts = tlSegs.slice(1).map((s) => s.out_from_s);
-        out.sfx = plan.sfx.map((s, index) => ({ index, role: s.role, file: s.file, at_s: s.at_s, gain_db: s.gain_db, locked: s.role === "riser" || s.role === "shutter" }));
+        out.sfx = plan.sfx.map((s, index) => ({ index, role: s.role, file: s.file, at_s: s.at_s, gain_db: s.gain_db, trim_end_at_s: s.trim_end_at_s ?? null, locked: s.role === "riser" || s.role === "shutter" }));
         out.broll = plan.broll.map((b) => ({ id: b.id, start_s: b.start_s, end_s: b.end_s, motif: b.motif, source: b.source.kind, info: "info" in b.source ? b.source.info ?? null : null }));
         out.zooms = plan.zooms.map((z, index) => ({ index, start_s: z.start_s, to_scale: z.to_scale }));
         out.zoomValues = style.params.zoom.erlaubte_werte;
@@ -189,6 +189,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     return out;
   };
 
+  const sfxInfoCache = new Map<string, { dur_s: number; peaksPerSec: number; peaks: number[] }>();
   let editorJs: Promise<string> | null = null;
   const editorBundle = () => (editorJs ??= import("esbuild").then(async (esbuild) => {
     const r = await esbuild.build({
@@ -311,6 +312,16 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
       if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)$/))) {
         const d = validName(mm[1]!) ? detail(mm[1]!) : null;
         return d ? json(res, 200, d) : json(res, 404, { error: "Run nicht gefunden" });
+      }
+      if (req.method === "GET" && p === "/api/sfx/info") {
+        // Länge und Lautstärkeverlauf eines Soundeffekts (für die Zeitleiste)
+        const e = findSfx(buildSfxIndex(cfg.sfxLibrary), url.searchParams.get("file") ?? "");
+        if (!e) return json(res, 404, { error: "Sound nicht gefunden" });
+        const f = path.join(cfg.sfxLibrary, e.file);
+        const key = `${f}:${fs.statSync(f).mtimeMs}`;
+        let info = sfxInfoCache.get(key);
+        if (!info) { const w = await waveformPeaks(f); info = { dur_s: w.peaks.length / w.peaksPerSec, peaksPerSec: w.peaksPerSec, peaks: w.peaks }; sfxInfoCache.set(key, info); }
+        return json(res, 200, info);
       }
       if (req.method === "GET" && p === "/api/sfx") {
         const e = findSfx(buildSfxIndex(cfg.sfxLibrary), url.searchParams.get("file") ?? "");
