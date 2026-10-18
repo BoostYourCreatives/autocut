@@ -162,52 +162,106 @@
   main > * { min-width: 0; } input[type=file] { max-width: 100%; }
   @media (max-width: 900px) { main.has-run #detail { order: -1; } .ws-actions { width: 100%; margin-left: 0; } .applybar { max-width: none; } }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* ---------- Kopfzeile, Dialoge, Layout ohne Seitenleiste ---------- */
+  header { gap: 14px; padding: 10px 20px; }
+  .hdr-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .hdr-actions form { margin: 0; }
+  header .menu .pop { left: 0; right: auto; min-width: 260px; max-height: 60vh; overflow: auto; }
+  header .menu > summary { display: inline-flex; align-items: center; gap: 8px; }
+  header .menu > summary::after { content: ""; width: 7px; height: 7px; border-right: 1.75px solid currentColor; border-bottom: 1.75px solid currentColor; transform: rotate(45deg) translateY(-2px); opacity: .6; }
+  .runs button { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 12px; border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 8px; margin: 0; }
+  .runs button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .runs button.sel { background: color-mix(in srgb, var(--gold) 20%, transparent); box-shadow: none; }
+  main { display: block; max-width: 1680px; padding: 20px 24px; }
+  @media (max-width: 900px) { main { padding: 14px; } header { flex-wrap: wrap; } }
+  dialog { border: 1px solid var(--line); border-radius: 18px; padding: 0; background: var(--panel); color: var(--ink); width: min(560px, calc(100% - 28px)); max-height: 90vh; box-shadow: 0 30px 80px -20px rgba(0,0,0,.5); }
+  dialog::backdrop { background: rgba(10,10,9,.5); backdrop-filter: blur(3px); }
+  dialog[open] { animation: dlg .35s cubic-bezier(.16,1,.3,1); }
+  @keyframes dlg { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+  .dlg-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 0; }
+  .dlg-head h2 { margin: 0; font-size: 18px; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+  .dlg-body { padding: 8px 20px 20px; overflow: auto; max-height: calc(90vh - 70px); }
+  .dlg-h { font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  .vh { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .drop { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; text-align: center; padding: 26px 16px; margin: 8px 0 4px; border: 1.5px dashed color-mix(in srgb, var(--ink) 28%, var(--line)); border-radius: 14px; cursor: pointer; color: var(--ink); font-size: 15px; transition: border-color .15s ease, background-color .15s ease; }
+  .drop:hover, .drop.over { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+  .drop.has { border-style: solid; border-color: var(--ok); }
+  .drop .drop-s { font-size: 12.5px; color: var(--muted); }
+  .btn.wide { width: 100%; justify-content: center; margin-top: 14px; padding: 11px; }
+  .btn.primary:disabled { background: color-mix(in srgb, var(--muted) 30%, var(--panel)); border-color: transparent; color: var(--muted); }
+  .empty-hero { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 90px 20px; color: var(--muted); }
+  .empty-hero h2 { margin: 0; color: var(--ink); font-size: 24px; letter-spacing: -.02em; text-transform: none; }
+  #sysBtn.warn::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+  #sysBtn { position: relative; }
+  /* Bühne und Bedienfelder in einem Bild: Video links, rechts Texte und Zeitleiste */
+  .studio { grid-template-columns: max-content minmax(0, 1fr); gap: 20px; }
+  .stage { width: max-content; max-width: 100%; position: static; }
+  .stage-frame { width: auto; height: min(calc(100vh - 250px), 760px); min-height: 380px; max-height: none; margin: 0; }
+  .stage-frame video { object-fit: cover; }
+  .right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .panels { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 1.5fr); gap: 14px; align-items: start; }
+  @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; } .stage { width: 100%; } .stage-frame { width: 100%; height: auto; min-height: 0; max-height: min(70vh, 640px); } .panels { grid-template-columns: 1fr; } }
+  .hook-col { display: flex; flex-direction: column; gap: 8px; }
 </style>
 </head>
 <body>
-<header><span class="dot"></span><h1>autocut</h1><span class="sub">Rohvideo rein, fertig geschnittenes Reel raus (Thorsten Wittmann)</span><form method="post" action="/logout" id="logout" style="margin-left:auto;display:none"><button>Abmelden</button></form></header>
+<header>
+  <span class="dot"></span><h1>autocut</h1>
+  <details class="menu" id="runMenu"><summary class="btn" id="runSummary"><span id="runLabel">Reels</span></summary><div class="pop runs" id="runs"><div class="muted" style="padding:8px 10px">Noch keine.</div></div></details>
+  <div class="hdr-actions">
+    <button class="btn primary" id="newBtn" type="button"></button>
+    <button class="btn icon ghost" id="sysBtn" type="button" aria-label="Einstellungen und System-Check" title="Einstellungen und System-Check"></button>
+    <form method="post" action="/logout" id="logout" style="display:none"><button class="btn ghost">Abmelden</button></form>
+  </div>
+</header>
 <main>
-  <aside>
-    <section class="card">
-      <h2>Neues Reel</h2>
-      <input type="file" id="file" accept="video/*">
-      <label>Name (optional)</label>
-      <input type="text" id="name" placeholder="z. B. 53">
-      <label>Hook-Text (optional, 2 Zeilen)</label>
-      <div class="row"><input type="text" id="hook1" placeholder="Zeile 1"><input type="text" id="hook2" placeholder="Zeile 2"></div>
-      <div class="hint">Leer lassen: Claude formuliert den Hook-Text.</div>
-      <label>Übergang am Hook-Ende</label>
-      <select id="transition"><option value="auto">Claude entscheidet nach Inhalt</option><option value="blitz">Immer Blitz + Riser</option><option value="hart">Immer harter Schnitt</option></select>
-      <label>Material</label>
-      <select id="precut"><option value="auto">automatisch erkennen</option><option value="ja">schon vorgeschnitten und gezoomt</option><option value="nein">roh, ungeschnitten</option></select>
-      <label>B-Rolls</label>
-      <label class="check"><input type="checkbox" id="brollOwn"> Eigene B-Rolls verwenden (aus deiner Bibliothek)</label>
-      <label class="check"><input type="checkbox" id="brollStock"> Stock-B-Rolls verwenden (Pexels und Pixabay)</label>
-      <div class="hint">Nichts angehakt: Das Reel bekommt keine B-Rolls. Beides: erst eigene, sonst Stock.</div>
-      <label class="check"><input type="checkbox" id="selfcheck" checked> Nach dem Rendern von Claude prüfen lassen</label>
-      <button class="primary" id="start" disabled>Starten</button>
-      <div class="hint" id="startHint"></div>
-    </section>
-    <section class="card runs"><h2>Läufe</h2><div id="runs"><div class="muted">Noch keine.</div></div></section>
-    <section class="card health"><h2>System-Check</h2><ul id="health"></ul></section>
-    <section class="card">
-      <h2>Soundeffekte und Schriften</h2>
-      <div class="hint" style="margin:0 0 8px">Diese Dateien liegen auf dem Server und werden für jedes Reel gebraucht. Einmal hochladen genügt.</div>
-      <ul id="assetNeed" style="list-style:none;margin:0;padding:0;font-size:13px"></ul>
-      <label>Soundeffekte hinzufügen (mp3, wav, …)</label>
-      <input type="file" id="sfxFiles" multiple accept="audio/*,.mp3,.wav,.m4a,.aif,.aiff,.flac,.ogg">
-      <label>Eigene B-Roll-Videos hinzufügen (mp4, mov)</label>
-      <input type="file" id="brollFiles" multiple accept="video/*,.mp4,.mov,.m4v,.webm">
-      <div class="hint">Benenne die Dateien so, dass man das Motiv erkennt, z. B. „baustelle-kran.mp4“. Daran findet Claude die passende Datei.</div>
-      <label>Schriften hinzufügen (ttf, otf)</label>
-      <input type="file" id="fontFiles" multiple accept=".ttf,.otf">
-      <div class="hint" id="assetMsg"></div>
-      <details data-k="assets" style="margin-top:8px"><summary style="font-size:13px">Vorhandene Dateien</summary><div id="assetList" class="hint"></div></details>
-    </section>
-  </aside>
-
-  <section id="detail"><div class="card empty">Links ein Reel hochladen oder einen Lauf auswählen.</div></section>
+  <section id="detail"></section>
 </main>
+
+<dialog id="newDlg" aria-labelledby="newTitle">
+  <div class="dlg-head"><h2 id="newTitle">Neues Reel</h2><button class="btn icon ghost" type="button" id="newClose" aria-label="Schließen"></button></div>
+  <div class="dlg-body">
+    <label class="drop" for="file" id="dropZone"><span class="drop-t" id="dropText">Rohvideo auswählen oder hierher ziehen</span><span class="drop-s">mp4 oder mov</span></label>
+    <input type="file" id="file" accept="video/*" class="vh">
+    <label>Name (optional)</label>
+    <input type="text" id="name" placeholder="z. B. 53">
+    <label>Hook-Text (optional, 2 Zeilen)</label>
+    <div class="row"><input type="text" id="hook1" placeholder="Zeile 1"><input type="text" id="hook2" placeholder="Zeile 2"></div>
+    <div class="hint">Leer lassen: Claude formuliert den Hook-Text.</div>
+    <div class="row" style="margin-top:4px"><div><label>Übergang am Hook-Ende</label>
+      <select id="transition"><option value="auto">Claude entscheidet</option><option value="blitz">Immer Blitz + Riser</option><option value="hart">Immer harter Schnitt</option></select></div>
+      <div><label>Material</label>
+      <select id="precut"><option value="auto">automatisch erkennen</option><option value="ja">schon vorgeschnitten</option><option value="nein">roh, ungeschnitten</option></select></div></div>
+    <label>B-Rolls</label>
+    <label class="check"><input type="checkbox" id="brollOwn"> Eigene B-Rolls verwenden</label>
+    <label class="check"><input type="checkbox" id="brollStock"> Stock-B-Rolls verwenden (Pexels und Pixabay)</label>
+    <div class="hint">Nichts angehakt: keine B-Rolls. Beides: erst eigene, sonst Stock.</div>
+    <label class="check"><input type="checkbox" id="selfcheck" checked> Nach dem Rendern von Claude prüfen lassen</label>
+    <button class="btn primary wide" id="start" disabled type="button">Starten</button>
+    <div class="hint" id="startHint"></div>
+  </div>
+</dialog>
+
+<dialog id="sysDlg" aria-labelledby="sysTitle">
+  <div class="dlg-head"><h2 id="sysTitle">System und Dateien</h2><button class="btn icon ghost" type="button" id="sysClose" aria-label="Schließen"></button></div>
+  <div class="dlg-body">
+    <h3 class="dlg-h">System-Check</h3>
+    <div class="health"><ul id="health"></ul></div>
+    <h3 class="dlg-h">Soundeffekte, B-Rolls und Schriften</h3>
+    <div class="hint" style="margin:0 0 8px">Diese Dateien liegen auf dem Server. Einmal hochladen genügt.</div>
+    <ul id="assetNeed" style="list-style:none;margin:0;padding:0;font-size:13px"></ul>
+    <label>Soundeffekte hinzufügen (mp3, wav, …)</label>
+    <input type="file" id="sfxFiles" multiple accept="audio/*,.mp3,.wav,.m4a,.aif,.aiff,.flac,.ogg">
+    <label>Eigene B-Roll-Videos hinzufügen (mp4, mov)</label>
+    <input type="file" id="brollFiles" multiple accept="video/*,.mp4,.mov,.m4v,.webm">
+    <div class="hint">Benenne die Dateien nach dem Motiv, z. B. „baustelle-kran.mp4“. Daran findet Claude die passende Datei.</div>
+    <label>Schriften hinzufügen (ttf, otf)</label>
+    <input type="file" id="fontFiles" multiple accept=".ttf,.otf">
+    <div class="hint" id="assetMsg"></div>
+    <details data-k="assets" style="margin-top:8px"><summary style="font-size:13px">Vorhandene Dateien</summary><div id="assetList" class="hint"></div></details>
+  </div>
+</dialog>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -240,6 +294,7 @@ async function loadHealth() {
       el('span', {}, el('b', { text: i.label }), el('div', { class: 'd', text: i.detail }))));
   }
   const blockers = items.filter((i) => !i.ok && !i.optional);
+  window.__busy = busy; $('sysBtn').classList.toggle('warn', blockers.length > 0);
   $('start').disabled = !$('file').files[0] || !!busy;
   $('startHint').textContent = busy ? `Es läuft gerade ein Lauf (${busy}).` : blockers.length ? `Achtung: ${blockers.map((b) => b.label).join(', ')} fehlt, der Lauf wird voraussichtlich scheitern (siehe System-Check).` : '';
 }
@@ -248,15 +303,29 @@ async function loadHealth() {
 async function loadRuns() {
   const runs = await api('/api/runs');
   const box = $('runs'); box.replaceChildren();
-  if (!runs.length) box.append(el('div', { class: 'muted', text: 'Noch keine.' }));
+  if (!runs.length) box.append(el('div', { class: 'muted', style: 'padding:8px 10px', text: 'Noch keine Reels.' }));
   for (const r of runs) {
     const label = { running: ['läuft', 'b-run'], done: ['fertig', 'b-ok'], error: ['Fehler', 'b-bad'], idle: ['offen', ''] }[r.status];
-    box.append(el('button', { class: r.name === current ? 'sel' : '', onclick: () => select(r.name) }, el('span', { text: r.name }), el('span', { class: `badge ${label[1]}`, text: label[0] })));
+    box.append(el('button', { type: 'button', class: r.name === current ? 'sel' : '', onclick: () => { $('runMenu').open = false; select(r.name); } }, el('span', { text: r.name }), el('span', { class: `badge ${label[1]}`, text: label[0] })));
   }
+  $('runLabel').textContent = current ? `Reel ${current}` : runs.length ? 'Reels' : 'Keine Reels';
+  if (!current && !$('detail').children.length) { if (runs.length) select(runs[0].name); else showEmpty(0); }
+}
+function showEmpty(has) {
+  $('detail').replaceChildren(el('div', { class: 'empty-hero' }, el('h2', { text: has ? 'Wähle ein Reel' : 'Noch kein Reel' }), el('div', { text: has ? 'Oben unter „Reels“ findest du deine bisherigen Läufe.' : 'Lade ein Rohvideo hoch, den Rest macht autocut.' }), btn('primary', 'plus', 'Neues Reel', openNew)));
 }
 
 // ---------- Hochladen ----------
-$('file').addEventListener('change', () => { $('start').disabled = !$('file').files[0]; });
+function openNew() { $('startHint').textContent = ''; $('newDlg').showModal(); loadHealth(); }
+function pickFile(f) {
+  const dz = $('dropZone'); dz.classList.toggle('has', !!f);
+  $('dropText').textContent = f ? `${f.name} (${(f.size / 1e6).toFixed(1)} MB)` : 'Rohvideo auswählen oder hierher ziehen';
+  $('start').disabled = !f || !!window.__busy;
+}
+$('file').addEventListener('change', () => pickFile($('file').files[0]));
+$('dropZone').addEventListener('dragover', (e) => { e.preventDefault(); $('dropZone').classList.add('over'); });
+$('dropZone').addEventListener('dragleave', () => $('dropZone').classList.remove('over'));
+$('dropZone').addEventListener('drop', (e) => { e.preventDefault(); $('dropZone').classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) { const dt = new DataTransfer(); dt.items.add(f); $('file').files = dt.files; pickFile(f); } });
 $('start').addEventListener('click', async () => {
   const f = $('file').files[0]; if (!f) return;
   $('start').disabled = true; $('startHint').textContent = `Lade ${(f.size / 1e6).toFixed(1)} MB hoch …`;
@@ -270,7 +339,7 @@ $('start').addEventListener('click', async () => {
   };
   try {
     const r = await api(`/api/upload?filename=${encodeURIComponent(f.name)}&o=${encodeURIComponent(JSON.stringify(o))}`, { method: 'POST', body: f });
-    $('startHint').textContent = '';
+    $('startHint').textContent = ''; $('newDlg').close();
     await select(r.name); await loadRuns();
   } catch (e) { $('startHint').textContent = e.message; $('start').disabled = false; }
 });
@@ -280,6 +349,7 @@ const ICONS = {
   play: ['M8 5.5v13l10.5-6.5z'], pause: ['M8 5.5v13', 'M16 5.5v13'], back: ['M14.5 6l-6 6 6 6'], fwd: ['M9.5 6l6 6-6 6'],
   download: ['M12 4v11', 'M7.5 10.5L12 15l4.5-4.5', 'M5 19.5h14'], check: ['M5 12.5l4.5 4.5L19 7.5'], trash: ['M5 7h14', 'M10 11v6', 'M14 11v6', 'M7 7l1 12h8l1-12', 'M9 7V4.5h6V7'],
   more: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'], target: ['M12 3v4', 'M12 17v4', 'M3 12h4', 'M17 12h4', 'M12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z'], undo: ['M9 6.5L4.5 11 9 15.5', 'M4.5 11H14a5.5 5.5 0 010 11h-2'],
+  plus: ['M12 5v14', 'M5 12h14'], close: ['M6 6l12 12', 'M18 6L6 18'], gear: ['M12 15a3 3 0 100-6 3 3 0 000 6z', 'M19.4 13.5a7.7 7.7 0 000-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 00-2.6-1.5L14 2.5h-4l-.4 2.5A7.6 7.6 0 007 6.5l-2.4-1-2 3.4 2 1.6a7.7 7.7 0 000 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 002.6 1.5l.4 2.5h4l.4-2.5a7.6 7.6 0 002.6-1.5l2.4 1 2-3.4z'],
   alert: ['M12 8v5', 'M12 16.5h.01', 'M10.3 4.5L3.5 17a2 2 0 001.7 3h13.6a2 2 0 001.7-3L13.7 4.5a2 2 0 00-3.4 0z'], info: ['M12 11v5', 'M12 7.5h.01', 'M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17z'],
 };
 const ico = (n, size = 18) => {
@@ -295,7 +365,6 @@ const clock = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60); return 
 let curData = null, pendingHook = null, planHookLines = null;
 async function select(name) {
   current = name; logLines = [];
-  document.querySelector('main').classList.add('has-run');
   if (es) es.close();
   es = new EventSource(`/api/runs/${name}/events`);
   es.onmessage = (m) => {
@@ -392,14 +461,14 @@ function studio(d, running) {
       btn('', 'back', '', () => stepFrame(-1), { 'aria-label': 'Ein Bild zurück', title: 'Ein Bild zurück' }),
       btn('', 'fwd', '', () => stepFrame(1), { 'aria-label': 'Ein Bild vor', title: 'Ein Bild vor' }),
       el('span', { id: 'timeLbl', class: 'time', text: '0:00.0' })),
-      el('div', { id: 'capLive', class: 'live-note', text: 'Die Texte siehst du hier live. Das Video wird erst beim Übernehmen neu gebaut.' }));
+      el('div', { id: 'capLive', class: 'live-note', text: 'Texte siehst du hier live. Neu gebaut wird erst beim Übernehmen.' }));
   }
 
-  // Seitenleiste
-  const side = el('div', { class: 'side' });
+  // Bedienfelder neben dem Video
+  const panels = el('div', { class: 'panels' });
   if (d.hook) {
-    const h1 = el('input', { type: 'text', id: 'hook1', value: d.hook.lines[0], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 1' });
-    const h2 = el('input', { type: 'text', id: 'hook2', value: d.hook.lines[1], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 2' });
+    const h1 = el('input', { type: 'text', id: 'hookA', value: d.hook.lines[0], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 1' });
+    const h2 = el('input', { type: 'text', id: 'hookB', value: d.hook.lines[1], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 2' });
     const onHook = () => {
       const cur = [h1.value, h2.value], same = cur[0].trim().toUpperCase() === planHookLines[0] && cur[1].trim().toUpperCase() === planHookLines[1];
       pendingHook = same || !cur[0].trim() || !cur[1].trim() ? null : cur;
@@ -407,25 +476,20 @@ function studio(d, running) {
       capCount();
     };
     h1.addEventListener('input', onHook); h2.addEventListener('input', onHook);
-    side.append(el('section', { class: 'panel' }, el('h3', { text: 'Hook-Text' }), el('div', { class: 'two' }, h1, h2)));
+    panels.append(el('section', { class: 'panel' }, el('h3', { text: 'Hook-Text' }), el('div', { class: 'hook-col' }, h1, h2)));
   }
-  side.append(el('section', { class: 'panel', id: 'selPanel' }));
-  const generic = /^(Weicht von den üblichen|Abweichung von der Regel|Hook-Text von Claude formuliert|B-Roll #\d+ steht)/;
-  const checks = [...(d.hinschauen || []).filter((i) => !generic.test(i.text)).map((i) => ({ t: i.t_s, text: i.text })), ...((d.selfcheck && d.selfcheck.result && d.selfcheck.result.befunde) || []).map((b) => ({ t: b.t_s, text: b.beschreibung }))].sort((a, b) => a.t - b.t);
-  side.append(el('section', { class: 'panel' }, el('h3', {}, 'Zu prüfen', checks.length ? el('span', { class: 'count', text: String(checks.length) }) : null),
-    checks.length
-      ? el('ul', { class: 'checks' }, ...checks.slice(0, 40).map((c) => el('li', {}, el('button', { type: 'button', onclick: () => { seekTo(c.t); const v = $('vid'); if (v) v.play(); } }, el('span', { class: 'tm', text: mmss(c.t) }), el('span', { text: c.text })))))
-      : el('div', { class: 'allgood' }, ico('check'), el('span', { text: 'Claude hat nichts Auffälliges gefunden.' }))));
+  panels.append(el('section', { class: 'panel', id: 'selPanel' }));
 
-  const node = el('div', { style: 'display:flex;flex-direction:column;gap:16px' },
-    el('div', { class: 'studio' }, stage, side),
-    layered ? el('section', { class: 'tl-card' },
-      el('div', { class: 'tl-head' }, el('h3', { text: 'Zeitleiste' }),
-        el('div', { class: 'legend' }, el('span', {}, el('i', { style: 'background:var(--bg)' }), 'Untertitel'), el('span', {}, el('i', { style: 'background:var(--gold);border-color:var(--gold)' }), 'Gold'), el('span', {}, el('i', { style: 'border:2px solid var(--edit)' }), 'geändert')),
-        el('label', { class: 'zoom' }, 'Zoom', el('input', { type: 'range', id: 'zoomR', min: '1', max: '10', step: '0.5', value: String(capZoom) }))),
-      el('div', { id: 'tlBox' }),
-      el('div', { class: 'hint', text: 'Block anklicken oder ziehen. Rand ziehen = Start oder Ende. Pfeiltasten verschieben um ein Bild (Umschalt: fünf).' })) : null,
-    el('div', { id: 'applybar', class: 'applybar', role: 'status' },
+  const timeline = layered ? el('section', { class: 'tl-card' },
+    el('div', { class: 'tl-head' }, el('h3', { text: 'Zeitleiste' }),
+      el('div', { class: 'legend' }, el('span', {}, el('i', { style: 'background:var(--bg)' }), 'Untertitel'), el('span', {}, el('i', { style: 'background:var(--gold);border-color:var(--gold)' }), 'Gold'), el('span', {}, el('i', { style: 'border:2px solid var(--edit)' }), 'geändert')),
+      el('label', { class: 'zoom' }, 'Zoom', el('input', { type: 'range', id: 'zoomR', min: '1', max: '10', step: '0.5', value: String(capZoom) }))),
+    el('div', { id: 'tlBox' }),
+    el('div', { class: 'hint', text: 'Block anklicken oder ziehen. Rand ziehen = Start oder Ende. Pfeiltasten: ein Bild verschieben (Umschalt: fünf).' })) : null;
+
+  const node = el('div', { class: 'studio' }, stage,
+    el('div', { class: 'right' }, panels, timeline),
+    el('div', { id: 'applybar', class: 'applybar', role: 'status', style: 'grid-column:1 / -1' },
       el('div', { class: 'msg' }, el('span', { id: 'capCountTxt', text: '' }), el('small', { id: 'capSmall', text: '' }), el('span', { id: 'capMsg', class: 'bad' })),
       btn('ghost', 'undo', 'Verwerfen', resetCaps),
       btn('primary', 'check', 'Übernehmen', sendCaps, { id: 'capGo' })));
@@ -519,7 +583,7 @@ function nudge(id, frames, which) {
 }
 
 // ---------- Zeitleiste ----------
-const TL_WAVE_H = 60, TL_LANE_H = 30;
+const TL_WAVE_H = 96, TL_LANE_H = 34;
 let tlPps = 40, tlBlocks = {};
 function buildTimeline() {
   const host = $('tlBox'); if (!host || !capDur) return;
@@ -535,7 +599,7 @@ function buildTimeline() {
   for (let t = 0; t <= capDur; t++) { const major = t % 5 === 0; inner.append(el('div', { style: `position:absolute;left:${t * tlPps}px;top:0;height:${major ? 12 : 6}px;border-left:1px solid var(--line)` })); if (major) inner.append(el('div', { style: `position:absolute;left:${t * tlPps + 4}px;top:0;font-size:10.5px;color:var(--muted)`, text: mmss(t) })); }
   tlBlocks = {};
   for (const c of capsList) {
-    const b = el('div', { 'data-id': String(c.id), style: 'position:absolute;height:25px;border-radius:7px;font-size:12px;font-weight:550;line-height:25px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:grab;box-sizing:border-box;transition:box-shadow .15s ease' });
+    const b = el('div', { 'data-id': String(c.id), style: 'position:absolute;height:28px;border-radius:7px;font-size:12.5px;font-weight:550;line-height:28px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:grab;box-sizing:border-box;transition:box-shadow .15s ease' });
     b.addEventListener('pointerdown', (ev) => blockDown(ev, c.id, b));
     tlBlocks[c.id] = b; inner.append(b);
   }
@@ -602,7 +666,7 @@ function capCount() {
 }
 function resetCaps() {
   for (const id of Object.keys(pendingCaps)) if (capPrev) capPrev.setEdit(Number(id), null);
-  pendingCaps = {}; if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hook1') && planHookLines) { $('hook1').value = curData.hook.lines[0]; $('hook2').value = curData.hook.lines[1]; } }
+  pendingCaps = {}; if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hookA') && planHookLines) { $('hookA').value = curData.hook.lines[0]; $('hookB').value = curData.hook.lines[1]; } }
   capCount(); paintTimeline(); paintSel();
 }
 async function sendCaps() {
@@ -620,7 +684,7 @@ async function approve() {
 }
 async function delRun() {
   if (!confirm('Den ganzen Lauf löschen, auch das fertige Video? Das kann nicht rückgängig gemacht werden.')) return;
-  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; pendingCaps = {}; pendingHook = null; $('detail').replaceChildren(el('div', { class: 'card empty', text: 'Lauf gelöscht.' })); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
+  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; pendingCaps = {}; pendingHook = null; $('detail').replaceChildren(); await loadRuns(); showEmpty(true); loadHealth(); } catch (e) { alert(e.message); }
 }
 
 // ---------- Technische Details (eingeklappt) ----------
@@ -686,6 +750,11 @@ $('sfxFiles').addEventListener('change', (e) => uploadAssets('sfx', e.target));
 $('brollFiles').addEventListener('change', (e) => uploadAssets('broll', e.target));
 $('fontFiles').addEventListener('change', (e) => uploadAssets('fonts', e.target));
 
+$('newBtn').append(ico('plus'), el('span', { text: 'Neues Reel' })); $('newBtn').addEventListener('click', openNew);
+$('sysBtn').append(ico('gear')); $('sysBtn').addEventListener('click', () => { loadHealth(); loadAssets(); $('sysDlg').showModal(); });
+for (const [btnId, dlg] of [['newClose', 'newDlg'], ['sysClose', 'sysDlg']]) { $(btnId).append(ico('close')); $(btnId).addEventListener('click', () => $(dlg).close()); }
+for (const id of ['newDlg', 'sysDlg']) $(id).addEventListener('click', (e) => { if (e.target === $(id)) $(id).close(); });
+document.addEventListener('click', (e) => { const m = $('runMenu'); if (m.open && !m.contains(e.target)) m.open = false; });
 loadHealth(); loadRuns(); loadAssets(); setInterval(() => { loadRuns(); loadHealth(); }, 8000);
 </script>
 </body>
