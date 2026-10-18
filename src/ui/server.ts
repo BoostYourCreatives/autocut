@@ -21,7 +21,7 @@ import { hasLayeredRender, baseVideoFile } from "../steps/render.ts";
 import { buildTimeline, outDuration } from "../plan/timeline.ts";
 import { findStockClip } from "../steps/broll.ts";
 import { waveformPeaks } from "../lib/waveform.ts";
-import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
+import { JobRunner, MOTIONS_STEP_ORDER, STEP_ORDER, runStil, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
   ingest: "Einlesen",
@@ -31,6 +31,7 @@ const STEP_LABEL: Record<string, string> = {
   broll: "B-Rolls",
   plan: "Schnittplan",
   render: "Video bauen",
+  cutout: "Freistellen",
 };
 
 const slug = (s: string) => s.toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "reel";
@@ -120,7 +121,8 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     const job = jobs.jobs.get(name);
     const log = readRunLog(runPaths(cfg, name));
     const uiStep = (s: string) => (s.startsWith("render") || s === "selfcheck" ? "render" : s.startsWith("broll") ? "broll" : s);
-    const steps = STEP_ORDER.map((key) => {
+    const motions = runStil(dir) === "motions";
+    const steps = (motions ? MOTIONS_STEP_ORDER : STEP_ORDER).map((key) => {
       const entries = log.steps.filter((s) => uiStep(s.step) === key);
       const last = entries[entries.length - 1];
       const secs = entries.reduce((a, e) => a + e.duration_ms / 1000, 0);
@@ -132,6 +134,14 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
     if (fs.existsSync(path.join(dir, "approved.json"))) out.approved = JSON.parse(fs.readFileSync(path.join(dir, "approved.json"), "utf8"));
     if (!job && fs.existsSync(path.join(dir, "job.json"))) out.interrupted = JSON.parse(fs.readFileSync(path.join(dir, "job.json"), "utf8"));
 
+    if (motions) {
+      out.engine = "motions";
+      const outDir = path.join(dir, "out");
+      const mp4 = fs.existsSync(outDir) ? fs.readdirSync(outDir).find((f) => f.endsWith(".mp4")) : undefined;
+      if (mp4) out.files = { video: `/media/${name}/${mp4}`, hinschauen: "", plan: `/api/runs/${name}/plan`, bericht: `/api/runs/${name}/report` };
+      out.summary = summarizeRun(dir);
+      return out;
+    }
     const planFile = planPaths(runPaths(cfg, name)).plan;
     if (fs.existsSync(planFile)) {
       try {
@@ -297,7 +307,8 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
           brollStock: opts.brollStock === true,
           transition: opts.transition === "blitz" ? "blitz_riser" : opts.transition === "hart" ? "hart" : undefined,
           hookLines: opts.hook1 && opts.hook2 ? [opts.hook1, opts.hook2] : undefined,
-          video: `TW_Reel_${name}`,
+          video: opts.stil === "motions" ? `Reel_${name}` : `TW_Reel_${name}`,
+          stil: opts.stil === "motions" ? "motions" : "thorsten",
         };
         try {
           jobs.start(name, "pipeline", jo, dest);

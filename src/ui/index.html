@@ -244,6 +244,9 @@
   <div class="dlg-body">
     <label class="drop" for="file" id="dropZone"><span class="drop-t" id="dropText">Rohvideo auswählen oder hierher ziehen</span><span class="drop-s">mp4 oder mov</span></label>
     <input type="file" id="file" accept="video/*" class="vh">
+    <label>Editing-Stil</label>
+    <select id="stil"><option value="thorsten">Thorsten Wittmann (Schnitt, Gold-Untertitel, B-Rolls)</option><option value="motions">Motions (freigestellt, Glas-Optik)</option></select>
+    <div class="hint" id="stilHint" hidden>Motions stellt den Sprecher frei und setzt ihn vor einen Farbverlauf. Das Freistellen dauert einige Minuten.</div>
     <label>Name (optional)</label>
     <input type="text" id="name" placeholder="z. B. 53">
     <label>Hook-Text (optional, 2 Zeilen)</label>
@@ -344,6 +347,7 @@ function pickFile(f) {
   $('start').disabled = !f || !!window.__busy;
 }
 $('file').addEventListener('change', () => pickFile($('file').files[0]));
+$('stil').addEventListener('change', () => { const m = $('stil').value === 'motions'; $('stilHint').hidden = !m; for (const id of ['hook1', 'hook2', 'transition', 'precut', 'brollOwn', 'brollStock', 'selfcheck']) { const e = $(id); e.disabled = m; } });
 $('dropZone').addEventListener('dragover', (e) => { e.preventDefault(); $('dropZone').classList.add('over'); });
 $('dropZone').addEventListener('dragleave', () => $('dropZone').classList.remove('over'));
 $('dropZone').addEventListener('drop', (e) => { e.preventDefault(); $('dropZone').classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) { const dt = new DataTransfer(); dt.items.add(f); $('file').files = dt.files; pickFile(f); } });
@@ -352,6 +356,7 @@ $('start').addEventListener('click', async () => {
   $('start').disabled = true; $('startHint').textContent = `Lade ${(f.size / 1e6).toFixed(1)} MB hoch …`;
   const o = {
     name: $('name').value.trim() || undefined,
+    stil: $('stil').value,
     transition: $('transition').value,
     precut: { auto: 'auto', ja: true, nein: false }[$('precut').value],
     selfcheck: $('selfcheck').checked,
@@ -453,7 +458,7 @@ function render(d) {
   if (running) ws.append(progressPanel(d));
   if (d.approved) ws.append(banner('ok', 'Abgenommen', 'Das Rohmaterial ist gelöscht, das fertige Video bleibt. Änderungen sind nicht mehr möglich.'));
   let mount = null;
-  if (d.files && d.approved) {
+  if (d.files && (d.approved || d.engine === 'motions')) {
     ws.append(el('div', { class: 'studio' }, el('div', { class: 'stage' }, el('div', { class: 'stage-frame' }, el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' })))));
   } else if (d.files) {
     const st = studio(d, running); ws.append(st.node); mount = st.mount;
@@ -905,7 +910,7 @@ function techDetails(d) {
       v.errors.length ? el('ul', { class: 'list' }, ...v.errors.map((e) => el('li', { class: 'conf-niedrig', text: e.message }))) : null,
       v.warnings.length ? el('details', { 'data-k': 'warn' }, el('summary', { text: `${v.warnings.length} Hinweis(e)` }), el('ul', { class: 'list' }, ...v.warnings.map((w) => el('li', { class: 'muted', text: w.message })))) : null));
   }
-  if (d.files || d.validation) {
+  if (d.engine !== 'motions' && (d.files || d.validation)) {
     const links = d.files ? el('div', { class: 'links' }, el('a', { href: d.files.plan, text: 'Plan (json)' }), el('a', { href: d.files.hinschauen, target: '_blank', text: 'Hinweise (md)' }), el('a', { href: d.files.bericht, target: '_blank', text: 'Laufbericht' })) : null;
     if (!d.approved) {
       const ta = el('textarea', { id: 'planText', spellcheck: 'false' }), msg = el('div', { id: 'planMsg', class: 'hint' });

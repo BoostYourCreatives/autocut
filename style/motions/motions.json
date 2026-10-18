@@ -1,0 +1,14 @@
+{
+  "_hinweis": "Zahlen für die Render-Engine 'motions' (Untertitel, Hintergrund, Platzierung des Sprechers).",
+  "engine": "motions",
+  "akzent": "#fab926",
+  "untertitel_y": 1330,
+  "hintergruende": [
+    ["#d6ece4", "#c4d6ec"],
+    ["#c9dcf2", "#dcd0f0"],
+    ["#d9ecf5", "#e6f1f3"]
+  ],
+  "sprecher": { "schatten_unschaerfe": 28, "schatten_versatz_y": 22, "schatten_staerke": 0.3 },
+  "ton": { "lautheit_lufs": -14, "true_peak": -1.5 },
+  "video": { "crf": 17, "preset": "medium", "audio_kbps": 192 }
+}

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Config, Style } from "../config.ts";
+import { ROOT, type Config, type Style } from "../config.ts";
 import type { LlmClient } from "../llm/client.ts";
 import { ingest } from "../steps/ingest.ts";
 import { transcribe } from "../steps/transcribe/index.ts";
@@ -16,6 +16,9 @@ import { runPaths } from "../util/run.ts";
 import { timed } from "../util/runlog.ts";
 import { exec } from "../util/exec.ts";
 import { writeJson } from "../util/files.ts";
+import { cutout } from "../motions/cutout.ts";
+import { planMotions } from "../motions/plan.ts";
+import { renderMotions } from "../motions/render.ts";
 
 export interface JobOptions {
   hookLines?: [string, string];
@@ -33,6 +36,18 @@ export interface JobOptions {
   captionOldRangesS?: [number, number][];
   /** Ton neu mischen (Soundeffekte geändert) */
   remixAudio?: boolean;
+  /** Editing-Stil des Reels; wird pro Lauf gemerkt (stil.json) */
+  stil?: "thorsten" | "motions";
+}
+
+export const STIL_DATEI = "stil.json";
+export function runStil(runDir: string): "thorsten" | "motions" {
+  try {
+    const f = path.join(runDir, STIL_DATEI);
+    return fs.existsSync(f) && JSON.parse(fs.readFileSync(f, "utf8")).stil === "motions" ? "motions" : "thorsten";
+  } catch {
+    return "thorsten";
+  }
 }
 
 export type JobEvent =
@@ -52,6 +67,7 @@ export interface Job {
 }
 
 export const STEP_ORDER = ["ingest", "transcribe", "analyze", "chin", "plan", "broll", "render"] as const;
+export const MOTIONS_STEP_ORDER = ["ingest", "transcribe", "cutout", "plan", "render"] as const;
 
 export class JobRunner {
   jobs = new Map<string, Job>();
@@ -76,6 +92,9 @@ export class JobRunner {
       const w = JSON.parse(fs.readFileSync(wahl, "utf8")) as { own?: boolean; stock?: boolean };
       opts = { ...opts, brollOwn: !!w.own, brollStock: !!w.stock };
     } else writeJson(wahl, { own: !!opts.brollOwn, stock: !!opts.brollStock });
+    const stil = opts.stil ?? runStil(runPaths(this.cfg, run).dir);
+    fs.mkdirSync(runPaths(this.cfg, run).dir, { recursive: true });
+    writeJson(path.join(runPaths(this.cfg, run).dir, STIL_DATEI), { stil });
     const job: Job = { run, kind, status: "running", current: null, error: null, events: [], listeners: new Set() };
     // Marker: bleibt er nach einem Neustart liegen, wurde der Lauf unterbrochen (z. B. Container wegen Speicher beendet)
     writeJson(path.join(runPaths(this.cfg, run).dir, "job.json"), { kind, started_at: new Date().toISOString() });
@@ -83,6 +102,19 @@ export class JobRunner {
     this.busy = run;
     void this.execute(job, opts, source).finally(() => (this.busy = null));
     return job;
+  }
+
+  /** Stil "motions": einlesen → transkribieren → freistellen → Untertitel planen → rendern. */
+  private async executeMotions(job: Job, opts: JobOptions, source: string | undefined, step: <T>(name: string, fn: () => Promise<T>) => Promise<T>) {
+    const { cfg, style } = this;
+    if (job.kind === "pipeline") {
+      await step("ingest", () => ingest(cfg, style, job.run, { reels: [source!], hooks: [], precut: false }));
+      const provider = opts.provider === "auto" ? "faster-whisper" : opts.provider;
+      await step("transcribe", () => transcribe(cfg, style, job.run, { provider }));
+      await step("cutout", () => cutout(cfg, job.run));
+    }
+    if (job.kind === "pipeline" || job.kind === "replan") await step("plan", () => planMotions(cfg, job.run, { llm: this.llm, video: opts.video }));
+    await step("render", () => renderMotions(cfg, runPaths(cfg, job.run), path.resolve(ROOT, cfg.styleDir, "motions")));
   }
 
   private async execute(job: Job, opts: JobOptions, source?: string) {
@@ -105,6 +137,12 @@ export class JobRunner {
     const run = runPaths(cfg, job.run);
     const planFile = planPaths(run).plan;
     try {
+      if (runStil(run.dir) === "motions") {
+        await this.executeMotions(job, opts, source, step);
+        job.status = "done";
+        this.push(job, { type: "done", t: t() });
+        return;
+      }
       if (job.kind === "pipeline") {
         await step("ingest", () => ingest(cfg, style, job.run, { reels: [source!], hooks: [], precut: opts.precut }));
         const provider = opts.provider === "auto" ? "faster-whisper" : opts.provider;
