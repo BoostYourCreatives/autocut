@@ -1,0 +1,527 @@
+{
+  "_meta": {
+    "zweck": "Maschinenlesbare Werte fuer die Pipeline. style.json enthaelt viele Werte nur als Fliesstext (z. B. 'ffmpeg silencedetect noise=-35dB d=0.12'). Die Pipeline liest Zahlen aus DIESER Datei. style.json und regeln.md bleiben die Quelle der Wahrheit, jeder Wert hier nennt seine Quelle.",
+    "kunde": "Thorsten Wittmann",
+    "regel": "Aenderungen an Stilwerten zuerst in style.json/regeln.md klaeren, dann hier nachziehen. Mit TODO(style) markierte Werte sind Annahmen und nicht vom User bestaetigt."
+  },
+  "ingest": {
+    "proxy": {
+      "codec": "libx264",
+      "crf": 14,
+      "gop": 15,
+      "audio": false,
+      "_quelle": "regeln.md Arbeitsablauf 1"
+    },
+    "analyse_audio": {
+      "sample_rate": 16000,
+      "channels": 1,
+      "_quelle": "regeln.md Arbeitsablauf 1"
+    },
+    "master_audio": {
+      "sample_rate": 48000,
+      "channels": 2,
+      "_quelle": "style.json format.finaler_export (AAC 48 kHz Stereo)"
+    },
+    "fps_regel": "quelle_beibehalten",
+    "erlaubte_fps": [
+      24,
+      25,
+      30,
+      50,
+      60
+    ],
+    "soll_aufloesung": [
+      1080,
+      1920
+    ],
+    "_quelle": "style.json format.fps_regel"
+  },
+  "analyze": {
+    "stille": {
+      "noise_db": -35,
+      "min_s": 0.12,
+      "_quelle": "style.json schnitt_rhythmus.pausenerkennung"
+    },
+    "leise_bereiche": {
+      "noise_db": -28,
+      "min_s": 0.15,
+      "_todo": "TODO(style): Atmer-Erkennung ist nicht in style.json beschrieben. Schwellen sind eine Annahme (Kandidaten fuer Atmer = leiser als -28 dB, aber nicht still)."
+    },
+    "szenenwechsel": {
+      "schwelle": 0.2,
+      "_quelle": "regeln.md STANDARD 1 (ffmpeg scene > 0.2)"
+    },
+    "vorgeschnitten_ab_harten_schnitten": {
+      "anzahl": 2,
+      "_todo": "TODO(style): Heuristik ist eine Annahme. Laut regeln.md entscheidet zusaetzlich die Aussage des Users ('Zooms hab ich schon gemacht'), siehe --precut."
+    },
+    "lautheit_fenster_s": 0.1
+  },
+  "transcribe": {
+    "language": "de",
+    "wortgrenzen_an_stille_anpassen": true,
+    "min_wortdauer_s": 0.04,
+    "vokabel_hinweis": [
+      "Freiheitstraining",
+      "Kontosetup",
+      "Auslandskonto",
+      "Hellmeyer",
+      "Vermögensstruktur"
+    ],
+    "_quelle": "regeln.md Arbeitsablauf 2 (faster-whisper medium, int8, de, beam 5, danach Wortgrenzen an Stillen anpassen); style.json schreibweise (Vokabeln)",
+    "_todo": "TODO(style): Die Vokabelliste ist aus Beispielen in style.json abgeleitet, nicht vollstaendig."
+  },
+  "schnitt": {
+    "min_pause_s": 0.15,
+    "luft_rand_s": 0.02,
+    "audio_fade_ms": 8,
+    "min_fragment_frames": 6,
+    "_quelle": "style.json schnitt_rhythmus"
+  },
+  "hook_uebergang": {
+    "modus_standard": "auto",
+    "erlaubt": [
+      "blitz_riser",
+      "hart"
+    ],
+    "_quelle": "User-Vorgabe 15.10.2026: Uebergang mit Riser nicht immer, Kriterium 'nach Inhalt'. regeln.md MUSS 7 beschreibt nur, WIE er aussieht, wenn er gesetzt wird.",
+    "_todo": "TODO(style): Die genaue Auslegung von 'nach Inhalt' (kriterium_text) ist meine Interpretation, nicht vom User bestaetigt. Mit den ersten Reels abgleichen.",
+    "kriterium": "inhalt",
+    "kriterium_text": "Claude entscheidet nach dem Inhalt des Hooks. blitz_riser, wenn der Hook ein in sich geschlossener Satz ist (zugespitzte These, Frage oder Aussage), nach dem inhaltlich ein neuer Abschnitt beginnt. hart, wenn der erste Satz gedanklich direkt in den naechsten uebergeht (z. B. Aufzaehlung, 'Erstens ...', Satz ohne eigenen Abschluss). Die Entscheidung bekommt reason und confidence; bei mittel/niedrig erscheint sie in der Liste 'Hier genauer hinschauen'."
+  },
+  "captions": {
+    "merge": {
+      "min_anzeige_s": 0.24,
+      "funktionswort_max_anzeige_s": 0.3,
+      "max_zeichen": 22,
+      "funktionswoerter": [
+        "die",
+        "der",
+        "das",
+        "dein",
+        "deine",
+        "ein",
+        "eine",
+        "einer",
+        "einem",
+        "einen",
+        "in",
+        "für",
+        "von",
+        "und",
+        "wenn",
+        "wie",
+        "du",
+        "ich",
+        "sie",
+        "ihr",
+        "dass",
+        "mich",
+        "dich",
+        "ist",
+        "wird",
+        "mit",
+        "es",
+        "sind",
+        "was",
+        "bei",
+        "am",
+        "dir",
+        "des",
+        "um",
+        "zu",
+        "bis",
+        "mein",
+        "je",
+        "da",
+        "auf",
+        "nur",
+        "nicht",
+        "sich",
+        "dann",
+        "als",
+        "den",
+        "all",
+        "ja",
+        "gar"
+      ],
+      "_quelle": "style.json untertitel.woerter_pro_einblendung. Das Kriterium bezieht sich auf die Anzeigedauer des zuletzt angehaengten Wortes; so ergibt es die Gruppen aus Reel 48 ('Wenn ich mein Vermögen', 'auf die nächsten', 'würde ich mir')."
+    },
+    "timing": {
+      "start_vorlauf_frames": 1,
+      "nachlauf_luecke_s": 0.35,
+      "nachlauf_s": 0.18,
+      "wipe_vorlauf_frames": 4,
+      "_quelle": "style.json untertitel.timing, hervorhebungen_gold.typen.wipe"
+    },
+    "min_frames": 6,
+    "ende_nach_letztem_wort_s": 0.05,
+    "cta": {
+      "erkennung_woerter": [
+        "kommentier",
+        "kommentiere"
+      ],
+      "_quelle": "style.json call_to_action"
+    }
+  },
+  "zoom": {
+    "erlaubte_werte": [
+      1.1,
+      1.12,
+      1.15
+    ],
+    "rampe_frames": 24,
+    "max_schritt_pro_frame": 0.0105,
+    "anzahl": {
+      "min": 1,
+      "max": 3
+    },
+    "mindestabstand_s": 6,
+    "hook_push_nach": 1.06,
+    "_quelle": "regeln.md MUSS 2/3, STANDARD 3/4",
+    "_todo": "Vorgabe vom User (Oktober 2026): Zooms seltener als in regeln.md. Hoechstens 3 pro Reel, mindestens 6 s Abstand, nur bei echter Betonung."
+  },
+  "sfx": {
+    "verboten_muster": [
+      "swish_whoosh",
+      "whoosh"
+    ],
+    "cues": {
+      "riser": {
+        "file": "Riser.mp3",
+        "gain_db": -16,
+        "peak_im_file_s": 3.81,
+        "ende_nach_blitz_s": 0.25,
+        "fade_out_ms": 80
+      },
+      "shutter": {
+        "file": "Camera_Shutter.mp3",
+        "gain_db": -16,
+        "versatz_s": -0.09
+      },
+      "fuwa_stark": {
+        "file": "Fuwa.mp3",
+        "gain_db": -18,
+        "versatz_s": -0.18,
+        "anzahl": {
+          "min": 4,
+          "max": 6
+        }
+      },
+      "fuwa_leise": {
+        "file": "Fuwa.mp3",
+        "gain_db": -21,
+        "versatz_s": -0.18,
+        "anzahl": {
+          "min": 2,
+          "max": 4
+        }
+      },
+      "money": {
+        "file": "Money_Caching.mp3",
+        "gain_db": -13,
+        "versatz_s": 0.07,
+        "anzahl": {
+          "min": 1,
+          "max": 1
+        }
+      },
+      "ding": {
+        "file": "Ding.mp3",
+        "gain_db": -9,
+        "versatz_s": -0.05
+      }
+    },
+    "_quelle": "style.json soundeffekte.cues (Versaetze gegen Reel 48/53 nachgerechnet)"
+  },
+  "broll": {
+    "anzahl": {
+      "min": 2,
+      "max": 4
+    },
+    "shade_alpha": 0.36,
+    "shade_alpha_hell": 0.62,
+    "vorlauf_frames": 1,
+    "nachlauf_s": 0.18,
+    "max_s": 3,
+    "_quelle": "style.json b_roll, regeln.md STANDARD 7"
+  },
+  "hook": {
+    "zeilen": 2,
+    "ki_text": "Info: Dieses Video wurde mit KI erstellt.",
+    "max_zeichen_zeile": 30,
+    "min_luecke_s": 0.04,
+    "_quelle": "style.json text_hooks",
+    "_todo": "TODO(style): max_zeichen_zeile=30 ist eine Annahme (laengste Beispielzeile hat 27 Zeichen)."
+  },
+  "farben": {
+    "weiss": "#ffffff",
+    "gold": "#fab926",
+    "erlaubt": [
+      "#ffffff",
+      "#fab926",
+      "#000000"
+    ],
+    "_quelle": "style.json farben"
+  },
+  "schriften": {
+    "weiss": "Helvetica-Bold",
+    "gold": "SegoePro-BoldItalic",
+    "zitat": "SegoePro-BoldItalic",
+    "cta": "SegoePro-BoldItalic",
+    "_quelle": "regeln.md MUSS 4/15"
+  },
+  "gold": {
+    "anzahl": {
+      "min": 6,
+      "max": 18
+    },
+    "_quelle": "style.json hervorhebungen_gold.dosierung_pro_reel (10-16)",
+    "_todo": "TODO(style): Band 6-18 als Warnschwelle, weil 10-16 'in der Praxis' steht."
+  },
+  "validator": {
+    "tonsprung_warn_db": -30,
+    "tonsprung_fehler_db": -15,
+    "wortrand_toleranz_s": 0.012,
+    "max_entfernt_sprechanteil": 0.25,
+    "min_laenge_verhaeltnis": 0.6,
+    "min_laenge_verhaeltnis_vorgeschnitten": 0.97,
+    "_todo": "TODO(style): Alle Schwellen dieses Blocks sind Annahmen (nicht in style.json/regeln.md). Mit echten Reels kalibrieren."
+  },
+  "plan": {
+    "claude_effort": "high",
+    "max_tokens": 16000,
+    "_todo": "TODO(config): Effort/max_tokens fuer den Plan sind Annahmen."
+  },
+  "layout": {
+    "_quelle": "style.json (typografie, untertitel, hervorhebungen_gold, text_hooks, b_roll, uebergaenge, zooms_und_kamera). Positionen in Pixel im 1080x1920-Frame; BL = Grundlinie, DY = Verschiebung nach unten (aus der Kinn-Messung).",
+    "schrift": {
+      "weiss": {
+        "datei": "Helvetica-Bold.ttf",
+        "familie": "Helvetica-Bold",
+        "fallback": "Helvetica Neue, Helvetica, Arial, Inter, sans-serif",
+        "K": 0.27,
+        "letter_spacing_em": -0.045,
+        "gewicht": 700,
+        "kursiv": false
+      },
+      "gold": {
+        "datei": "SegoePro-BoldItalic.ttf",
+        "familie": "SegoePro-BoldItalic",
+        "fallback": "Segoe UI, Inter, sans-serif",
+        "K": 0.391,
+        "letter_spacing_em": -0.02,
+        "gewicht": 700,
+        "kursiv": true
+      },
+      "ki": {
+        "datei": "heros-regular.otf",
+        "familie": "Heros-Regular",
+        "fallback": "Helvetica Neue, Helvetica, Arial, Inter, sans-serif"
+      }
+    },
+    "max_breite_px": 900,
+    "weiss": {
+      "size": 60,
+      "baseline": 978
+    },
+    "gold": {
+      "size_standard": 72,
+      "groessen_nach_zeichen": [
+        [
+          3,
+          100
+        ],
+        [
+          9,
+          90
+        ],
+        [
+          12,
+          86
+        ],
+        [
+          18,
+          80
+        ]
+      ],
+      "baseline_zuschlag": 2,
+      "_todo": "TODO(style): style.json nennt 72 (Standard), 80-90 (kurze Kernwoerter), 100 (sehr kurze). Die Staffel nach Zeichenzahl ist aus den Beispielplaenen abgeleitet."
+    },
+    "zitat": {
+      "size": 64,
+      "baseline_zuschlag": 2
+    },
+    "stack": {
+      "zeile1_baseline": 976,
+      "gold_baseline": 1043,
+      "zeile3_baseline": 1093,
+      "zeile3_unterlaenge_zuschlag": 4,
+      "gold_size_standard": 86
+    },
+    "liste": {
+      "eintrag_abstaende": [
+        88,
+        170,
+        252,
+        334
+      ],
+      "eintrag_size": 72
+    },
+    "cta": {
+      "size": 80,
+      "baseline": 1091,
+      "kontur_px": 2
+    },
+    "wipe": {
+      "frames": 9,
+      "maske_padding": "0.4em 16px",
+      "kante_prozent": 12
+    },
+    "animation": {
+      "mini": {
+        "scale_von": 0.95,
+        "frames": 3
+      },
+      "pop": {
+        "frames": [
+          0,
+          2,
+          4,
+          6
+        ],
+        "scale": [
+          1.28,
+          1.06,
+          0.985,
+          1.0
+        ],
+        "opacity_von": 0.3
+      },
+      "slide": {
+        "x_von": -70,
+        "frames_x": 5,
+        "frames_opacity": 3
+      },
+      "rise": {
+        "y_von": 16,
+        "frames_y": 4,
+        "frames_opacity": 3
+      },
+      "words": {
+        "opacity_von": 0.4,
+        "scale_von": 0.95,
+        "frames": 3
+      }
+    },
+    "schatten": {
+      "weiss": "1px 3px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.25)",
+      "gold": "1px 4px 14px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.28)",
+      "ki": "1px 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2)"
+    },
+    "hook_box": {
+      "top": 282,
+      "radius": 10,
+      "padding": [
+        12,
+        18,
+        10,
+        18
+      ],
+      "size": 56,
+      "zeilenhoehe": 0.875,
+      "letter_spacing_em": -0.02,
+      "farbe_text": "#000000",
+      "farbe_hintergrund": "#ffffff"
+    },
+    "ki_hinweis": {
+      "size": 35,
+      "y_mitte": 1706,
+      "letter_spacing_em": -0.025
+    },
+    "b_roll": {
+      "zoom_von": 1.0,
+      "zoom_bis": 1.06,
+      "origin": [
+        540,
+        900
+      ],
+      "shade_cy": 1035,
+      "shade_ellipse": [
+        560,
+        330
+      ],
+      "shade_einblenden_frames": 4
+    },
+    "blitz": {
+      "halbe_dauer_frames": 5,
+      "warm_frames": [
+        -5,
+        -1,
+        0,
+        1,
+        5
+      ],
+      "warm_opacity": [
+        0,
+        0.85,
+        1,
+        0.85,
+        0
+      ],
+      "weiss_frames": [
+        -2,
+        0,
+        2
+      ],
+      "weiss_opacity": [
+        0,
+        0.95,
+        0
+      ],
+      "warm_verlauf": "radial-gradient(ellipse at 70% 30%, #fece40 0%, #fab926 35%, #f99d27 70%, #c86a10 100%)",
+      "weiss_verlauf": "radial-gradient(ellipse at 60% 40%, #fffdf5 0%, #fff4cf 55%, #ffe39a 100%)"
+    },
+    "kamera": {
+      "ease": "cosine",
+      "hook_push_ab_frame": 1
+    },
+    "kinn": {
+      "mindestabstand_px": 20,
+      "messung_jedes_n_frame": 3,
+      "oberkante_faktor_cap": 0.75,
+      "dy_ersatz_ohne_messung": 160,
+      "_todo": "TODO(style): oberkante_faktor_cap (Schrifthoehe oberhalb der Grundlinie = 0,75 x Schriftgroesse) ist eine Naeherung. dy_ersatz_ohne_messung=160 gilt nur, wenn das Kinn nicht gemessen werden konnte (style.json: 132-245 je nach Setting)."
+    },
+    "schrift_ersatz_hinweis": "Fehlen die Original-Schriften in assets/fonts, rendert die Pipeline mit der Fallback-Schrift und warnt."
+  },
+  "export": {
+    "zwischen": {
+      "codec": "h264",
+      "crf": 14
+    },
+    "final": {
+      "codec": "libx265",
+      "bitrate_kbps": 4400,
+      "pass": 2,
+      "preset": "medium",
+      "tag": "hvc1",
+      "audio_codec": "aac",
+      "audio_kbps": 192,
+      "max_mb": 30
+    },
+    "lautheit": {
+      "i": -17,
+      "tp": -1.5,
+      "lra": 11
+    },
+    "_quelle": "style.json format.finaler_export, soundeffekte.mix"
+  },
+  "selfcheck": {
+    "frame_abstand_s": 2.0,
+    "bildbreite_px": 540,
+    "max_bilder": 40,
+    "modell_effort": "medium",
+    "_todo": "TODO(config): Abstand und Bildbreite der Selfcheck-Frames sind Annahmen."
+  }
+}

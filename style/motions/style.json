@@ -1,0 +1,216 @@
+{
+  "_meta": {
+    "gilt_fuer": "Thorsten-Wittmann-REELS (TW_Reel_33 bis TW_Reel_54), Stand 15.10.2026. Dieser Chat enthält KEINE TW_CCC-Ads – siehe Teil 4, Frage 1.",
+    "quelle": "Code in /code (Reel.tsx, build_edit_reel53.py, audio.py, run.sh) + Korrekturen des Users im Chat. Bei Widerspruch gilt der jeweils spätere Stand; Datum steht dabei.",
+    "referenz_video": "TW_Reel_34 (fertiger Schnitt des Users, 30.09.2026). Nicht 1:1 kopieren, sondern pro Reel 1-2 eigene Animationen/B-Rolls mehr.",
+    "koordinaten": "Pixel im 1080x1920-Frame, Ursprung oben links. 'baseline' = Schrift-Grundlinie. Alle y-Werte der Textebene zzgl. DY (Setting-abhängig, siehe untertitel.position)."
+  },
+
+  "format": {
+    "aufloesung": [1080, 1920],
+    "seitenverhaeltnis": "9:16",
+    "fps": 30,
+    "fps_regel": "Render in der fps des Rohmaterials. Alle Reels 35-54 hatten 30 fps. Reel 34 kam mit 25 fps und wurde in 25 fps gerendert.",
+    "laenge_s": "ergibt sich aus Rohmaterial minus Pausen; in der Praxis 42-51 s",
+    "ende": "letzter Frame = Ende des letzten Wortes + 0,05 s (kein Outro, keine Endcard)",
+    "zwischen_render": "Remotion 4 (Composition 1080x1920, fps aus edit.json), Codec h264, CRF 14, ohne Ton",
+    "finaler_export": {
+      "video": "libx265, 2-pass, 4400 kbit/s, preset medium, Tag hvc1, +faststart",
+      "audio": "AAC 192 kbit/s, 48 kHz Stereo",
+      "max_dateigroesse_mb": 30,
+      "dateiname": "TW_Reel_<Nr>.mp4"
+    },
+    "kein_color_grading": true,
+    "keine_vignette": true,
+    "kein_logo": true,
+    "keine_progressbar": true
+  },
+
+  "typografie": {
+    "fonts": {
+      "H": {"datei": "Helvetica-Bold.ttf", "verwendung": "weiße Untertitel, weiße Stack-Zeilen, Listen-Kopfzeile, Hook-Box", "letter_spacing_em": -0.045, "baseline_faktor_K": 0.270},
+      "S": {"datei": "SegoePro-BoldItalic.ttf", "verwendung": "ALLE goldenen Highlights, CTA-Keyword, Zitat-Untertitel (weiß)", "letter_spacing_em": -0.02, "baseline_faktor_K": 0.391},
+      "R": {"datei": "heros-regular.otf (TeX Gyre Heros Regular als Helvetica-Regular-Ersatz)", "verwendung": "nur KI-Hinweis"}
+    },
+    "y_berechnung": "y_mitte = baseline - K * size; Element wird mit translateY(-50%) auf y_mitte zentriert",
+    "zeilenhoehe": 1.0,
+    "ausrichtung": "horizontal zentriert (left 0 / right 0 / text-align center), white-space: pre (keine automatischen Umbrüche)",
+    "zeilenumbruch": "KEIN Umbruch. Jede Einblendung ist genau eine Zeile. Ist eine Zeile breiter als 900 px (gemessen mit PIL-Fontmetrik + Laufweite), wird die Schriftgröße proportional verkleinert: size = int(size * 900 / breite). Mehrzeiligkeit entsteht nur über Stacks/Listen (separate Elemente).",
+    "max_breite_px": 900,
+    "font_smoothing": "antialiased, text-rendering geometricPrecision",
+    "konturen": "keine (Ausnahme CTA: 2 px Kontur in derselben Goldfarbe, paint-order stroke fill = macht dicker, kein sichtbarer Rand)"
+  },
+
+  "farben": {
+    "weiss": "#ffffff",
+    "gold": "#fab926",
+    "hook_box_hintergrund": "#ffffff",
+    "hook_box_text": "#000000",
+    "schatten_weiss": "1px 3px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.25)",
+    "schatten_gold": "1px 4px 14px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.28)",
+    "schatten_strong_optional": "0 0 26px rgba(0,0,0,0.55), 2px 4px 14px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.45) (Flag o.strong in Reel.tsx, in den gelieferten Reels nicht benutzt)",
+    "schatten_ki_hinweis": "1px 2px 8px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2)",
+    "light_leak_verlauf": "radial-gradient(ellipse at 70% 30%, #fece40 0%, #fab926 35%, #f99d27 70%, #c86a10 100%), mix-blend-mode screen",
+    "light_leak_weiss": "radial-gradient(ellipse at 60% 40%, #fffdf5 0%, #fff4cf 55%, #ffe39a 100%)",
+    "b_roll_abdunklung": "radial-gradient(ellipse 560px 330px at 540px <cy>px, rgba(0,0,0,a) 0%, rgba(0,0,0,a*0.6) 55%, rgba(0,0,0,0) 100%)",
+    "verboten": ["Blau in Schrift, Schatten oder Kontur", "zweite Akzentfarbe", "Orange #EA5E20 aus den alten Referenzen", "Konturen um Gold"]
+  },
+
+  "untertitel": {
+    "schrift": "H (Helvetica Bold), weiß",
+    "groesse_px": 60,
+    "position": {
+      "baseline_px": "978 + DY",
+      "DY_regel": "DY so wählen, dass die Oberkante jeder Einblendung in jedem Frame >= 20 px unter dem Kinn liegt (Kinn = MediaPipe FaceLandmarker Punkt 152, gemessen alle 3 Frames, mit Zoom hochgerechnet). Faustregel aus den Reels: DY ≈ maximale Kinn-y - 880.",
+      "DY_gemessen_pro_setting": {
+        "Restaurant/Tisch grünes Polo (Reel 34)": 0,
+        "Veranda Norweger-Pulli (Reel 33/40/43/48)": "132-245 (Reel 40: 160, Reel 43: 160, Reel 48: 245)",
+        "Arkade hellblaues Polo (Reel 39/44)": 232,
+        "Schiffsrestaurant (Reel 41)": 80,
+        "Pavillon nah graues Polo (Reel 42)": 40,
+        "Studio Mikrofon grünes Polo (Reel 50/51/54)": "20 / 70 / -10",
+        "Pool hellblaues Polo (Reel 45/47/53)": "185-250"
+      },
+      "pruefung": "chin_check.py edit.json chin_raw.json 20 -> muss 'below margin 0' melden"
+    },
+    "woerter_pro_einblendung": {
+      "grundsatz": "1 Wort pro Einblendung",
+      "merge_regel": "Nächstes Wort anhängen, wenn (a) Anzeigedauer des aktuellen Wortes < 0,24 s ODER (b) aktuelles Wort ist Funktionswort und Anzeigedauer < 0,30 s; nur wenn: direkt aufeinanderfolgend, aktueller Text endet nicht auf . ? !, Gesamtlänge <= 22 Zeichen, beide im selben Schnitt-Segment, keins in NOMERGE.",
+      "nachlauf_merge": "Einzelwort mit Anzeigedauer < 0,24 s wird an die vorige Einblendung angehängt (gleiche Bedingungen).",
+      "funktionswoerter": ["die","der","das","dein","deine","ein","eine","einer","einem","einen","in","für","von","und","wenn","wie","du","ich","sie","ihr","dass","mich","dich","ist","wird","mit","es","sind","was","bei","am","dir","des","um","zu","bis","mein","je","da","auf","nur","nicht","sich","dann","als","den","all","ja","gar"],
+      "min_dauer_frames": 6,
+      "min_dauer_ms": 200
+    },
+    "timing": {
+      "start": "Wortbeginn - 1 Frame (nicht vor den Segmentanfang)",
+      "ende": "Start der nächsten Einblendung; liegt die > 0,35 s nach Wortende, dann Wortende + 0,18 s; nie über das Segmentende hinaus",
+      "ueberlappung": "nie. Endet spätestens beim Start der nächsten Einheit (Gruppen zählen als eine Einheit)."
+    },
+    "animation_minizoom": {"name": "mini", "scale": [0.95, 1.0], "dauer_frames": 3, "dauer_ms": 100, "easing": "Easing.out(Easing.quad)", "ausblenden": "hart, ohne Animation", "transform_origin": "50% 50%"},
+    "wort_fuer_wort_zeilen": {"name": "words", "verhalten": "Zeilentext steht fest an seiner Position, jedes Wort erscheint zu seinem gesprochenen Frame (Offset relativ zur Zeile)", "pro_wort": "opacity 0.4 -> 1 in 1 Frame, scale 0.95 -> 1 in 3 Frames (ease-out quad), origin 50% 60%; vor Erscheinen opacity 0"},
+    "schreibweise": "Groß/klein und Satzzeichen wie gesprochen; Zahlen als Ziffern; Transkriptionsfehler korrigieren (z. B. 'Hellmayer/Hellmeier' -> 'Hellmeyer', 'Konto Set-up' -> 'Setup', 'zeige' -> 'zeig' wenn so gesprochen, 'ein' -> 'eines' wenn gesprochen, 'Plan b' -> 'Plan B')",
+    "zitat_untertitel": {"wann": "Thorsten gibt Aussagen anderer wieder (nicht seine Meinung)", "schrift": "S (Segoe Pro Bold Italic), weiß", "groesse_px": 64, "baseline": "BL_MAIN + 2", "anfuehrungszeichen": "„ am ersten, “ am letzten Wort"},
+    "ueber_b_roll": "laufen unverändert weiter"
+  },
+
+  "hervorhebungen_gold": {
+    "farbe": "#fab926",
+    "schrift": "S (Segoe Pro Bold Italic)",
+    "typen": {
+      "pop_solo": {"groesse_px": "72 (Standard GOLD) / 80-90 für kurze Kernwörter / 100 für sehr kurze (z. B. 'ETF')", "baseline": "BL_MAIN + 2", "ersetzt": "den weißen Untertitel an dieser Stelle", "dauer": "vom ersten bis zum letzten Wort der Phrase, meist bis Beginn des nächsten Wortes nach der Phrase oder Segmentende"},
+      "stack_3_zeilen": {"zeile1": {"schrift": "H weiß 60", "baseline": "976 + DY", "animation": "words"}, "zeile2_gold": {"schrift": "S gold 76-90", "baseline": "1043 + DY", "animation": "pop"}, "zeile3": {"schrift": "H weiß 60", "baseline": "1093 + DY (+4 bei Unterlängen)", "animation": "words oder rise", "x_offset_px": "0 oder 30-36 (optional nach rechts versetzt)"}, "dauer": "bis Ende des Satzteils / nächstes Gruppenwort / Segmentende"},
+      "stack_2_zeilen": "zeile1 weiß (976+DY) + gold (1043+DY), ohne dritte Zeile",
+      "wipe": {"groesse_px": "76-86", "baseline": "BL_MAIN (solo) oder BL_STACK[1]+6 (unter weißer Zeile)", "start": "Wortbeginn - 4 Frames", "dauer_frames": 9, "dauer_ms": 300, "maske": "linear-gradient 90deg, Position -12% -> 100%, weiche Kante 12%", "easing": "Easing.inOut(Easing.quad)", "maskenpadding": "0.4em 16px / margin -0.4em -16px (verhindert abgeschnittene Unterlängen, Fix Reel 36)"},
+      "liste_slide": {"kopfzeile": "H weiß 60 an BL_MAIN, animation words", "eintraege": "S gold 72 an BL_MAIN + 88 / +170 / +252 / +334", "eintrag_kompakt": "bei 5 Einträgen: S 66 px, Abstand 72 px, Start BL_MAIN + 20", "animation": "slide: opacity 0->1 in 3 Frames, x -70 -> 0 px in 5 Frames, Easing.out(cubic)", "dauer": "alle Zeilen bis Ende der Aufzählung"},
+      "rise": "opacity 0->1 in 3 Frames, y +16 -> 0 px in 4 Frames, Easing.out(cubic)",
+      "fadein": "opacity 0->1 und scale 0.97->1 in 3 Frames (im Code vorhanden, selten genutzt)"
+    },
+    "pop_animation": {"scale_keyframes": {"frames": [0, 2, 4, 6], "werte": [1.28, 1.06, 0.985, 1.0]}, "easing": "Easing.out(Easing.quad)", "opacity": "0.3 -> 1 in 1 Frame", "dauer_ms": 200},
+    "dosierung_pro_reel": "in der Praxis 10-16 Gold-Momente (Pops, Stacks, Wipe, Liste); mindestens 1 Stack, 1 Wipe, oft 1 Liste",
+    "auswahl": "Zahlen, Beträge, Länder/Orte, Schlagworte der Kernaussage, 2-3 logisch zusammengehörige Wörter als Gruppe"
+  },
+
+  "text_hooks": {
+    "box": {"position": "top 282 px, horizontal zentriert (flex center)", "hoehe_gemessen": "y 282-403 bei 2 Zeilen", "hintergrund": "#ffffff", "border_radius_px": 10, "padding_px": "12 oben / 18 seitlich / 10 unten", "schatten": "keiner"},
+    "text": {"schrift": "Helvetica Bold", "groesse_px": 56, "zeilenhoehe": 0.875, "farbe": "#000000", "letter_spacing_em": -0.02, "versalien": true, "zeilen": 2, "umbruch": "manuell, Zeilen kommen vom User bzw. aus dem Plan (lines: [z1, z2])"},
+    "dauer": "Frame 0 bis zum Gold-Blitz (Beginn Segment 1 = flash_c); verschwindet hart mit dem Blitz",
+    "inhalt": "zugespitzte These/Frage, NICHT der gesprochene Satz. Bevorzugt kommt der Text vom User. 'ß' wird zu 'SS'. '≠' als Stilmittel erlaubt.",
+    "beispiele_vom_user": ["AUSWANDERN ≠ PLAN B -> 'INTERNATIONAL AUFSTELLEN / ≠ AUSWANDERN'", "WER BEZAHLT EIGENTLICH / DIE GANZEN STAATSSCHULDEN?", "WARUM SICH IMMER MEHR / MIT PARAGUAY BESCHÄFTIGEN", "3 FRAGEN FÜR JEDEN / DER INVESTIEREN MÖCHTE", "WELCHE GELDFORM WIRD / IN ZUKUNFT GEWINNEN?", "EUROPAS GRÖSSTES PROBLEM / BEIM KI-BOOM", "VERSCHIEBT SICH DIE / FINANZMACHT NACH ASIEN?", "WARUM EUROPA WIRTSCHAFTLICH / ZURÜCKFALLEN KÖNNTE"],
+    "ki_hinweis": {"text": "Info: Dieses Video wurde mit KI erstellt.", "schrift": "heros-regular (Helvetica-Regular-Ersatz)", "groesse_px": 35, "farbe": "#ffffff", "letter_spacing_em": -0.025, "y_mitte_px": 1706, "dauer": "identisch zur Hook-Box", "pflicht": true}
+  },
+
+  "zooms_und_kamera": {
+    "transform": "Video-Ebene: scale(s) mit transform-origin 540px / AY px (pro Frame aus frames[])",
+    "anker_AY": "Median der gemessenen Kinn-y des Rohvideos (z. B. 910, 963, 1000, 1080) -> Kinn bleibt beim Zoomen an Ort und Stelle",
+    "hook_push": {"von": 1.0, "nach": 1.06, "ueber": "ganze Hook-Dauer (Frame 1 bis flash_c)", "easing": "0.5 - 0.5*cos(pi*x)"},
+    "zoom_in": {"zielwerte": [1.10, 1.12, 1.15], "verwendung": "1.10 Standard, 1.12 stärkere Aussage, 1.15 stärkste Aussage / Schluss", "rampe_frames": 24, "rampe_ms": 800, "easing": "0.5 - 0.5*cos(pi*x) (cosine ease-in-out)", "max_schritt_pro_frame": 0.0105, "halten": "bis Ende des Schnitt-Segments", "ausstieg": "hart auf 1.0 am nächsten Segmentanfang (Schnitt)"},
+    "anzahl": "5 pro Reel geplant (inkl. CTA-Bereich), max. 1 pro Schnitt-Segment (zweiter im selben Segment wird verworfen)",
+    "platzierung": "auf den ersten Wörtern eines inhaltlichen Wendepunkts (Kernaussage, Gegenthese, Schlussgedanke, oft 'wie du dich…' im CTA)",
+    "bei_vorgezoomtem_rohmaterial": "keine eigenen Zooms, kein Hook-Push (scale konstant 1.0) – Reels 45-50, 54",
+    "keine_seitlichen_verschiebungen": "tx immer 0"
+  },
+
+  "schnitt_rhythmus": {
+    "pausenerkennung": "ffmpeg silencedetect noise=-35dB d=0.12 auf Mono-16-kHz-WAV",
+    "geschnitten_wird": "jede Stille >= 0,15 s nach dem Hook-Ende; 0,02 s Luft an beiden Rändern (Schnitt bei start+0,02 bis ende-0,02)",
+    "hook": "erster Satz bleibt ungeschnitten (Segment 0). Endet der Satz ohne Pause, wird ein manueller Schnittpunkt in die nächste kleine Lücke gesetzt (z. B. Reel 53: 4,06-4,18 s; Reel 51: Hook bis zum Ende des 2. Satzes, Schnitt 5,25-5,58 s)",
+    "start": "erstes gesprochenes Wort (führende Stille wegschneiden, z. B. Reel 53 Start bei 0,30 s)",
+    "ergebnis": "Jump-Cuts an jeder Pause, typ. 20-28 Segmente, Segmentlänge 0,8-5 s",
+    "audio_an_schnitten": "8 ms Fade-in/-out pro Segment",
+    "min_fragment_frames": 6,
+    "vorgeschnittenes_rohmaterial": "nicht weiter schneiden; nur ein Schnittpunkt am vorhandenen Szenenwechsel/an der Hook-Pause für den Blitz"
+  },
+
+  "b_roll": {
+    "anzahl_pro_reel": "2-4 (in der Praxis 2; bei Wunsch des Users zusätzlich zu Problemstellen)",
+    "vollbild": "1080x1920, object-fit cover",
+    "eigenbewegung": "scale 1.00 -> 1.06 linear über die Clipdauer, origin 540px 900px",
+    "start": "Frame des ersten Wortes der Phrase - 1",
+    "ende": "Ende der zugehörigen Text-Gruppe (Stack/Liste) bzw. Beginn des Folgeworts",
+    "schnitt": "hart rein und raus, kein Übergang",
+    "abdunklung": {"cy": "1035 + DY", "alpha_standard": 0.36, "spanne": "0.32-0.40", "hell_oder_goldlastig": 0.62, "einblenden_frames": 4},
+    "untertitel": "laufen weiter, meist als Stack/Liste mit Gold",
+    "quellen_reihenfolge": ["vom User angehängte Clips", "Stock-B-Roll-Ordner des Users (Mac: /Users/kevinbauer/Desktop/Templates/Stock B-Roll)", "Canva-Design 'B-Rolls' DAHBwfmCn-0 (Seite einzeln als mp4 vertical_1080p exportieren, Motiv per Vorschau prüfen)", "Higgsfield-Standbild gpt_image_2_5, 9:16, 0,25 Credits, als 7-s-Clip mit zoompan z=1+0.0008*on"],
+    "fps": "Clips auf 30 fps bringen (60-fps-Exporte runterrechnen)",
+    "querformat": "nicht als Querformat mit Rand verwenden – entweder 9:16-Version suchen oder anderes Motiv (Korrektur Reel 48)",
+    "pflicht_abdeckung": "KI-Fehler im Rohvideo (Ring am Finger, fehlende Hand) vollständig überdecken; Frame-Abdeckung per Skript prüfen"
+  },
+
+  "overlays_und_grafiken": {
+    "b_roll_shade": "siehe b_roll.abdunklung",
+    "keine": ["Emojis", "Sticker", "Memes", "Rahmen", "Progressbar", "Logo/Wasserzeichen", "Kapitel-Titel oben (Konzept existiert, seit Reel 34 nicht genutzt)"]
+  },
+
+  "uebergaenge": {
+    "hook_ende": {
+      "typ": "goldener Light-Leak-Blitz",
+      "zentrum": "flash_c = erster Frame von Segment 1",
+      "halbe_dauer_frames": 5,
+      "gesamtdauer_frames": 11,
+      "warm_ebene_opacity": {"frames_rel": [-5, -1, 0, 1, 5], "werte": [0, 0.85, 1, 0.85, 0], "easing": "inOut(quad)", "blend": "screen"},
+      "weiss_ebene_opacity": {"frames_rel": [-2, 0, 2], "werte": [0, 0.95, 0]},
+      "sound": "Camera_Shutter + Riser"
+    },
+    "sonst": "harte Schnitte (auch an jedem Pausenschnitt und am Zoom-Ausstieg)"
+  },
+
+  "soundeffekte": {
+    "ordner_in_der_pipeline": "/home/claude/tw/sfx/ (6 Dateien, vom User am 29.09. vorgegeben, Ablage: Artifact 'TW Sound-Library' https://claude.ai/artifact/13g8HzbmC4YDuKqoGFk7Zr, Pfade sfx/<Name>.mp3)",
+    "hinweis_library_pfad": "Die globale Präferenz nennt /Users/noah/Downloads/Soundeffekte – siehe Teil 4",
+    "cues": {
+      "Riser.mp3": {"wann": "jedes Reel, Hook", "gain_db": -16, "timing": "Datei-Start = flash_s - 3,81 s (Peak bei 3,81 s im File fällt auf den Blitz)", "ende": "abgeschnitten bei flash_s + 0,25 s mit 80 ms Fade-out (Korrektur 07.10.: Riser muss mit dem Camera Shutter enden)"},
+      "Camera_Shutter.mp3": {"wann": "Gold-Blitz", "gain_db": -16, "timing": "flash_s - 0,09 s"},
+      "Fuwa.mp3": {"wann": "3-6 stärkste Gold-Pops/Stack-Kernwörter", "gain_db": -18, "timing": "Wortbeginn - 0,18 s"},
+      "Fuwa.mp3 (leise)": {"wann": "2-4 weitere Gold-Momente", "gain_db": -21, "timing": "Wortbeginn - 0,18 s"},
+      "Money_Caching.mp3": {"wann": "genau 1x pro Reel bei Geld/Konto/Betrag", "gain_db": -13, "timing": "Wortbeginn (+0,1 s) - 0,03 s"},
+      "Ding.mp3": {"wann": "CTA-Keyword", "gain_db": -9, "timing": "Keyword-Beginn - 0,05 s; entfällt, wenn kein CTA gesprochen wird (Reel 50)"},
+      "Swish_Whoosh_Large.mp3": {"status": "seit 14.10. NICHT mehr verwenden (zu laut/erschreckend)", "frueher_gain_db": -19}
+    },
+    "mix": "amix normalize=0, danach 2-pass loudnorm I=-17 LUFS, TP=-1,5 dBTP, LRA=11 (linear)",
+    "regel": "SFX klar unter der Stimme, nur saubere angenehme Sounds"
+  },
+
+  "musik": {"verwenden": false, "begruendung": "Thorsten-Reels sind seit Reel 32 ohne Musik; globale Regel: niemals Musik generieren, wenn Musik dann nur aus /Users/noah/Downloads/Musik-Library"},
+
+  "hook_struktur": {
+    "dauer_s": "Länge des ersten gesprochenen Satzes (2,3-6,3 s)",
+    "ebenen": ["Hook-Box oben (Frame 0 bis Blitz)", "KI-Hinweis unten (Frame 0 bis Blitz)", "Untertitel / 1-2 Gold-Pops auf Zahlen oder Schlagworten", "Kamera-Push 1.00->1.06 (nur bei eigenem Schnitt)", "Riser baut auf"],
+    "ende": "Gold-Blitz + Camera Shutter auf dem ersten Frame von Segment 1; Hook-Box und KI-Hinweis verschwinden hart"
+  },
+
+  "body_struktur": {
+    "aufbau": "Jump-Cuts an jeder Pause, weiße Wort-Untertitel, alle 2-5 s ein Gold-Moment, 1 Liste, 2-3 Stacks, 1 Wipe, 2-4 B-Rolls mit Stack darauf, 4-5 Zooms (je bis Segmentende)",
+    "schluss_vor_cta": "Stack mit der Kernaussage, oft mit 1.15-Zoom"
+  },
+
+  "call_to_action": {
+    "erkennen": "gesprochen 'Kommentier mit <Keyword> und ich zeig dir, …'",
+    "weiss": "'Kommentier' und 'mit' als normale Untertitel; 'mit' steht bis zum Keyword",
+    "keyword": {"text": "\"<KEYWORD>\" in Versalien, ein Wort zusammengeschrieben (z. B. \"FREIHEITSTRAINING\", \"KONTOSETUP\", \"AUSLANDSKONTO\")", "schrift": "S gold", "groesse_px": 80, "kontur": "2px #fab926, paint-order stroke fill", "baseline": "1091 + DY", "animation": "pop", "dauer": "ab Keyword-Beginn bis letzter Frame"},
+    "weiter": "weiße Untertitel laufen oberhalb weiter",
+    "sound": "Ding.mp3 -9 dB",
+    "ohne_cta": "wenn Thorsten keinen CTA spricht: kein Keyword, kein Ding, letzte Gold-Gruppe steht bis zum Ende (Reel 50)"
+  },
+
+  "endcard": {"verwenden": false}
+}
