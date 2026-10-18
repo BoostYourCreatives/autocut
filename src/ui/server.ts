@@ -13,7 +13,7 @@ import { health } from "./health.ts";
 import { createAuth, loginPage } from "./auth.ts";
 import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { pruneModelCache } from "../util/modelCache.ts";
-import { applyCaptionEdits, type CaptionEdit } from "../steps/captionEdit.ts";
+import { applyCaptionEdits, applyHookEdit, type CaptionEdit } from "../steps/captionEdit.ts";
 import { approveRun } from "../steps/approve.ts";
 import { hasLayeredRender, baseVideoFile } from "../steps/render.ts";
 import { waveformPeaks } from "../lib/waveform.ts";
@@ -437,14 +437,23 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         const planFile = planPaths(runPaths(cfg, name)).plan;
         if (!fs.existsSync(planFile)) return json(res, 404, { error: "Noch kein Plan" });
         let edits: CaptionEdit[];
+        let hookLines: [string, string] | null = null;
         try {
-          edits = (JSON.parse(await readBody(req)) as { edits: CaptionEdit[] }).edits;
+          const body = JSON.parse(await readBody(req)) as { edits?: CaptionEdit[]; hook?: string[] };
+          edits = body.edits ?? [];
+          if (body.hook !== undefined) {
+            if (!Array.isArray(body.hook) || body.hook.length !== 2 || !body.hook.every((l) => typeof l === "string")) throw new Error("hook");
+            hookLines = [body.hook[0]!, body.hook[1]!];
+          }
           const num = (x: unknown) => x === undefined || (typeof x === "number" && Number.isFinite(x));
           if (!Array.isArray(edits) || !edits.every((e) => Number.isInteger(e.id) && (e.text === undefined || typeof e.text === "string") && num(e.start_s) && num(e.end_s))) throw new Error("edits fehlt");
         } catch {
           return json(res, 400, { error: "Bitte {edits:[{id,text?,start_s?,end_s?}]} senden." });
         }
-        const { plan, changed, oldRangesS } = applyCaptionEdits(Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8"))), edits);
+        const { plan, changed: capChanged, oldRangesS } = applyCaptionEdits(Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8"))), edits);
+        const hookRange = hookLines ? applyHookEdit(plan, hookLines) : null;
+        if (hookRange) oldRangesS.push(hookRange);
+        const changed = capChanged + (hookRange ? 1 : 0);
         if (!changed) return json(res, 200, { ok: true, started: false, changed: 0 });
         const tmp = path.join(runDir(name), "plan.edit.json");
         fs.writeFileSync(tmp, JSON.stringify(plan, null, 2));

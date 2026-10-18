@@ -65,6 +65,103 @@
   details { margin-top: 4px; } summary { cursor: pointer; font-weight: 600; font-size: 14px; }
   .conf-hoch { color: var(--ok); } .conf-mittel { color: var(--warn); } .conf-niedrig { color: var(--bad); }
   .muted { color: var(--muted); } .empty { color: var(--muted); padding: 30px 10px; text-align: center; }
+
+  /* ---------- Arbeitsfläche (Detailansicht) ---------- */
+  :root { --stage: #151514; --stage-ink: #f1efe9; --edit: #d9480f; --playhead: #e5484d; --focus: color-mix(in srgb, var(--run) 55%, transparent); --shadow: 0 1px 2px rgba(20,20,18,.06), 0 8px 24px -12px rgba(20,20,18,.18); }
+  @media (prefers-color-scheme: dark) { :root { --stage: #0c0c0b; --edit: #ff8a4c; --playhead: #ff6b6b; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -12px rgba(0,0,0,.6); } }
+  button, input, select, textarea, summary, a { transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, opacity .15s ease; }
+  :focus-visible { outline: 2px solid var(--run); outline-offset: 2px; }
+  ::selection { background: color-mix(in srgb, var(--gold) 45%, transparent); color: inherit; }
+  input[type=text]:focus { outline: none; border-color: var(--run); box-shadow: 0 0 0 3px var(--focus); }
+  button:not(:disabled):hover { border-color: color-mix(in srgb, var(--ink) 30%, var(--line)); }
+  .ws { display: flex; flex-direction: column; gap: 16px; padding-bottom: 88px; }
+  .ws-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ws-title { font-size: 22px; letter-spacing: -.02em; margin: 0; font-weight: 650; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 14%, transparent); color: var(--muted); }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 13%, transparent); }
+  .pill.run { color: var(--run); background: color-mix(in srgb, var(--run) 13%, transparent); } .pill.run::before { animation: pulse 1.2s ease-in-out infinite; }
+  .pill.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 13%, transparent); }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .ws-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 9px; font-weight: 550; text-decoration: none; color: var(--ink); border: 1px solid var(--line); background: var(--panel); cursor: pointer; font: inherit; font-weight: 550; }
+  .btn svg { flex: none; }
+  .btn.primary { background: var(--gold); border-color: var(--gold); color: #231a00; width: auto; margin: 0; padding: 8px 16px; }
+  .btn.primary:not(:disabled):hover { background: color-mix(in srgb, var(--gold) 86%, #000); border-color: transparent; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn.sm { padding: 5px 10px; font-size: 13px; border-radius: 8px; }
+  .btn.icon { padding: 8px; }
+  .menu { position: relative; margin: 0; } .menu > summary { list-style: none; cursor: pointer; } .menu > summary::-webkit-details-marker { display: none; }
+  .menu .pop { position: absolute; right: 0; top: calc(100% + 6px); min-width: 190px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; box-shadow: var(--shadow); z-index: 20; }
+  .menu .pop button { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; text-align: left; padding: 8px 10px; }
+  .menu .pop button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .banner { display: flex; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+  .banner b { display: block; } .banner span { color: var(--muted); }
+  .banner.bad { border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); background: color-mix(in srgb, var(--bad) 7%, var(--panel)); }
+  .banner.ok { border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); background: color-mix(in srgb, var(--ok) 7%, var(--panel)); }
+  .banner.note { background: color-mix(in srgb, var(--run) 7%, var(--panel)); }
+  .progress { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .progress h3 { margin: 0; font-size: 17px; letter-spacing: -.01em; }
+  .progress .live { color: var(--muted); font-size: 13.5px; margin-top: 4px; min-height: 20px; }
+  .bar { height: 6px; border-radius: 99px; background: var(--line); margin: 16px 0 14px; overflow: hidden; } .bar i { display: block; height: 100%; background: var(--gold); border-radius: 99px; transition: width .6s cubic-bezier(.16,1,.3,1); }
+  .stepper { display: flex; gap: 6px; flex-wrap: wrap; }
+  .stepper .st { flex: 1; min-width: 92px; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .stepper .st i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+  .stepper .st.ok { color: var(--ink); } .stepper .st.ok i { background: var(--ok); }
+  .stepper .st.running { color: var(--ink); font-weight: 600; } .stepper .st.running i { background: var(--run); animation: pulse 1.2s ease-in-out infinite; }
+  .stepper .st.error i { background: var(--bad); }
+  .studio { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; } }
+  .stage { background: var(--stage); border-radius: 18px; padding: 14px; box-shadow: var(--shadow); color: var(--stage-ink); position: sticky; top: 76px; }
+  .stage-frame { position: relative; line-height: 0; border-radius: 10px; overflow: hidden; background: #000; aspect-ratio: 9 / 16; width: 100%; max-height: min(68vh, 640px); margin: 0 auto; }
+  .stage-frame video { width: 100%; height: 100%; max-width: none; aspect-ratio: auto; border-radius: 0; object-fit: contain; cursor: pointer; }
+  .stage-frame .ov { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .transport { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+  .transport .btn { background: rgba(255,255,255,.08); border-color: transparent; color: var(--stage-ink); padding: 7px 9px; }
+  .transport .btn:hover { background: rgba(255,255,255,.16); border-color: transparent !important; }
+  .transport .time { margin-left: auto; font: 12.5px ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; opacity: .8; }
+  .stage .live-note { font-size: 12px; opacity: .6; margin-top: 10px; line-height: 1.4; }
+  .side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+  .panel h3 { margin: 0 0 10px; font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+  .panel h3 .count { font-weight: 600; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent); padding: 1px 8px; border-radius: 99px; }
+  .field-label { font-size: 12px; color: var(--muted); margin: 0 0 4px; display: block; }
+  .panel input[type=text] { font-size: 15px; padding: 9px 11px; }
+  .panel .big { font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .timing { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .tbox { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg); }
+  .tbox .tv { font: 600 16px ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .tbox .tb { display: flex; gap: 4px; margin-top: 6px; }
+  .tbox .tb .btn { padding: 3px 8px; font-size: 12px; }
+  .empty-sel { color: var(--muted); font-size: 14px; padding: 10px 0 2px; }
+  .checks { margin: 0; padding: 0; list-style: none; max-height: 240px; overflow: auto; }
+  .checks li { margin: 0; }
+  .checks button { display: flex; gap: 10px; width: 100%; text-align: left; border: 0; background: none; padding: 8px 6px; border-radius: 8px; align-items: baseline; font-size: 14px; }
+  .checks button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .checks .tm { font: 12px ui-monospace, Menlo, monospace; color: var(--run); min-width: 34px; }
+  .allgood { display: flex; gap: 8px; align-items: center; color: var(--ok); font-size: 14px; }
+  .tl-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; box-shadow: var(--shadow); }
+  .tl-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tl-head h3 { margin: 0; font-size: 14px; font-weight: 650; }
+  .legend { display: flex; gap: 12px; font-size: 12px; color: var(--muted); align-items: center; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: -2px; border: 1px solid var(--line); }
+  .zoom { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .zoom input { width: 130px; accent-color: var(--ink); }
+  #tlScroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  #tlScroll::-webkit-scrollbar { height: 10px; } #tlScroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+  .applybar { position: sticky; bottom: 16px; z-index: 8; margin: 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 12px 10px 18px; border-radius: 16px; background: var(--ink); color: var(--bg); box-shadow: 0 12px 40px -10px rgba(0,0,0,.45); max-width: 640px; width: 100%; transform: translateY(140%); opacity: 0; pointer-events: none; transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .3s ease; }
+  .applybar.on { transform: none; opacity: 1; pointer-events: auto; }
+  .applybar .msg { font-size: 14px; flex: 1; min-width: 0; } .applybar .msg small { display: block; opacity: .7; font-size: 12px; }
+  .applybar .msg .bad { color: #ff9d95; display: block; font-size: 12.5px; }
+  .applybar .btn { border-color: transparent; }
+  .applybar .btn.ghost { color: var(--bg); opacity: .75; } .applybar .btn.ghost:hover { opacity: 1; }
+  .tech { background: transparent; border: 1px dashed var(--line); border-radius: 12px; padding: 4px 14px; }
+  .tech > summary { color: var(--muted); font-weight: 550; padding: 8px 0; }
+  .tech section { margin: 12px 0 16px; } .tech h4 { margin: 0 0 8px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  main > * { min-width: 0; } input[type=file] { max-width: 100%; }
+  @media (max-width: 900px) { main.has-run #detail { order: -1; } .ws-actions { width: 100%; margin-left: 0; } .applybar { max-width: none; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -178,9 +275,27 @@ $('start').addEventListener('click', async () => {
   } catch (e) { $('startHint').textContent = e.message; $('start').disabled = false; }
 });
 
+// ---------- Symbole ----------
+const ICONS = {
+  play: ['M8 5.5v13l10.5-6.5z'], pause: ['M8 5.5v13', 'M16 5.5v13'], back: ['M14.5 6l-6 6 6 6'], fwd: ['M9.5 6l6 6-6 6'],
+  download: ['M12 4v11', 'M7.5 10.5L12 15l4.5-4.5', 'M5 19.5h14'], check: ['M5 12.5l4.5 4.5L19 7.5'], trash: ['M5 7h14', 'M10 11v6', 'M14 11v6', 'M7 7l1 12h8l1-12', 'M9 7V4.5h6V7'],
+  more: ['M5 12h.01', 'M12 12h.01', 'M19 12h.01'], target: ['M12 3v4', 'M12 17v4', 'M3 12h4', 'M17 12h4', 'M12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z'], undo: ['M9 6.5L4.5 11 9 15.5', 'M4.5 11H14a5.5 5.5 0 010 11h-2'],
+  alert: ['M12 8v5', 'M12 16.5h.01', 'M10.3 4.5L3.5 17a2 2 0 001.7 3h13.6a2 2 0 001.7-3L13.7 4.5a2 2 0 00-3.4 0z'], info: ['M12 11v5', 'M12 7.5h.01', 'M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17z'],
+};
+const ico = (n, size = 18) => {
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: 'currentColor', 'stroke-width': 1.75, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(k, v);
+  for (const d of ICONS[n]) { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.append(p); }
+  return svg;
+};
+const btn = (cls, icon, text, onclick, attrs = {}) => el('button', { class: `btn ${cls}`, onclick, type: 'button', ...attrs }, icon ? ico(icon) : null, text ? el('span', { text }) : null);
+const clock = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60); return `${m}:${(t - m * 60).toFixed(1).padStart(4, '0')}`; };
+
 // ---------- Detail ----------
+let curData = null, pendingHook = null, planHookLines = null;
 async function select(name) {
   current = name; logLines = [];
+  document.querySelector('main').classList.add('has-run');
   if (es) es.close();
   es = new EventSource(`/api/runs/${name}/events`);
   es.onmessage = (m) => {
@@ -191,180 +306,160 @@ async function select(name) {
   await refresh(); await loadRuns();
 }
 function paintLog() {
-  const box = document.getElementById('log'); if (!box) return;
-  box.replaceChildren(...logLines.slice(-200).map((l) => el('div', { class: l.level, text: l.msg })));
-  box.scrollTop = box.scrollHeight;
+  const box = document.getElementById('log');
+  if (box) { box.replaceChildren(...logLines.slice(-200).map((l) => el('div', { class: l.level, text: l.msg }))); box.scrollTop = box.scrollHeight; }
+  const live = $('liveLine');
+  if (live) { const last = [...logLines].reverse().find((l) => l.level === 'info'); live.textContent = last ? last.msg.replace(/^\[[^\]]*\]\s*/, '') : ''; }
 }
 async function refresh() {
   if (!current) return;
   let d; try { d = await api(`/api/runs/${current}`); } catch (e) { return; }
+  // Während Änderungen im Editor offen sind, die Ansicht nicht neu aufbauen (nur Laufstatus aktualisieren)
+  if (editorBusy() && !(d.job && d.job.status === 'running') && !(curData && curData.job && curData.job.status === 'running')) { curData = d; return; }
   render(d);
   clearTimeout(pollTimer);
   if (d.job && d.job.status === 'running') pollTimer = setTimeout(refresh, 2500);
 }
+const editorBusy = () => !!$('applybar') && (Object.keys(pendingCaps).length > 0 || pendingHook !== null);
 
-function conf(c) { return el('span', { class: `conf-${c}`, text: c }); }
+const STEP_NAMES = { ingest: 'Einlesen', transcribe: 'Text erkennen', analyze: 'Analysieren', chin: 'Gesicht messen', plan: 'Schnittplan', broll: 'B-Rolls', render: 'Video bauen' };
+function banner(kind, title, text, icon) {
+  return el('div', { class: `banner ${kind}` }, ico(icon || (kind === 'bad' ? 'alert' : kind === 'ok' ? 'check' : 'info'), 20), el('div', {}, el('b', { text: title }), text ? el('span', { text }) : null));
+}
+function progressPanel(d) {
+  const steps = d.steps, done = steps.filter((x) => x.status === 'ok').length, run = steps.find((x) => x.status === 'running');
+  const fast = d.job && (d.job.kind === 'recaption' || d.job.kind === 'rerender');
+  const title = fast ? 'Dein Video wird neu gebaut' : run ? `${STEP_NAMES[run.key] || run.label} …` : 'Wird vorbereitet …';
+  return el('section', { class: 'progress' },
+    el('h3', { text: title }), el('div', { id: 'liveLine', class: 'live' }),
+    el('div', { class: 'bar' }, el('i', { style: `width:${Math.max(4, Math.round(((done + (run ? .5 : 0)) / steps.length) * 100))}%` })),
+    fast ? null : el('div', { class: 'stepper' }, ...steps.map((x) => el('div', { class: `st ${x.status}` }, el('i'), el('span', { text: STEP_NAMES[x.key] || x.label })))),
+    el('div', { class: 'hint', text: 'Das dauert einige Minuten. Du kannst die Seite offen lassen.' }));
+}
 
 function render(d) {
+  curData = d;
   const root = $('detail');
   const keepOpen = new Set([...root.querySelectorAll('details[open]')].map((x) => x.dataset.k));
-  const running = d.job && d.job.status === 'running';
-  const kids = [];
+  const running = !!(d.job && d.job.status === 'running');
+  const failed = !!(d.job && d.job.status === 'error');
+  const state = d.approved ? ['ok', 'Abgenommen'] : running ? ['run', 'Läuft'] : failed || d.interrupted ? ['bad', 'Fehler'] : d.files ? ['ok', 'Fertig'] : ['', 'Offen'];
+  const ws = el('div', { class: 'ws' });
 
-  kids.push(el('section', { class: 'card' },
-    el('div', { class: 'row', style: 'align-items:center' },
-      el('h2', { style: 'margin:0;flex:3', text: `Lauf ${d.name}` }),
-      el('div', { style: 'text-align:right;flex:2' },
-        d.summary ? el('span', { class: 'muted', text: `${Math.round(d.summary.total_seconds)} s, geschätzt ${money(d.summary.cost_usd)}` }) : '',
-        ' ', !running && !d.approved ? el('button', { style: 'margin:0 6px;padding:2px 8px;font-size:12px', text: 'Lauf löschen', onclick: delRun }) : '', el('span', { class: `badge ${running ? 'b-run' : d.job && d.job.status === 'error' ? 'b-bad' : d.files ? 'b-ok' : ''}`, text: running ? 'läuft' : d.job && d.job.status === 'error' ? 'Fehler' : d.files ? 'fertig' : 'offen' }))),
-    el('div', { class: 'steps', style: 'margin-top:12px' }, ...d.steps.map((s) => el('div', { class: `step ${s.status}` },
-      el('div', { class: 'n', text: `${{ ok: '✓', error: '✗', running: '…', pending: '·' }[s.status]} ${s.label}` }),
-      el('div', { class: 's', text: s.status === 'pending' ? 'wartet' : s.status === 'running' ? 'läuft' : `${s.seconds} s` }))))));
+  const actions = el('div', { class: 'ws-actions' });
+  if (d.files) actions.append(el('a', { class: 'btn', href: d.files.video, download: '' }, ico('download'), el('span', { text: 'Video laden' })));
+  if (d.files && !d.approved && !running) actions.append(btn('primary', 'check', 'Abnahme', approve));
+  if (!running) actions.append(el('details', { class: 'menu' }, el('summary', { class: 'btn icon ghost', 'aria-label': 'Mehr' }, ico('more')), el('div', { class: 'pop' }, btn('ghost', 'trash', 'Lauf löschen', delRun))));
+  ws.append(el('div', { class: 'ws-head' }, el('h2', { class: 'ws-title', text: `Reel ${d.name}` }), el('span', { class: `pill ${state[0]}`, text: state[1] }), actions));
 
-  if (d.interrupted) {
-    kids.push(el('div', { class: 'err' }, el('b', { text: 'Der Lauf wurde unterbrochen. ' }), `Der Server wurde während des Laufs neu gestartet (gestartet ${d.interrupted.started_at}). Meist hat Railway ihn beendet, weil der Arbeitsspeicher nicht reichte. Sieh bei Railway unter Metrics nach und lade das Reel danach neu hoch.`));
-  }
-  if (d.job && d.job.error) {
-    const se = d.attempts && d.attempts.find((a) => a.structured_error);
-    const att = d.attempts && d.attempts.length ? el('ul', {}, ...(se ? [el('li', { text: `Die Claude-API hat das erzwungene JSON-Format abgelehnt: ${se.structured_error}` })] : []), ...d.attempts.flatMap((a) => a.lines.slice(0, 3).map((l) => el('li', { text: `Versuch ${a.attempt}: ${l}` })))) : null;
-    kids.push(el('div', { class: 'err' }, el('b', { text: 'Das hat nicht geklappt: ' }), d.job.error, att));
-  }
-
-  if (d.approved) {
-    kids.push(el('div', { class: 'card', style: 'border-color:var(--ok,#2a7)' }, el('b', { text: 'Abgenommen. ' }), `Rohmaterial und Zwischendateien sind gelöscht (${(d.approved.freed_bytes / 1e6).toFixed(0)} MB frei). Das fertige Video, der Plan und die Berichte bleiben. Neu rendern ist nicht mehr möglich.`));
-  }
-  if (d.files && !running && !d.approved) {
-    kids.push(el('section', { class: 'card' }, el('div', { class: 'row', style: 'align-items:center' },
-      el('div', { style: 'flex:3' }, el('b', { text: 'Passt das Video?' }), el('div', { class: 'hint', text: 'Mit „Abnahme“ wird das Rohmaterial vom Server gelöscht. Das fertige Video bleibt. Lade es vorher herunter, wenn du es brauchst.' })),
-      el('button', { class: 'primary', style: 'margin:0;flex:1', text: 'Abnahme', onclick: approve }))));
-  }
-  if (d.files) {
-    const hook = d.hook;
-    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Ergebnis' }),
-      el('div', { class: 'result' },
-        el('div', {}, d.layered
-          ? el('div', { id: 'vwrap', style: 'position:relative;line-height:0;max-width:270px' }, el('video', { id: 'vid', controls: '', src: `/api/runs/${d.name}/base`, preload: 'auto' }), el('div', { id: 'capOverlay', style: 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:hidden' }))
-          : el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' }),
-          el('div', { class: 'links' }, el('a', { href: d.files.video, download: '', text: 'Video (mp4)' }), el('a', { href: d.files.plan, text: 'Plan (json)' }), el('a', { href: d.files.hinschauen, target: '_blank', text: 'Hinweise (md)' }), el('a', { href: d.files.bericht, target: '_blank', text: 'Laufbericht' })),
-          ''),
-        el('div', {},
-          hook ? el('div', { style: 'margin-bottom:12px' }, el('div', { class: 'muted', style: 'font-size:12px', text: `Hook-Text${hook.origin === 'generated' ? ' (von Claude)' : ' (von dir)'}` }), el('div', { style: 'font-weight:700', text: hook.lines.join(' / ') }),
-            el('div', { class: 'muted', style: 'font-size:13px', text: `Übergang: ${hook.transition === 'blitz_riser' ? 'Blitz + Riser' : 'harter Schnitt'}. ` }), el('div', { style: 'font-size:13px' }, hook.reason, ' (', conf(hook.confidence), ')')) : null,
-          el('h2', { text: 'Hier genauer hinschauen' }),
-          d.hinschauen && d.hinschauen.length
-            ? el('ul', { class: 'list' }, ...d.hinschauen.slice(0, 30).map((i) => el('li', {}, el('button', { class: 't', onclick: () => { const v = $('vid'); v.currentTime = i.t_s; v.play(); }, text: mmss(i.t_s) }), el('span', { text: i.text }))))
-            : el('div', { class: 'muted', text: 'Nichts Auffälliges.' })))));
-  } else if (!running && !(d.job && d.job.error) && d.planError) {
-    kids.push(el('div', { class: 'err', text: `Plan nicht lesbar: ${d.planError}` }));
-  }
-
-  if (d.selfcheck) {
-    const sc = d.selfcheck;
-    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Selfcheck (Claude schaut sich das fertige Video an)' }),
-      sc.skipped ? el('div', { class: 'muted', text: `Übersprungen: ${sc.skipped}` })
-        : el('div', {}, el('div', { text: sc.result.zusammenfassung }),
-          sc.result.befunde.length ? el('ul', { class: 'list', style: 'margin-top:8px' }, ...sc.result.befunde.map((b) => el('li', {}, el('button', { class: 't', onclick: () => { const v = $('vid'); if (v) { v.currentTime = b.t_s; v.play(); } }, text: mmss(b.t_s) }), el('span', {}, el('b', { class: b.schwere === 'fehler' ? 'conf-niedrig' : 'conf-mittel', text: b.schwere === 'fehler' ? 'Fehler: ' : 'Hinweis: ' }), `${b.art.replace('_', ' ')}: ${b.beschreibung}`)))) : null)));
-  }
-
-  if (d.validation) {
-    const v = d.validation;
-    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Prüfung des Plans (Validator, ohne KI)' }),
-      el('div', {}, el('span', { class: `badge ${v.ok ? 'b-ok' : 'b-bad'}`, text: v.ok ? 'bestanden' : 'nicht bestanden' }), ` ${v.errors.length} Fehler, ${v.warnings.length} Warnung(en); Länge ${v.stats.out_duration_s.toFixed(1)} s (${Math.round(v.stats.length_ratio * 100)} % der Quelle)`),
-      v.errors.length ? el('ul', { class: 'list' }, ...v.errors.map((e) => el('li', { class: 'conf-niedrig', text: e.message }))) : null,
-      v.warnings.length ? el('details', { 'data-k': 'warn' }, el('summary', { text: `${v.warnings.length} Warnung(en)` }), el('ul', { class: 'list' }, ...v.warnings.map((w) => el('li', { class: 'muted', text: w.message })))) : null,
-      v.notChecked.length ? el('div', { class: 'hint', text: `Nicht geprüft: ${v.notChecked.join('; ')}` }) : null));
-  }
-
-  if (d.decisions && d.decisions.length) {
-    kids.push(el('section', { class: 'card' }, el('details', { 'data-k': 'dec' }, el('summary', { text: `Entscheidungen von Claude (${d.decisions.length})` }),
-      el('table', {}, el('tr', {}, el('th', { text: 'Zeit' }), el('th', { text: 'Art' }), el('th', { text: 'Was' }), el('th', { text: 'Begründung' }), el('th', { text: 'Sicher?' })),
-        ...d.decisions.map((x) => el('tr', {}, el('td', { text: mmss(x.t_s) }), el('td', { text: x.typ }), el('td', { text: x.text }), el('td', { text: x.reason }), el('td', {}, conf(x.confidence))))))));
-  }
-
-  if (d.summary) {
-    const s = d.summary, q = s.quality;
-    kids.push(el('section', { class: 'card' }, el('h2', { text: 'Dauer, Kosten, Qualität' }),
-      el('table', {}, el('tr', {}, el('th', { text: 'Schritt' }), el('th', { text: 'Dauer' }), el('th', { text: 'Kosten' })),
-        ...s.steps.map((x) => el('tr', {}, el('td', { text: x.label }), el('td', { text: `${x.seconds.toFixed(1)} s` }), el('td', { text: x.cost_usd ? money(x.cost_usd) : '–' }))),
-        el('tr', {}, el('td', {}, el('b', { text: 'Summe' })), el('td', { text: `${s.total_seconds.toFixed(1)} s` }), el('td', {}, el('b', { text: money(s.cost_usd) })))),
-      el('div', { class: 'hint', text: `Claude-Tokens: ${s.tokens.input} ein, ${s.tokens.output} aus, ${s.tokens.cache_read} aus dem Cache. Kosten sind Schätzungen aus den Preisen in der Config.` }),
-      q ? el('div', { style: 'margin-top:10px;font-size:14px' }, `Plan: ${q.attempts} Versuch(e), Validator-Fehler je Versuch [${q.validator_errors_per_attempt.join(', ')}]. Entfernt: ${q.removed.total_s.toFixed(1)} s. ${q.counts.captions} Untertitel, ${q.counts.gold} Gold, ${q.counts.zooms} Zooms, ${q.counts.broll} B-Roll-Slots, ${q.counts.sfx} Sounds.`) : null));
-  }
-
-  if (d.files && !d.approved) kids.push(capEditor(d.captions || [], d));
-
-  if ((d.files || d.validation) && !d.approved) {
-    const ta = el('textarea', { id: 'planText', spellcheck: 'false' });
-    const msg = el('div', { id: 'planMsg', class: 'hint' });
-    const sc = el('input', { type: 'checkbox', id: 'sc2' }); sc.checked = true;
-    const body = el('div', {},
-      el('div', { class: 'hint', text: 'Hier kannst du den Plan von Hand ändern (z. B. Zeiten, Texte, Entscheidungen). „Prüfen“ nutzt dieselben Regeln wie die Pipeline. „Speichern und neu rendern“ baut das Video neu, ohne die KI-Schritte zu wiederholen.' }), ta,
-      el('div', { class: 'row', style: 'margin-top:8px' },
-        el('button', { text: 'Prüfen', onclick: () => planCall('check') }),
-        el('button', { class: 'primary', style: 'margin:0', text: 'Speichern und neu rendern', onclick: () => planCall('save') }),
-        el('button', { text: 'Neu planen lassen (Claude)', onclick: replan })),
-      el('label', { class: 'check' }, sc, ' danach Selfcheck'), msg);
-    const det = el('details', { 'data-k': 'plan' }, el('summary', { text: 'Plan bearbeiten und neu rendern' }), body);
-    det.addEventListener('toggle', async () => { if (det.open && !ta.value) { ta.value = JSON.stringify(await (await fetch(`/api/runs/${current}/plan`)).json(), null, 2); } });
-    kids.push(el('section', { class: 'card' }, det));
-  }
-
-  kids.push(el('section', { class: 'card' }, el('h2', { text: 'Protokoll' }), el('div', { id: 'log', class: 'log' })));
-  root.replaceChildren(...kids);
+  if (d.interrupted) ws.append(banner('bad', 'Der Lauf wurde unterbrochen', 'Der Server wurde mitten im Lauf neu gestartet, meist weil der Arbeitsspeicher nicht reichte. Lade das Reel bitte noch einmal hoch.'));
+  if (d.job && d.job.error) ws.append(banner('bad', 'Das hat nicht geklappt', d.job.error.length > 320 ? d.job.error.slice(0, 320) + ' …' : d.job.error));
+  if (running) ws.append(progressPanel(d));
+  if (d.approved) ws.append(banner('ok', 'Abgenommen', 'Das Rohmaterial ist gelöscht, das fertige Video bleibt. Änderungen sind nicht mehr möglich.'));
+  let mount = null;
+  if (d.files && d.approved) {
+    ws.append(el('div', { class: 'studio' }, el('div', { class: 'stage' }, el('div', { class: 'stage-frame' }, el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' })))));
+  } else if (d.files) {
+    const st = studio(d, running); ws.append(st.node); mount = st.mount;
+  } else if (!running && !failed && !d.interrupted && d.planError) ws.append(banner('bad', 'Der Plan ist nicht lesbar', d.planError));
+  ws.append(techDetails(d));
+  root.replaceChildren(ws);
   for (const k of keepOpen) { const x = root.querySelector(`details[data-k="${k}"]`); if (x) x.open = true; }
   paintLog();
+  if (mount) mount();
 }
 
-async function planCall(kind) {
-  const msg = $('planMsg'); msg.textContent = 'Prüfe …';
-  const sc = $('sc2').checked ? '1' : '0';
-  try {
-    const r = await api(`/api/runs/${current}/plan/${kind}?selfcheck=${sc}`, { method: 'POST', body: $('planText').value });
-    if (kind === 'save' && r.started) { msg.textContent = 'Gespeichert, Video wird neu gebaut.'; await select(current); return; }
-    msg.textContent = r.ok ? `Plan ist in Ordnung (${r.warnings.length} Warnung(en)).` : `Nicht in Ordnung: ${r.errors.map((e) => e.message).slice(0, 5).join(' | ')}`;
-  } catch (e) { msg.textContent = e.message; }
-}
-// ---------- Untertitel-Editor ----------
-let capsList = [], pendingCaps = {}, capShown = '', capPrev = null, capSeq = 0, capFps = 25, capDur = 0, capSel = null, capWave = null, capZoom = 1;
+// ---------- Arbeitsfläche: Video, Texte, Zeitleiste ----------
+let capsList = [], pendingCaps = {}, capPrev = null, capSeq = 0, capFps = 25, capDur = 0, capSel = null, capWave = null, capZoom = 1, rafId = 0;
 const capCur = (c) => ({ ...c, ...(pendingCaps[c.id] || {}) });
 const q = (t) => Math.round(t * capFps) / capFps;
+
+function studio(d, running) {
+  capsList = d.captions || []; pendingCaps = {}; pendingHook = null; capSel = null; capWave = null;
+  planHookLines = d.hook ? d.hook.lines.map((l) => l.toUpperCase()) : null;
+  if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
+  cancelAnimationFrame(rafId);
+  const seq = ++capSeq, layered = !!d.layered;
+
+  // Bühne
+  const frame = el('div', { class: 'stage-frame' },
+    layered ? el('video', { id: 'vid', src: `/api/runs/${d.name}/base`, preload: 'auto', playsinline: '' }) : el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' }),
+    layered ? el('div', { id: 'capOverlay', class: 'ov' }) : null);
+  const stage = el('div', { class: 'stage' }, frame);
+  if (layered) {
+    stage.append(el('div', { class: 'transport' },
+      btn('', 'play', '', () => togglePlay(), { id: 'playBtn', 'aria-label': 'Abspielen oder anhalten' }),
+      btn('', 'back', '', () => stepFrame(-1), { 'aria-label': 'Ein Bild zurück', title: 'Ein Bild zurück' }),
+      btn('', 'fwd', '', () => stepFrame(1), { 'aria-label': 'Ein Bild vor', title: 'Ein Bild vor' }),
+      el('span', { id: 'timeLbl', class: 'time', text: '0:00.0' })),
+      el('div', { id: 'capLive', class: 'live-note', text: 'Die Texte siehst du hier live. Das Video wird erst beim Übernehmen neu gebaut.' }));
+  }
+
+  // Seitenleiste
+  const side = el('div', { class: 'side' });
+  if (d.hook) {
+    const h1 = el('input', { type: 'text', id: 'hook1', value: d.hook.lines[0], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 1' });
+    const h2 = el('input', { type: 'text', id: 'hook2', value: d.hook.lines[1], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 2' });
+    const onHook = () => {
+      const cur = [h1.value, h2.value], same = cur[0].trim().toUpperCase() === planHookLines[0] && cur[1].trim().toUpperCase() === planHookLines[1];
+      pendingHook = same || !cur[0].trim() || !cur[1].trim() ? null : cur;
+      if (capPrev) capPrev.setHook(pendingHook);
+      capCount();
+    };
+    h1.addEventListener('input', onHook); h2.addEventListener('input', onHook);
+    side.append(el('section', { class: 'panel' }, el('h3', { text: 'Hook-Text' }), el('div', { class: 'two' }, h1, h2)));
+  }
+  side.append(el('section', { class: 'panel', id: 'selPanel' }));
+  const generic = /^(Weicht von den üblichen|Abweichung von der Regel|Hook-Text von Claude formuliert|B-Roll #\d+ steht)/;
+  const checks = [...(d.hinschauen || []).filter((i) => !generic.test(i.text)).map((i) => ({ t: i.t_s, text: i.text })), ...((d.selfcheck && d.selfcheck.result && d.selfcheck.result.befunde) || []).map((b) => ({ t: b.t_s, text: b.beschreibung }))].sort((a, b) => a.t - b.t);
+  side.append(el('section', { class: 'panel' }, el('h3', {}, 'Zu prüfen', checks.length ? el('span', { class: 'count', text: String(checks.length) }) : null),
+    checks.length
+      ? el('ul', { class: 'checks' }, ...checks.slice(0, 40).map((c) => el('li', {}, el('button', { type: 'button', onclick: () => { seekTo(c.t); const v = $('vid'); if (v) v.play(); } }, el('span', { class: 'tm', text: mmss(c.t) }), el('span', { text: c.text })))))
+      : el('div', { class: 'allgood' }, ico('check'), el('span', { text: 'Claude hat nichts Auffälliges gefunden.' }))));
+
+  const node = el('div', { style: 'display:flex;flex-direction:column;gap:16px' },
+    el('div', { class: 'studio' }, stage, side),
+    layered ? el('section', { class: 'tl-card' },
+      el('div', { class: 'tl-head' }, el('h3', { text: 'Zeitleiste' }),
+        el('div', { class: 'legend' }, el('span', {}, el('i', { style: 'background:var(--bg)' }), 'Untertitel'), el('span', {}, el('i', { style: 'background:var(--gold);border-color:var(--gold)' }), 'Gold'), el('span', {}, el('i', { style: 'border:2px solid var(--edit)' }), 'geändert')),
+        el('label', { class: 'zoom' }, 'Zoom', el('input', { type: 'range', id: 'zoomR', min: '1', max: '10', step: '0.5', value: String(capZoom) }))),
+      el('div', { id: 'tlBox' }),
+      el('div', { class: 'hint', text: 'Block anklicken oder ziehen. Rand ziehen = Start oder Ende. Pfeiltasten verschieben um ein Bild (Umschalt: fünf).' })) : null,
+    el('div', { id: 'applybar', class: 'applybar', role: 'status' },
+      el('div', { class: 'msg' }, el('span', { id: 'capCountTxt', text: '' }), el('small', { id: 'capSmall', text: '' }), el('span', { id: 'capMsg', class: 'bad' })),
+      btn('ghost', 'undo', 'Verwerfen', resetCaps),
+      btn('primary', 'check', 'Übernehmen', sendCaps, { id: 'capGo' })));
+
+  const mount = () => {
+    const v = $('vid'); if (!v) return;
+    paintSel();
+    const zr = $('zoomR'); if (zr) zr.addEventListener('input', () => { capZoom = parseFloat(zr.value); buildTimeline(); });
+    for (const ev of ['timeupdate', 'seeked', 'loadedmetadata']) v.addEventListener(ev, onTime);
+    v.addEventListener('seeked', () => autoSelect(v.currentTime));
+    v.addEventListener('play', () => { setPlayIcon(); tickLoop(); });
+    v.addEventListener('pause', () => { setPlayIcon(); cancelAnimationFrame(rafId); onTime(); autoSelect(v.currentTime); });
+    if (layered) { v.addEventListener('click', togglePlay); mountPreview(d.name, seq); }
+    else v.addEventListener('pause', () => autoSelect(v.currentTime));
+    if (running) { const g = $('capGo'); if (g) g.disabled = true; }
+  };
+  return { node, mount };
+}
+function setPlayIcon() { const b = $('playBtn'), v = $('vid'); if (!b || !v) return; b.replaceChildren(ico(v.paused ? 'play' : 'pause'), el('span', {})); }
+function togglePlay() { const v = $('vid'); if (!v) return; if (v.paused) v.play(); else v.pause(); }
+function stepFrame(n) { const v = $('vid'); if (!v) return; v.pause(); seekTo(v.currentTime + n / capFps); }
+function tickLoop() { const v = $('vid'); if (!v || v.paused) return; onTime(); rafId = requestAnimationFrame(tickLoop); }
+function onTime() { movePlayhead(); const v = $('vid'), l = $('timeLbl'); if (v && l) l.textContent = `${clock(v.currentTime)} / ${clock(capDur || v.duration || 0)}`; }
+document.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' || !$('playBtn') || /^(INPUT|TEXTAREA|SELECT|BUTTON|SUMMARY)$/.test(document.activeElement.tagName)) return;
+  e.preventDefault(); togglePlay();
+});
 function setPending(id, patch) {
   const c = capsList.find((x) => x.id === id); if (!c) return;
   const cur = { ...(pendingCaps[id] || {}), ...patch };
   const same = (cur.text === undefined || cur.text.trim() === c.text || !cur.text.trim()) && (cur.start_s === undefined || Math.abs(cur.start_s - c.start_s) < 1e-6) && (cur.end_s === undefined || Math.abs(cur.end_s - c.end_s) < 1e-6);
   if (same) delete pendingCaps[id]; else pendingCaps[id] = cur;
-  if (capPrev) {
-    const p = pendingCaps[id];
-    capPrev.setEdit(id, p ? { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s } : null);
-  }
-  capCount(); paintTimeline();
-}
-function capEditor(caps, d) {
-  capsList = caps; pendingCaps = {}; capShown = ''; capSel = null; capWave = null;
-  if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
-  const seq = ++capSeq;
-  const box = el('section', { class: 'card' },
-    el('h2', { text: 'Untertitel korrigieren' }),
-    el('div', { class: 'hint', text: d.layered ? 'Pausiere das Video oder klicke einen Block in der Zeitleiste. Text ändern oder den Block mit der Maus verschieben (Rand ziehen = Start oder Ende). Die Vorschau oben zeigt die Änderung sofort. Am Ende einmal übernehmen.' : 'Pausiere das Video an der Stelle. Darunter erscheint der Untertitel dieser Sekunde. Text ändern, am Ende einmal neu rendern.' }),
-    el('div', { id: 'capLive', class: 'hint' }),
-    d.layered ? el('div', { id: 'tlBox', style: 'margin:10px 0' }) : '',
-    el('div', { id: 'capSelBox', style: 'margin:8px 0' }),
-    el('div', { id: 'capNow', style: 'margin:8px 0;min-height:36px' }),
-    el('div', { class: 'row', style: 'align-items:center' },
-      el('button', { id: 'capGo', class: 'primary', style: 'margin:0', disabled: '', text: 'Änderungen übernehmen und neu rendern', onclick: sendCaps }),
-      el('button', { id: 'capReset', style: 'margin:0 0 0 8px', text: 'Alle verwerfen', onclick: resetCaps }),
-      el('span', { id: 'capMsg', class: 'hint' })),
-    el('details', { 'data-k': 'caps', style: 'margin-top:8px' }, el('summary', { text: 'Alle Untertitel als Liste' }),
-      el('div', { id: 'capAll', style: 'max-height:260px;overflow:auto;margin-top:6px' })));
-  setTimeout(() => {
-    const v = $('vid'); if (!v) return;
-    v.addEventListener('timeupdate', () => { paintCapNow(v.currentTime); movePlayhead(); });
-    v.addEventListener('seeked', () => { paintCapNow(v.currentTime); movePlayhead(); });
-    v.addEventListener('pause', () => { paintCapNow(v.currentTime, true); });
-    paintCapAll(); paintCapNow(0);
-    if (d.layered) mountPreview(d.name, seq);
-  }, 0);
-  return box;
+  if (capPrev) { const p = pendingCaps[id]; capPrev.setEdit(id, p ? { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s } : null); }
+  capCount(); paintTimeline(); syncSel();
 }
 async function mountPreview(name, seq) {
   try {
@@ -374,56 +469,85 @@ async function mountPreview(name, seq) {
     if (seq !== capSeq || !$('capOverlay')) return;
     const ctl = await window.AutocutPreview.mount($('capOverlay'), data, $('vid'));
     if (seq !== capSeq) { ctl.destroy(); return; }
-    capPrev = ctl;
-    const note = $('capLive'); if (note) note.textContent = 'Live-Vorschau an: Änderungen erscheinen sofort im Video.';
+    capPrev = ctl; onTime();
+    if (pendingHook) ctl.setHook(pendingHook);
+    for (const [id, p] of Object.entries(pendingCaps)) ctl.setEdit(Number(id), p);
     api(`/api/runs/${name}/waveform`).then((w) => { if (seq === capSeq) { capWave = w; buildTimeline(); } }).catch(() => { if (seq === capSeq) buildTimeline(); });
   } catch (e) { const note = $('capLive'); if (note) note.textContent = `Live-Vorschau nicht verfügbar (${e.message}).`; }
 }
 
+// ---------- Ausgewählter Untertitel ----------
+function autoSelect(t) {
+  if (!capsList.length || (document.activeElement && document.activeElement.closest && document.activeElement.closest('#selPanel') && document.activeElement.tagName === 'INPUT')) return;
+  const act = capsList.map(capCur).filter((c) => c.start_s <= t + 0.02 && t < c.end_s).sort((a, b) => Math.abs(a.start_s - t) - Math.abs(b.start_s - t));
+  const id = act.length ? act[0].id : capSel;
+  if (id !== capSel) { capSel = id; paintTimeline(); }
+  paintSel();
+}
+function selectCap(id, seek) {
+  capSel = id; paintTimeline(); paintSel();
+  const c = capsList.find((x) => x.id === id);
+  if (seek && c) seekTo(capCur(c).start_s + 0.02);
+}
+function paintSel() {
+  const host = $('selPanel'); if (!host) return;
+  if (capSel === null) { host.replaceChildren(el('h3', { text: 'Untertitel' }), el('div', { class: 'empty-sel', text: $('tlBox') ? 'Klicke einen Block in der Zeitleiste oder halte das Video an der Stelle an.' : 'Halte das Video an der Stelle an, die du ändern willst.' })); return; }
+  const c = capsList.find((x) => x.id === capSel);
+  const inp = el('input', { type: 'text', id: 'selText', class: 'big', autocomplete: 'off', 'aria-label': 'Text des Untertitels' });
+  inp.addEventListener('input', () => setPending(c.id, { text: inp.value }));
+  const tb = (which, label) => el('div', { class: 'tbox' }, el('span', { class: 'field-label', text: label }), el('div', { class: 'tv', id: `tv_${which}` }),
+    el('div', { class: 'tb' }, btn('', null, '−1', () => nudge(c.id, -1, which), { title: 'Ein Bild früher' }), btn('', null, '+1', () => nudge(c.id, 1, which), { title: 'Ein Bild später' }), btn('', 'target', 'Jetzt', () => setToPlayhead(c.id, which), { title: 'Auf die aktuelle Position setzen' })));
+  host.replaceChildren(el('h3', {}, 'Untertitel', el('button', { class: 'btn ghost sm', type: 'button', style: 'margin-left:auto', onclick: () => { delete pendingCaps[c.id]; if (capPrev) capPrev.setEdit(c.id, null); capCount(); paintTimeline(); paintSel(); } }, ico('undo', 15), el('span', { text: 'Zurücksetzen' }))),
+    el('label', { class: 'field-label', for: 'selText', text: 'Text' }), inp, el('div', { class: 'timing' }, tb('start_s', 'Beginn'), tb('end_s', 'Ende')));
+  syncSel();
+}
+function syncSel() {
+  const c = capsList.find((x) => x.id === capSel); if (!c || !$('selText')) return;
+  const cur = capCur(c), inp = $('selText');
+  if (document.activeElement !== inp) inp.value = cur.text !== undefined && pendingCaps[c.id] && pendingCaps[c.id].text !== undefined ? pendingCaps[c.id].text : c.text;
+  const a = $('tv_start_s'), b = $('tv_end_s'); if (a) a.textContent = `${cur.start_s.toFixed(2)} s`; if (b) b.textContent = `${cur.end_s.toFixed(2)} s`;
+}
+function setToPlayhead(id, which) {
+  const v = $('vid'), t = q(v.currentTime), c = capCur(capsList.find((x) => x.id === id)), min = 2 / capFps;
+  if (which === 'start_s') setPending(id, { start_s: Math.min(t, c.end_s - min), end_s: c.end_s }); else setPending(id, { start_s: c.start_s, end_s: Math.max(t, c.start_s + min) });
+}
+function nudge(id, frames, which) {
+  const c = capCur(capsList.find((x) => x.id === id)), d = frames / capFps, min = 2 / capFps;
+  let s = c.start_s, en = c.end_s;
+  if (which === 'start_s') s = Math.min(en - min, Math.max(0, s + d)); else if (which === 'end_s') en = Math.min(capDur || 1e9, Math.max(s + min, en + d)); else { const len = en - s; s = Math.max(0, Math.min((capDur || 1e9) - len, s + d)); en = s + len; }
+  setPending(id, { start_s: q(s), end_s: q(en) }); seekTo(which === 'end_s' ? en - 1 / capFps : s + 0.02);
+}
+
 // ---------- Zeitleiste ----------
-const TL_WAVE_H = 56, TL_LANE_H = 26;
+const TL_WAVE_H = 60, TL_LANE_H = 30;
 let tlPps = 40, tlBlocks = {};
 function buildTimeline() {
   const host = $('tlBox'); if (!host || !capDur) return;
-  const fit = Math.max(20, ($('tlBox').clientWidth - 2) / capDur);
-  tlPps = fit * capZoom;
-  const zoom = el('input', { type: 'range', min: '1', max: '10', step: '0.5', value: String(capZoom), style: 'width:140px' });
-  zoom.addEventListener('input', () => { capZoom = parseFloat(zoom.value); buildTimeline(); });
-  const scroller = el('div', { id: 'tlScroll', style: 'overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg)', tabindex: '0' });
-  const inner = el('div', { id: 'tlInner', style: `position:relative;width:${Math.ceil(capDur * tlPps)}px;height:${TL_WAVE_H + 3 * TL_LANE_H + 8}px;user-select:none;touch-action:none` });
-  const cv = el('canvas', { id: 'tlWave', style: `position:absolute;left:0;top:0;height:${TL_WAVE_H}px` });
+  tlPps = Math.max(20, (host.clientWidth - 2) / capDur) * capZoom;
   const W = Math.ceil(capDur * tlPps), dpr = window.devicePixelRatio || 1;
-  cv.width = W * dpr; cv.height = TL_WAVE_H * dpr; cv.style.width = W + 'px';
-  const g = cv.getContext('2d'); g.scale(dpr, dpr);
-  const cs = getComputedStyle(document.body);
-  g.fillStyle = cs.getPropertyValue('--muted') || '#888';
-  if (capWave) for (let x = 0; x < W; x++) {
-    const i = Math.floor((x / tlPps) * capWave.peaksPerSec); const pk = (capWave.peaks[i] || 0) / 255; const h = Math.max(1, pk * (TL_WAVE_H - 6));
-    g.globalAlpha = .55; g.fillRect(x, (TL_WAVE_H - h) / 2, 1, h);
-  }
-  g.globalAlpha = 1;
+  const scroller = el('div', { id: 'tlScroll', tabindex: '0', 'aria-label': 'Zeitleiste der Untertitel' });
+  const inner = el('div', { id: 'tlInner', style: `position:relative;width:${W}px;height:${TL_WAVE_H + 3 * TL_LANE_H + 12}px;user-select:none;touch-action:none` });
+  const cv = el('canvas', { style: `position:absolute;left:0;top:0;height:${TL_WAVE_H}px;width:${W}px` });
+  cv.width = W * dpr; cv.height = TL_WAVE_H * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr); g.fillStyle = getComputedStyle(document.body).getPropertyValue('--muted').trim() || '#888'; g.globalAlpha = .5;
+  if (capWave) for (let x = 0; x < W; x++) { const pk = (capWave.peaks[Math.floor((x / tlPps) * capWave.peaksPerSec)] || 0) / 255, h = Math.max(1, pk * (TL_WAVE_H - 14)); g.fillRect(x, (TL_WAVE_H - h) / 2 + 6, 1, h); }
   inner.append(cv);
-  // Sekunden-Markierungen
-  for (let t = 0; t <= capDur; t++) inner.append(el('div', { style: `position:absolute;left:${t * tlPps}px;top:0;height:${t % 5 === 0 ? 14 : 7}px;border-left:1px solid var(--line)`, 'data-t': String(t) }), t % 5 === 0 ? el('div', { style: `position:absolute;left:${t * tlPps + 3}px;top:0;font-size:10px;color:var(--muted)`, text: mmss(t) }) : '');
+  for (let t = 0; t <= capDur; t++) { const major = t % 5 === 0; inner.append(el('div', { style: `position:absolute;left:${t * tlPps}px;top:0;height:${major ? 12 : 6}px;border-left:1px solid var(--line)` })); if (major) inner.append(el('div', { style: `position:absolute;left:${t * tlPps + 4}px;top:0;font-size:10.5px;color:var(--muted)`, text: mmss(t) })); }
   tlBlocks = {};
   for (const c of capsList) {
-    const b = el('div', { 'data-id': String(c.id), style: 'position:absolute;height:22px;border-radius:5px;font-size:11px;line-height:22px;padding:0 6px;overflow:hidden;white-space:nowrap;cursor:grab;box-sizing:border-box' });
+    const b = el('div', { 'data-id': String(c.id), style: 'position:absolute;height:25px;border-radius:7px;font-size:12px;font-weight:550;line-height:25px;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:grab;box-sizing:border-box;transition:box-shadow .15s ease' });
     b.addEventListener('pointerdown', (ev) => blockDown(ev, c.id, b));
     tlBlocks[c.id] = b; inner.append(b);
   }
-  inner.append(el('div', { id: 'tlHead', style: `position:absolute;top:0;bottom:0;width:2px;background:#e5484d;pointer-events:none` }));
-  inner.addEventListener('pointerdown', (ev) => { if (ev.target.closest('[data-id]')) return; const r = inner.getBoundingClientRect(); seekTo((ev.clientX - r.left) / tlPps); });
-  scroller.append(inner);
-  scroller.addEventListener('keydown', tlKey);
-  host.replaceChildren(el('div', { style: 'display:flex;gap:8px;align-items:center;margin-bottom:6px' }, el('span', { class: 'muted', style: 'font-size:12px', text: 'Zoom' }), zoom, el('span', { class: 'hint', style: 'margin:0', text: 'Pfeiltasten: Block um 1 Bild verschieben (Umschalt: 5 Bilder).' })), scroller);
-  paintTimeline(); movePlayhead(); paintSel();
+  inner.append(el('div', { id: 'tlHead', style: 'position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--playhead);pointer-events:none;border-radius:2px' }));
+  inner.addEventListener('pointerdown', (ev) => { if (ev.target.closest('[data-id]')) return; seekTo((ev.clientX - inner.getBoundingClientRect().left) / tlPps); });
+  scroller.append(inner); scroller.addEventListener('keydown', tlKey);
+  host.replaceChildren(scroller);
+  paintTimeline(); movePlayhead();
 }
 function lanesFor(list) {
-  const ends = []; const out = {};
-  for (const c of [...list].sort((a, b) => a.start_s - b.start_s)) {
-    let l = ends.findIndex((e) => e <= c.start_s + 1e-6); if (l < 0) { l = ends.length; ends.push(0); }
-    ends[l] = c.end_s; out[c.id] = Math.min(l, 2);
-  }
+  const ends = [], out = {};
+  for (const c of [...list].sort((a, b) => a.start_s - b.start_s)) { let l = ends.findIndex((e) => e <= c.start_s + 1e-6); if (l < 0) { l = ends.length; ends.push(0); } ends[l] = c.end_s; out[c.id] = Math.min(l, 2); }
   return out;
 }
 function paintTimeline() {
@@ -431,29 +555,25 @@ function paintTimeline() {
   const cur = capsList.map(capCur), lanes = lanesFor(cur);
   for (const c of cur) {
     const b = tlBlocks[c.id]; if (!b) continue;
-    const edited = !!pendingCaps[c.id], gold = c.kind === 'gold' || c.kind === 'cta';
-    b.style.left = (c.start_s * tlPps) + 'px'; b.style.width = Math.max(8, (c.end_s - c.start_s) * tlPps) + 'px'; b.style.top = (TL_WAVE_H + lanes[c.id] * TL_LANE_H) + 'px';
-    b.style.background = gold ? '#f5b53d' : 'var(--panel)'; b.style.color = gold ? '#222' : 'var(--ink)';
-    b.style.border = c.id === capSel ? '2px solid #3b82f6' : edited ? '2px solid #e5484d' : '1px solid var(--line)';
-    b.textContent = pendingCaps[c.id] && pendingCaps[c.id].text !== undefined ? pendingCaps[c.id].text : c.text;
+    const edited = !!pendingCaps[c.id], gold = c.kind === 'gold' || c.kind === 'cta', sel = c.id === capSel;
+    b.style.left = (c.start_s * tlPps) + 'px'; b.style.width = Math.max(10, (c.end_s - c.start_s) * tlPps - 1) + 'px'; b.style.top = (TL_WAVE_H + 4 + lanes[c.id] * TL_LANE_H) + 'px';
+    b.style.background = gold ? 'var(--gold)' : 'var(--panel)'; b.style.color = gold ? '#231a00' : 'var(--ink)';
+    b.style.border = `1px solid ${gold ? 'transparent' : 'var(--line)'}`;
+    b.style.boxShadow = sel ? '0 0 0 2px var(--run)' : edited ? '0 0 0 2px var(--edit)' : 'none';
+    b.style.zIndex = sel ? '2' : '1';
+    b.textContent = pendingCaps[c.id] && pendingCaps[c.id].text !== undefined && pendingCaps[c.id].text.trim() ? pendingCaps[c.id].text : c.text;
   }
 }
 function movePlayhead() {
   const h = $('tlHead'), v = $('vid'); if (!h || !v) return;
   h.style.left = (v.currentTime * tlPps) + 'px';
-  const sc = $('tlScroll'); if (sc && !v.paused) { const x = v.currentTime * tlPps; if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 30) sc.scrollLeft = Math.max(0, x - 40); }
+  const sc = $('tlScroll'); if (sc && !v.paused) { const x = v.currentTime * tlPps; if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 40) sc.scrollLeft = Math.max(0, x - 60); }
 }
-function seekTo(t) { const v = $('vid'); v.pause(); v.currentTime = Math.max(0, Math.min(capDur, t)); movePlayhead(); }
-function selectCap(id, seek) {
-  capSel = id; paintTimeline(); paintSel();
-  const c = capsList.find((x) => x.id === id);
-  if (seek && c) seekTo(capCur(c).start_s + 0.02);
-}
+function seekTo(t) { const v = $('vid'); if (!v) return; v.pause(); v.currentTime = Math.max(0, Math.min(capDur || v.duration || 0, t)); onTime(); }
 function blockDown(ev, id, b) {
   ev.preventDefault(); b.setPointerCapture(ev.pointerId);
   const c = capsList.find((x) => x.id === id), start = capCur(c), r = b.getBoundingClientRect(), x0 = ev.clientX;
-  const edge = 7, mode = ev.clientX - r.left < edge ? 'l' : r.right - ev.clientX < edge ? 'r' : 'm';
-  const minDur = 2 / capFps; let moved = false;
+  const mode = ev.clientX - r.left < 7 ? 'l' : r.right - ev.clientX < 7 ? 'r' : 'm', minDur = 2 / capFps; let moved = false;
   selectCap(id, false);
   const move = (e) => {
     const dt = (e.clientX - x0) / tlPps; if (Math.abs(e.clientX - x0) > 2) moved = true; if (!moved) return;
@@ -462,82 +582,81 @@ function blockDown(ev, id, b) {
     else if (mode === 'l') s = Math.max(0, Math.min(en - minDur, q(s + dt)));
     else en = Math.min(capDur, Math.max(s + minDur, q(en + dt)));
     setPending(id, { start_s: q(s), end_s: q(en) });
-    seekTo(mode === 'r' ? en - 1 / capFps : s + 0.02); paintSel();
+    seekTo(mode === 'r' ? en - 1 / capFps : s + 0.02);
   };
-  const up = () => { b.removeEventListener('pointermove', move); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up); if (!moved) seekTo(capCur(c).start_s + 0.02); $('tlScroll') && $('tlScroll').focus({ preventScroll: true }); };
+  const up = () => { b.removeEventListener('pointermove', move); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up); if (!moved) seekTo(capCur(c).start_s + 0.02); const sc = $('tlScroll'); if (sc) sc.focus({ preventScroll: true }); };
   b.addEventListener('pointermove', move); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
-}
-function nudge(id, frames, which) {
-  const c = capCur(capsList.find((x) => x.id === id)), d = frames / capFps;
-  let s = c.start_s, en = c.end_s;
-  if (which === 'start') s = Math.min(en - 2 / capFps, Math.max(0, s + d)); else if (which === 'end') en = Math.min(capDur, Math.max(s + 2 / capFps, en + d)); else { const len = en - s; s = Math.max(0, Math.min(capDur - len, s + d)); en = s + len; }
-  setPending(id, { start_s: q(s), end_s: q(en) }); seekTo(which === 'end' ? en - 1 / capFps : s + 0.02); paintSel();
 }
 function tlKey(e) {
   if (capSel === null || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
   e.preventDefault(); nudge(capSel, (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1), 'move');
 }
-function paintSel() {
-  const host = $('capSelBox'); if (!host) return;
-  if (capSel === null) { host.replaceChildren(); return; }
-  const c = capsList.find((x) => x.id === capSel), cur = capCur(c), v = $('vid');
-  const btn = (text, fn) => el('button', { style: 'margin:0 4px 0 0;padding:4px 8px;font-size:12px', text, onclick: fn });
-  host.replaceChildren(el('div', { style: 'display:flex;gap:6px;align-items:center;flex-wrap:wrap' },
-    el('span', { class: 'muted', style: 'font-size:12px;min-width:150px', text: `${cur.start_s.toFixed(2)} – ${cur.end_s.toFixed(2)} s (${(cur.end_s - cur.start_s).toFixed(2)} s)` }),
-    capField(c),
-    btn('◀ 1 Bild', () => nudge(c.id, -1, 'move')), btn('1 Bild ▶', () => nudge(c.id, 1, 'move')),
-    btn('Start = Abspielposition', () => { const t = q(v.currentTime); setPending(c.id, { start_s: Math.min(t, capCur(c).end_s - 2 / capFps), end_s: capCur(c).end_s }); paintSel(); }),
-    btn('Ende = Abspielposition', () => { const t = q(v.currentTime); setPending(c.id, { start_s: capCur(c).start_s, end_s: Math.max(t, capCur(c).start_s + 2 / capFps) }); paintSel(); }),
-    btn('Zurücksetzen', () => { delete pendingCaps[c.id]; if (capPrev) capPrev.setEdit(c.id, null); capCount(); paintTimeline(); paintSel(); paintCapNow($('vid').currentTime, false); })));
-}
-function capField(c) {
-  const cur = capCur(c);
-  const inp = el('input', { type: 'text', value: cur.text !== undefined && pendingCaps[c.id] && pendingCaps[c.id].text !== undefined ? pendingCaps[c.id].text : c.text, style: 'flex:1;min-width:120px' });
-  inp.addEventListener('input', () => setPending(c.id, { text: inp.value }));
-  inp.addEventListener('focus', () => { if (capSel !== c.id) { capSel = c.id; paintTimeline(); } });
-  return inp;
-}
-function paintCapNow(t, focus) {
-  const host = $('capNow'); if (!host) return;
-  const act = capsList.map(capCur).filter((c) => c.start_s <= t + 0.02 && t < c.end_s);
-  const key = act.map((c) => c.id).join(',');
-  if (key === capShown && !focus) return;
-  if (key === capShown && focus) { const f = host.querySelector('input'); if (f) f.focus(); return; }
-  if (!focus && $('vid').paused && host.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;
-  capShown = key;
-  host.replaceChildren(...(act.length ? act.map((c) => el('div', { class: 'row', style: 'align-items:center;margin-bottom:4px' }, el('span', { class: 'muted', style: 'width:52px', text: mmss(c.start_s) }), capField(capsList.find((x) => x.id === c.id)))) : [el('span', { class: 'muted', text: `Bei ${mmss(t)} steht kein Untertitel.` })]));
-  if (focus) { const f = host.querySelector('input'); if (f) f.focus(); }
-}
-function paintCapAll() {
-  const host = $('capAll'); if (!host) return;
-  host.replaceChildren(...capsList.map((c) => el('div', { class: 'row', style: 'align-items:center;margin-bottom:3px' },
-    el('button', { class: 't', style: 'width:52px;margin:0', text: mmss(c.start_s), onclick: () => { selectCap(c.id, true); } }), capField(c))));
-}
+
+// ---------- Übernehmen ----------
 function capCount() {
-  const n = Object.keys(pendingCaps).length;
-  const b = $('capGo'); if (!b) return;
-  b.disabled = !n; b.textContent = n ? `${n} Änderung${n > 1 ? 'en' : ''} übernehmen und neu rendern` : 'Änderungen übernehmen und neu rendern';
+  const n = Object.keys(pendingCaps).length + (pendingHook ? 1 : 0), bar = $('applybar'); if (!bar) return;
+  bar.classList.toggle('on', n > 0);
+  $('capCountTxt').textContent = n === 1 ? '1 Änderung' : `${n} Änderungen`;
+  $('capSmall').textContent = 'Bild und Ton bleiben, nur die Texte werden neu gebaut.';
+  if (!n) $('capMsg').textContent = '';
 }
 function resetCaps() {
   for (const id of Object.keys(pendingCaps)) if (capPrev) capPrev.setEdit(Number(id), null);
-  pendingCaps = {}; capShown = ''; capCount(); paintTimeline(); paintSel(); paintCapAll(); paintCapNow($('vid').currentTime, false);
+  pendingCaps = {}; if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hook1') && planHookLines) { $('hook1').value = curData.hook.lines[0]; $('hook2').value = curData.hook.lines[1]; } }
+  capCount(); paintTimeline(); paintSel();
 }
 async function sendCaps() {
   const edits = Object.entries(pendingCaps).map(([id, p]) => ({ id: Number(id), ...(p.text !== undefined && p.text.trim() ? { text: p.text } : {}), ...(p.start_s !== undefined ? { start_s: p.start_s } : {}), ...(p.end_s !== undefined ? { end_s: p.end_s } : {}) }));
-  $('capMsg').textContent = 'Prüfe …';
+  const g = $('capGo'); if (g) g.disabled = true; $('capMsg').textContent = '';
   try {
-    const r = await api(`/api/runs/${current}/captions`, { method: 'POST', body: JSON.stringify({ edits }) });
-    if (r.started) { pendingCaps = {}; await select(current); }
-    else $('capMsg').textContent = 'Nichts geändert.';
-  } catch (e) { $('capMsg').textContent = e.message; }
+    const r = await api(`/api/runs/${current}/captions`, { method: 'POST', body: JSON.stringify({ edits, ...(pendingHook ? { hook: pendingHook } : {}) }) });
+    if (r.started) { pendingCaps = {}; pendingHook = null; await select(current); }
+    else { $('capMsg').textContent = 'Nichts geändert.'; if (g) g.disabled = false; }
+  } catch (e) { $('capMsg').textContent = e.message; if (g) g.disabled = false; }
 }
 async function approve() {
-  if (!confirm('Video abnehmen? Das Rohmaterial und alle Zwischendateien werden gelöscht. Danach kann dieses Reel nicht mehr neu gerendert werden.')) return;
-  try { await api(`/api/runs/${current}/approve`, { method: 'POST' }); await refresh(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
+  if (!confirm('Video abnehmen? Das Rohmaterial und alle Zwischendateien werden gelöscht. Danach kann dieses Reel nicht mehr geändert werden.')) return;
+  try { await api(`/api/runs/${current}/approve`, { method: 'POST' }); pendingCaps = {}; pendingHook = null; await refresh(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
 }
 async function delRun() {
   if (!confirm('Den ganzen Lauf löschen, auch das fertige Video? Das kann nicht rückgängig gemacht werden.')) return;
-  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; $('detail').replaceChildren(); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
+  try { await api(`/api/runs/${current}`, { method: 'DELETE' }); current = null; pendingCaps = {}; pendingHook = null; $('detail').replaceChildren(el('div', { class: 'card empty', text: 'Lauf gelöscht.' })); await loadRuns(); loadHealth(); } catch (e) { alert(e.message); }
+}
+
+// ---------- Technische Details (eingeklappt) ----------
+function techDetails(d) {
+  const secs = [];
+  if (d.validation) {
+    const v = d.validation;
+    secs.push(el('section', {}, el('h4', { text: 'Prüfung des Plans' }),
+      el('div', {}, el('span', { class: `pill ${v.ok ? 'ok' : 'bad'}`, text: v.ok ? 'bestanden' : 'nicht bestanden' }), ` ${v.errors.length} Fehler, ${v.warnings.length} Hinweis(e)`),
+      v.errors.length ? el('ul', { class: 'list' }, ...v.errors.map((e) => el('li', { class: 'conf-niedrig', text: e.message }))) : null,
+      v.warnings.length ? el('details', { 'data-k': 'warn' }, el('summary', { text: `${v.warnings.length} Hinweis(e)` }), el('ul', { class: 'list' }, ...v.warnings.map((w) => el('li', { class: 'muted', text: w.message })))) : null));
+  }
+  if (d.files || d.validation) {
+    const links = d.files ? el('div', { class: 'links' }, el('a', { href: d.files.plan, text: 'Plan (json)' }), el('a', { href: d.files.hinschauen, target: '_blank', text: 'Hinweise (md)' }), el('a', { href: d.files.bericht, target: '_blank', text: 'Laufbericht' })) : null;
+    if (!d.approved) {
+      const ta = el('textarea', { id: 'planText', spellcheck: 'false' }), msg = el('div', { id: 'planMsg', class: 'hint' });
+      const sc = el('input', { type: 'checkbox', id: 'sc2' }); sc.checked = true;
+      const det = el('details', { 'data-k': 'plan' }, el('summary', { text: 'Plan von Hand bearbeiten' }),
+        el('div', { class: 'hint', text: 'Für Fortgeschrittene: der komplette Plan als Text. „Prüfen“ nutzt dieselben Regeln wie die Pipeline. „Speichern und neu rendern“ baut das ganze Video neu.' }), ta,
+        el('div', { style: 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap' }, btn('', null, 'Prüfen', () => planCall('check')), btn('', null, 'Speichern und neu rendern', () => planCall('save')), btn('', null, 'Neu planen lassen (Claude)', replan)),
+        el('label', { class: 'check' }, sc, ' danach von Claude prüfen lassen'), msg);
+      det.addEventListener('toggle', async () => { if (det.open && !ta.value) ta.value = JSON.stringify(await (await fetch(`/api/runs/${current}/plan`)).json(), null, 2); });
+      secs.push(el('section', {}, el('h4', { text: 'Plan' }), det, links));
+    } else secs.push(el('section', {}, links));
+  }
+  secs.push(el('section', {}, el('h4', { text: 'Protokoll' }), el('div', { id: 'log', class: 'log' })));
+  return el('details', { class: 'tech', 'data-k': 'tech' }, el('summary', { text: 'Technische Details' }), ...secs);
+}
+async function planCall(kind) {
+  const msg = $('planMsg'); msg.textContent = 'Prüfe …';
+  const sc = $('sc2').checked ? '1' : '0';
+  try {
+    const r = await api(`/api/runs/${current}/plan/${kind}?selfcheck=${sc}`, { method: 'POST', body: $('planText').value });
+    if (kind === 'save' && r.started) { msg.textContent = 'Gespeichert, Video wird neu gebaut.'; await select(current); return; }
+    msg.textContent = r.ok ? `Plan ist in Ordnung (${r.warnings.length} Hinweis(e)).` : `Nicht in Ordnung: ${r.errors.map((e) => e.message).slice(0, 5).join(' | ')}`;
+  } catch (e) { msg.textContent = e.message; }
 }
 async function replan() {
   if (!confirm('Claude erstellt den Plan neu und das Video wird neu gebaut. Deine Änderungen im Plan gehen verloren. Fortfahren?')) return;

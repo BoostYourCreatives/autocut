@@ -235,3 +235,22 @@ test("Wellenform: Hüllkurve eines Testtons, 100 Werte pro Sekunde", async () =>
   assert.ok(Math.abs(w.peaks.length - 200) <= 2);
   assert.ok(w.peaks[50]! > 200 && w.peaks[150]! < 5, "laut in der ersten, still in der zweiten Sekunde");
 });
+
+test("Hook-Text ändern: Versalien, Plan und Hook-Box gleichzeitig, Zeitbereich der Box", async () => {
+  const { applyHookEdit } = await import("../../src/steps/captionEdit.ts");
+  const { fixtureFromExample, EX53 } = await import("../helpers/reel.ts");
+  const { finalize } = await import("../../src/plan/finalize.ts");
+  const { draftReel53 } = await import("../fixtures/draft-reel53.ts");
+  const { validate } = await import("../../src/validate/validate.ts");
+  const f = fixtureFromExample(EX53, { silencesFromCuts: true, precut: false });
+  const plan = finalize({ draft: structuredClone(draftReel53), transcript: f.transcript, analysis: f.analysis, meta: f.meta, params: f.params, sfxIndex: f.sfxIndex, style: "thorsten", video: "TW_Reel_53" }).plan!;
+  const before = plan.hook!.lines.join("|");
+  assert.equal(applyHookEdit(plan, [plan.hook!.lines[0], plan.hook!.lines[1]]), null, "unverändert = keine Änderung");
+  const range = applyHookEdit(plan, ["warum europa", " zurückfallen könnte "]);
+  assert.ok(range && range[1] > range[0]);
+  assert.deepEqual(plan.hook!.lines, ["WARUM EUROPA", "ZURÜCKFALLEN KÖNNTE"]);
+  const box = plan.overlays.find((o) => o.type === "hook_box")!;
+  assert.deepEqual(box.type === "hook_box" ? box.lines : null, plan.hook!.lines);
+  assert.notEqual(before, plan.hook!.lines.join("|"));
+  assert.equal(validate({ plan, transcript: f.transcript, analysis: f.analysis, params: f.params, sfxIndex: f.sfxIndex }).errors.filter((e) => e.code.startsWith("hook")).length, 0);
+});

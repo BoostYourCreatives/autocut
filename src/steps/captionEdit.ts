@@ -56,3 +56,18 @@ export function wordOffsets(c: { word_offsets_frames?: [string, number][] }, tex
   const last = old[old.length - 1]![1];
   return words.map((w, i) => [w, words.length === old.length ? old[i]![1] : words.length === 1 ? 0 : Math.round((last * i) / (words.length - 1))] as [string, number]);
 }
+
+/** Hook-Text ändern (2 Zeilen, in Versalien). Gibt den Zeitbereich der Hook-Box zurück, der neu gerendert werden muss, sonst null. */
+export function applyHookEdit(plan: Plan, lines: [string, string]): [number, number] | null {
+  if (!plan.hook) return null;
+  const up = lines.map((l) => l.replace(/\s+/g, " ").trim().toUpperCase()) as [string, string];
+  if (!up[0] || !up[1] || (up[0] === plan.hook.lines[0] && up[1] === plan.hook.lines[1])) return null;
+  plan.hook.lines = up;
+  plan.hook.text_origin = "user";
+  const box = plan.overlays.find((o) => o.type === "hook_box");
+  if (box && box.type === "hook_box") {
+    box.lines = up;
+    return [box.start_s, box.end_s];
+  }
+  return null;
+}

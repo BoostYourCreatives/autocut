@@ -36,6 +36,8 @@ export interface PreviewController {
   /** Text und/oder Zeiten eines Untertitels vorläufig ändern (null = zurück auf den gespeicherten Stand) */
   setEdit(id: number, edit: { text?: string; start_s?: number; end_s?: number } | null): void;
   /** Aktuelle Zeit des Videos übernehmen */
+  /** Hook-Text vorläufig ändern (null = gespeicherter Stand) */
+  setHook(lines: [string, string] | null): void;
   seek(t: number): void;
   destroy(): void;
 }
@@ -55,6 +57,7 @@ async function mount(host: HTMLElement, data: PreviewData, video: HTMLVideoEleme
   await loadFonts(data.fonts);
   const ref = React.createRef<PlayerRef>();
   let edits: Record<number, { text?: string; start_s?: number; end_s?: number }> = {};
+  let hook: [string, string] | null = null;
   const root = createRoot(host);
   const render = () => {
     const captions = data.plan.captions.map((c) => {
@@ -67,7 +70,7 @@ async function mount(host: HTMLElement, data: PreviewData, video: HTMLVideoEleme
       <Player
         ref={ref}
         component={Texts}
-        inputProps={{ plan: { captions, overlays: data.plan.overlays }, L: data.L, DY: data.DY, fonts: data.fonts }}
+        inputProps={{ plan: { captions, overlays: hook ? data.plan.overlays.map((o) => (o.type === "hook_box" ? { ...o, lines: hook! } : o)) : data.plan.overlays }, L: data.L, DY: data.DY, fonts: data.fonts }}
         compositionWidth={data.width}
         compositionHeight={data.height}
         fps={data.fps}
@@ -94,6 +97,10 @@ async function mount(host: HTMLElement, data: PreviewData, video: HTMLVideoEleme
         const { [id]: _drop, ...rest } = edits;
         edits = rest;
       } else edits = { ...edits, [id]: edit };
+      render();
+    },
+    setHook(lines) {
+      hook = lines ? (lines.map((l) => l.toUpperCase()) as [string, string]) : null;
       render();
     },
     seek,
