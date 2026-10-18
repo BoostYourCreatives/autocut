@@ -205,7 +205,7 @@ export function validate(inp: ValidateInput): ValidationResult {
     if (c.end_s > total + 0.001 || c.start_s < -0.001) err("caption_bereich", `Untertitel #${c.id} liegt außerhalb des Videos (${de2(c.start_s)}–${de2(c.end_s)} s, Länge ${de2(total)} s)`, c.start_s);
     if ((c.end_s - c.start_s) * fps < P.captions.min_frames - 0.5) err("caption_kurz", `Untertitel #${c.id} "${c.text}" steht nur ${((c.end_s - c.start_s) * fps).toFixed(1)} Frames (Minimum ${P.captions.min_frames})`, c.start_s);
     if (c.kind !== "cta" && lastSeg && c.end_s > lastSeg.out_to_s + frame + 0.001) err("caption_ueber_schnitt", `Untertitel #${c.id} "${c.text}" läuft über das Segmentende (${de2(lastSeg.out_to_s)} s) hinaus`, c.start_s);
-    if (firstOut) {
+    if (firstOut && !c.edited) {
       const early = firstOut.start - c.start_s;
       if (early > (P.captions.timing.wipe_vorlauf_frames + 2) * frame + 0.001) err("caption_zu_frueh", `Untertitel #${c.id} "${c.text}" erscheint ${de2(early)} s vor dem gesprochenen Wort (Sync)`, c.start_s);
       if (early < -0.04) err("caption_zu_spaet", `Untertitel #${c.id} "${c.text}" erscheint ${de2(-early)} s nach dem gesprochenen Wort (Sync)`, c.start_s);

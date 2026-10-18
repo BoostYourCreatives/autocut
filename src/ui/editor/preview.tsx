@@ -33,8 +33,8 @@ const Texts: React.FC<Props> = (p) => (
 );
 
 export interface PreviewController {
-  /** Text eines Untertitels vorläufig ändern (null = zurück auf den gespeicherten Text) */
-  setText(id: number, text: string | null): void;
+  /** Text und/oder Zeiten eines Untertitels vorläufig ändern (null = zurück auf den gespeicherten Stand) */
+  setEdit(id: number, edit: { text?: string; start_s?: number; end_s?: number } | null): void;
   /** Aktuelle Zeit des Videos übernehmen */
   seek(t: number): void;
   destroy(): void;
@@ -54,10 +54,15 @@ async function loadFonts(fonts: Record<string, string>) {
 async function mount(host: HTMLElement, data: PreviewData, video: HTMLVideoElement): Promise<PreviewController> {
   await loadFonts(data.fonts);
   const ref = React.createRef<PlayerRef>();
-  let edits: Record<number, string> = {};
+  let edits: Record<number, { text?: string; start_s?: number; end_s?: number }> = {};
   const root = createRoot(host);
   const render = () => {
-    const captions = data.plan.captions.map((c) => (edits[c.id] !== undefined ? { ...c, text: edits[c.id]!, word_offsets_frames: wordOffsets(c, edits[c.id]!) } : c));
+    const captions = data.plan.captions.map((c) => {
+      const e = edits[c.id];
+      if (!e) return c;
+      const text = e.text ?? c.text;
+      return { ...c, text, word_offsets_frames: e.text !== undefined ? wordOffsets(c, e.text) : c.word_offsets_frames, start_s: e.start_s ?? c.start_s, end_s: e.end_s ?? c.end_s };
+    });
     root.render(
       <Player
         ref={ref}
@@ -84,9 +89,11 @@ async function mount(host: HTMLElement, data: PreviewData, video: HTMLVideoEleme
   raf = requestAnimationFrame(tick);
   render();
   return {
-    setText(id, text) {
-      if (text === null) delete edits[id];
-      else edits = { ...edits, [id]: text };
+    setEdit(id, edit) {
+      if (edit === null) {
+        const { [id]: _drop, ...rest } = edits;
+        edits = rest;
+      } else edits = { ...edits, [id]: edit };
       render();
     },
     seek,

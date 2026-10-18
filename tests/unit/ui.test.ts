@@ -193,3 +193,45 @@ test("Text-Ebene: Bildbereiche für geänderte Untertitel (mit Gruppe, zusammeng
   assert.deepEqual(captionFrameRanges(plan, [1], 25, 400), [[24, 76]]);
   assert.deepEqual(captionFrameRanges(plan, null, 25, 400), [[0, 399]]);
 });
+
+test("Untertitel-Zeiten: Verschieben wird auf Bilder gerundet, alter Bereich gemerkt, Sync-Prüfung entfällt, Überlappung bleibt verboten", async () => {
+  const { applyCaptionEdits } = await import("../../src/steps/captionEdit.ts");
+  const { fixtureFromExample, EX53 } = await import("../helpers/reel.ts");
+  const { finalize } = await import("../../src/plan/finalize.ts");
+  const { draftReel53 } = await import("../fixtures/draft-reel53.ts");
+  const { validate } = await import("../../src/validate/validate.ts");
+  const f = fixtureFromExample(EX53, { silencesFromCuts: true, precut: false });
+  const mk = () => finalize({ draft: structuredClone(draftReel53), transcript: f.transcript, analysis: f.analysis, meta: f.meta, params: f.params, sfxIndex: f.sfxIndex, style: "thorsten", video: "TW_Reel_53" }).plan!;
+  const v = (plan: unknown) => validate({ plan, transcript: f.transcript, analysis: f.analysis, params: f.params, sfxIndex: f.sfxIndex });
+
+  const plan = mk();
+  const fps = plan.source.fps;
+  const c = plan.captions.find((x) => x.kind === "weiss")!;
+  const [s0, e0] = [c.start_s, c.end_s];
+  const r = applyCaptionEdits(plan, [{ id: c.id, start_s: s0 + 0.081, end_s: e0 - 0.01 }]);
+  assert.equal(r.changed, 1);
+  assert.deepEqual(r.oldRangesS, [[s0, e0]]);
+  assert.ok(Math.abs(c.start_s * fps - Math.round(c.start_s * fps)) < 1e-6, "auf ganze Bilder gerundet");
+  assert.ok(c.edited);
+  // 0,08 s Verschiebung wäre ohne "edited" ein Sync-Fehler; mit manueller Änderung nicht
+  assert.equal(v(plan).errors.filter((e) => e.code === "caption_zu_spaet" || e.code === "caption_zu_frueh").length, 0);
+
+  const plan2 = mk();
+  const d = plan2.captions.find((x) => x.kind === "weiss" && x.layout === "solo")!;
+  const next = plan2.captions.filter((x) => x.start_s > d.start_s).sort((a, b) => a.start_s - b.start_s)[0]!;
+  applyCaptionEdits(plan2, [{ id: d.id, end_s: next.start_s + 0.2 }]);
+  assert.ok(v(plan2).errors.some((e) => e.code === "caption_ueberlappung" || e.code === "caption_ueber_schnitt"), "Überlappung muss abgelehnt werden");
+});
+
+test("Wellenform: Hüllkurve eines Testtons, 100 Werte pro Sekunde", async () => {
+  const { waveformPeaks } = await import("../../src/lib/waveform.ts");
+  const { ffmpeg } = await import("../../src/util/exec.ts");
+  const dir = path.join(TMP, "wave");
+  fs.mkdirSync(dir, { recursive: true });
+  const f = path.join(dir, "t.wav");
+  await ffmpeg(["-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-f", "lavfi", "-i", "anullsrc=r=16000:cl=mono", "-filter_complex", "[0:a][1:a]concat=n=2:v=0:a=1", "-t", "2", f]);
+  const w = await waveformPeaks(f);
+  assert.equal(w.peaksPerSec, 100);
+  assert.ok(Math.abs(w.peaks.length - 200) <= 2);
+  assert.ok(w.peaks[50]! > 200 && w.peaks[150]! < 5, "laut in der ersten, still in der zweiten Sekunde");
+});

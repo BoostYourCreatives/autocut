@@ -13,9 +13,10 @@ import { health } from "./health.ts";
 import { createAuth, loginPage } from "./auth.ts";
 import { assetDir, listAssets, MAX_ASSET_MB, MAX_BROLL_MB, safeAssetName, type AssetKind } from "./assets.ts";
 import { pruneModelCache } from "../util/modelCache.ts";
-import { applyCaptionEdits } from "../steps/captionEdit.ts";
+import { applyCaptionEdits, type CaptionEdit } from "../steps/captionEdit.ts";
 import { approveRun } from "../steps/approve.ts";
 import { hasLayeredRender, baseVideoFile } from "../steps/render.ts";
+import { waveformPeaks } from "../lib/waveform.ts";
 import { JobRunner, STEP_ORDER, type JobOptions } from "./jobs.ts";
 
 const STEP_LABEL: Record<string, string> = {
@@ -326,6 +327,15 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
           width: plan.source.width, height: plan.source.height, durationInFrames: Math.max(1, Math.round(total * plan.source.fps)), fonts,
         });
       }
+      if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/waveform$/))) {
+        const name = mm[1]!;
+        const file = baseVideoFile(runDir(name));
+        if (!validName(name) || !fs.existsSync(file)) return json(res, 404, { error: "Keine Basis-Vorschau" });
+        const cache = path.join(runDir(name), "render", "waveform.json");
+        if (!fs.existsSync(cache)) fs.writeFileSync(cache, JSON.stringify(await waveformPeaks(file)));
+        res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+        return res.end(fs.readFileSync(cache));
+      }
       if (req.method === "GET" && (mm = m(/^\/api\/runs\/([^/]+)\/base$/))) {
         const name = mm[1]!;
         const file = baseVideoFile(runDir(name));
@@ -426,14 +436,15 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         if (fs.existsSync(path.join(runDir(name), "approved.json"))) return json(res, 409, { error: "Das Video ist schon abgenommen, das Rohmaterial ist gelöscht." });
         const planFile = planPaths(runPaths(cfg, name)).plan;
         if (!fs.existsSync(planFile)) return json(res, 404, { error: "Noch kein Plan" });
-        let edits: { id: number; text: string }[];
+        let edits: CaptionEdit[];
         try {
-          edits = (JSON.parse(await readBody(req)) as { edits: { id: number; text: string }[] }).edits;
-          if (!Array.isArray(edits) || !edits.every((e) => Number.isInteger(e.id) && typeof e.text === "string")) throw new Error("edits fehlt");
+          edits = (JSON.parse(await readBody(req)) as { edits: CaptionEdit[] }).edits;
+          const num = (x: unknown) => x === undefined || (typeof x === "number" && Number.isFinite(x));
+          if (!Array.isArray(edits) || !edits.every((e) => Number.isInteger(e.id) && (e.text === undefined || typeof e.text === "string") && num(e.start_s) && num(e.end_s))) throw new Error("edits fehlt");
         } catch {
-          return json(res, 400, { error: "Bitte {edits:[{id,text}]} senden." });
+          return json(res, 400, { error: "Bitte {edits:[{id,text?,start_s?,end_s?}]} senden." });
         }
-        const { plan, changed } = applyCaptionEdits(Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8"))), edits);
+        const { plan, changed, oldRangesS } = applyCaptionEdits(Plan.parse(JSON.parse(fs.readFileSync(planFile, "utf8"))), edits);
         if (!changed) return json(res, 200, { ok: true, started: false, changed: 0 });
         const tmp = path.join(runDir(name), "plan.edit.json");
         fs.writeFileSync(tmp, JSON.stringify(plan, null, 2));
@@ -453,7 +464,7 @@ export function startServer(o: ServerOptions): Promise<{ server: http.Server; ur
         // Mit getrennter Text-Ebene: nur die geänderten Texte neu rendern, Bild und Ton bleiben
         const layered = hasLayeredRender(runDir(name));
         try {
-          jobs.start(name, layered ? "recaption" : "rerender", { precut: "auto", provider: "auto", selfcheck: false, captionIds: edits.map((e) => e.id) });
+          jobs.start(name, layered ? "recaption" : "rerender", { precut: "auto", provider: "auto", selfcheck: false, captionIds: edits.map((e) => e.id), captionOldRangesS: oldRangesS });
         } catch (e) {
           return json(res, 409, { error: (e as Error).message });
         }

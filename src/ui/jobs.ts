@@ -29,6 +29,8 @@ export interface JobOptions {
   video?: string;
   /** kind "recaption": geänderte Untertitel (nur deren Text-Ebene wird neu gerendert) */
   captionIds?: number[];
+  /** alte Zeitbereiche verschobener Untertitel */
+  captionOldRangesS?: [number, number][];
 }
 
 export type JobEvent =
@@ -117,7 +119,7 @@ export class JobRunner {
       // rerender/pipeline/replan: Validator ist schon bestanden bzw. wird hier erneut geprüft
       const v = validatePlanFile(cfg, style, planFile).result;
       if (!v.ok) throw new Error(`Der Plan besteht den Validator nicht (${v.errors.length} Fehler), es wird nicht gerendert.`);
-      await step("render", () => deliver(cfg, style, planFile, { selfcheck: opts.selfcheck, llm: this.llm, captionsPatch: job.kind === "recaption" ? { ids: opts.captionIds ?? null } : undefined }));
+      await step("render", () => deliver(cfg, style, planFile, { selfcheck: opts.selfcheck, llm: this.llm, captionsPatch: job.kind === "recaption" ? { ids: opts.captionIds ?? null, extraRangesS: opts.captionOldRangesS } : undefined }));
       job.status = "done";
       this.push(job, { type: "done", t: t() });
     } catch (e) {

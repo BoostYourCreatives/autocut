@@ -246,7 +246,7 @@ function render(d) {
           ? el('div', { id: 'vwrap', style: 'position:relative;line-height:0;max-width:270px' }, el('video', { id: 'vid', controls: '', src: `/api/runs/${d.name}/base`, preload: 'auto' }), el('div', { id: 'capOverlay', style: 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:hidden' }))
           : el('video', { id: 'vid', controls: '', src: d.files.video, preload: 'metadata' }),
           el('div', { class: 'links' }, el('a', { href: d.files.video, download: '', text: 'Video (mp4)' }), el('a', { href: d.files.plan, text: 'Plan (json)' }), el('a', { href: d.files.hinschauen, target: '_blank', text: 'Hinweise (md)' }), el('a', { href: d.files.bericht, target: '_blank', text: 'Laufbericht' })),
-          d.approved ? '' : capEditor(d.captions || [], d)),
+          ''),
         el('div', {},
           hook ? el('div', { style: 'margin-bottom:12px' }, el('div', { class: 'muted', style: 'font-size:12px', text: `Hook-Text${hook.origin === 'generated' ? ' (von Claude)' : ' (von dir)'}` }), el('div', { style: 'font-weight:700', text: hook.lines.join(' / ') }),
             el('div', { class: 'muted', style: 'font-size:13px', text: `Übergang: ${hook.transition === 'blitz_riser' ? 'Blitz + Riser' : 'harter Schnitt'}. ` }), el('div', { style: 'font-size:13px' }, hook.reason, ' (', conf(hook.confidence), ')')) : null,
@@ -291,6 +291,8 @@ function render(d) {
       q ? el('div', { style: 'margin-top:10px;font-size:14px' }, `Plan: ${q.attempts} Versuch(e), Validator-Fehler je Versuch [${q.validator_errors_per_attempt.join(', ')}]. Entfernt: ${q.removed.total_s.toFixed(1)} s. ${q.counts.captions} Untertitel, ${q.counts.gold} Gold, ${q.counts.zooms} Zooms, ${q.counts.broll} B-Roll-Slots, ${q.counts.sfx} Sounds.`) : null));
   }
 
+  if (d.files && !d.approved) kids.push(capEditor(d.captions || [], d));
+
   if ((d.files || d.validation) && !d.approved) {
     const ta = el('textarea', { id: 'planText', spellcheck: 'false' });
     const msg = el('div', { id: 'planMsg', class: 'hint' });
@@ -323,26 +325,41 @@ async function planCall(kind) {
   } catch (e) { msg.textContent = e.message; }
 }
 // ---------- Untertitel-Editor ----------
-let capsList = [], pendingCaps = {}, capShown = '';
-let capPrev = null, capSeq = 0;
+let capsList = [], pendingCaps = {}, capShown = '', capPrev = null, capSeq = 0, capFps = 25, capDur = 0, capSel = null, capWave = null, capZoom = 1;
+const capCur = (c) => ({ ...c, ...(pendingCaps[c.id] || {}) });
+const q = (t) => Math.round(t * capFps) / capFps;
+function setPending(id, patch) {
+  const c = capsList.find((x) => x.id === id); if (!c) return;
+  const cur = { ...(pendingCaps[id] || {}), ...patch };
+  const same = (cur.text === undefined || cur.text.trim() === c.text || !cur.text.trim()) && (cur.start_s === undefined || Math.abs(cur.start_s - c.start_s) < 1e-6) && (cur.end_s === undefined || Math.abs(cur.end_s - c.end_s) < 1e-6);
+  if (same) delete pendingCaps[id]; else pendingCaps[id] = cur;
+  if (capPrev) {
+    const p = pendingCaps[id];
+    capPrev.setEdit(id, p ? { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s } : null);
+  }
+  capCount(); paintTimeline();
+}
 function capEditor(caps, d) {
-  capsList = caps; pendingCaps = {}; capShown = '';
+  capsList = caps; pendingCaps = {}; capShown = ''; capSel = null; capWave = null;
   if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
   const seq = ++capSeq;
-  const box = el('div', { class: 'card', style: 'margin-top:12px;padding:12px' },
-    el('b', { text: 'Untertitel korrigieren' }),
-    el('div', { class: 'hint', text: 'Pausiere das Video an der Stelle. Darunter erscheint der Untertitel dieser Sekunde. Text ändern, am Ende einmal neu rendern.' }),
+  const box = el('section', { class: 'card' },
+    el('h2', { text: 'Untertitel korrigieren' }),
+    el('div', { class: 'hint', text: d.layered ? 'Pausiere das Video oder klicke einen Block in der Zeitleiste. Text ändern oder den Block mit der Maus verschieben (Rand ziehen = Start oder Ende). Die Vorschau oben zeigt die Änderung sofort. Am Ende einmal übernehmen.' : 'Pausiere das Video an der Stelle. Darunter erscheint der Untertitel dieser Sekunde. Text ändern, am Ende einmal neu rendern.' }),
     el('div', { id: 'capLive', class: 'hint' }),
+    d.layered ? el('div', { id: 'tlBox', style: 'margin:10px 0' }) : '',
+    el('div', { id: 'capSelBox', style: 'margin:8px 0' }),
     el('div', { id: 'capNow', style: 'margin:8px 0;min-height:36px' }),
     el('div', { class: 'row', style: 'align-items:center' },
       el('button', { id: 'capGo', class: 'primary', style: 'margin:0', disabled: '', text: 'Änderungen übernehmen und neu rendern', onclick: sendCaps }),
+      el('button', { id: 'capReset', style: 'margin:0 0 0 8px', text: 'Alle verwerfen', onclick: resetCaps }),
       el('span', { id: 'capMsg', class: 'hint' })),
-    el('details', { 'data-k': 'caps', style: 'margin-top:8px' }, el('summary', { text: 'Alle Untertitel' }),
+    el('details', { 'data-k': 'caps', style: 'margin-top:8px' }, el('summary', { text: 'Alle Untertitel als Liste' }),
       el('div', { id: 'capAll', style: 'max-height:260px;overflow:auto;margin-top:6px' })));
   setTimeout(() => {
     const v = $('vid'); if (!v) return;
-    v.addEventListener('timeupdate', () => paintCapNow(v.currentTime));
-    v.addEventListener('seeked', () => paintCapNow(v.currentTime));
+    v.addEventListener('timeupdate', () => { paintCapNow(v.currentTime); movePlayhead(); });
+    v.addEventListener('seeked', () => { paintCapNow(v.currentTime); movePlayhead(); });
     v.addEventListener('pause', () => { paintCapNow(v.currentTime, true); });
     paintCapAll(); paintCapNow(0);
     if (d.layered) mountPreview(d.name, seq);
@@ -352,44 +369,161 @@ function capEditor(caps, d) {
 async function mountPreview(name, seq) {
   try {
     const data = await api(`/api/runs/${name}/preview-data`);
+    capFps = data.fps; capDur = data.durationInFrames / data.fps;
     if (!window.AutocutPreview) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = '/editor.js'; s.onload = ok; s.onerror = () => no(new Error('Vorschau-Skript nicht geladen')); document.head.append(s); });
     if (seq !== capSeq || !$('capOverlay')) return;
-    const v = $('vid');
-    const ctl = await window.AutocutPreview.mount($('capOverlay'), data, v);
+    const ctl = await window.AutocutPreview.mount($('capOverlay'), data, $('vid'));
     if (seq !== capSeq) { ctl.destroy(); return; }
     capPrev = ctl;
-    for (const [id, t] of Object.entries(pendingCaps)) ctl.setText(Number(id), t);
-    const note = $('capLive'); if (note) note.textContent = 'Live-Vorschau an: Text-Änderungen erscheinen sofort im Video.';
+    const note = $('capLive'); if (note) note.textContent = 'Live-Vorschau an: Änderungen erscheinen sofort im Video.';
+    api(`/api/runs/${name}/waveform`).then((w) => { if (seq === capSeq) { capWave = w; buildTimeline(); } }).catch(() => { if (seq === capSeq) buildTimeline(); });
   } catch (e) { const note = $('capLive'); if (note) note.textContent = `Live-Vorschau nicht verfügbar (${e.message}).`; }
 }
+
+// ---------- Zeitleiste ----------
+const TL_WAVE_H = 56, TL_LANE_H = 26;
+let tlPps = 40, tlBlocks = {};
+function buildTimeline() {
+  const host = $('tlBox'); if (!host || !capDur) return;
+  const fit = Math.max(20, ($('tlBox').clientWidth - 2) / capDur);
+  tlPps = fit * capZoom;
+  const zoom = el('input', { type: 'range', min: '1', max: '10', step: '0.5', value: String(capZoom), style: 'width:140px' });
+  zoom.addEventListener('input', () => { capZoom = parseFloat(zoom.value); buildTimeline(); });
+  const scroller = el('div', { id: 'tlScroll', style: 'overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg)', tabindex: '0' });
+  const inner = el('div', { id: 'tlInner', style: `position:relative;width:${Math.ceil(capDur * tlPps)}px;height:${TL_WAVE_H + 3 * TL_LANE_H + 8}px;user-select:none;touch-action:none` });
+  const cv = el('canvas', { id: 'tlWave', style: `position:absolute;left:0;top:0;height:${TL_WAVE_H}px` });
+  const W = Math.ceil(capDur * tlPps), dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = TL_WAVE_H * dpr; cv.style.width = W + 'px';
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const cs = getComputedStyle(document.body);
+  g.fillStyle = cs.getPropertyValue('--muted') || '#888';
+  if (capWave) for (let x = 0; x < W; x++) {
+    const i = Math.floor((x / tlPps) * capWave.peaksPerSec); const pk = (capWave.peaks[i] || 0) / 255; const h = Math.max(1, pk * (TL_WAVE_H - 6));
+    g.globalAlpha = .55; g.fillRect(x, (TL_WAVE_H - h) / 2, 1, h);
+  }
+  g.globalAlpha = 1;
+  inner.append(cv);
+  // Sekunden-Markierungen
+  for (let t = 0; t <= capDur; t++) inner.append(el('div', { style: `position:absolute;left:${t * tlPps}px;top:0;height:${t % 5 === 0 ? 14 : 7}px;border-left:1px solid var(--line)`, 'data-t': String(t) }), t % 5 === 0 ? el('div', { style: `position:absolute;left:${t * tlPps + 3}px;top:0;font-size:10px;color:var(--muted)`, text: mmss(t) }) : '');
+  tlBlocks = {};
+  for (const c of capsList) {
+    const b = el('div', { 'data-id': String(c.id), style: 'position:absolute;height:22px;border-radius:5px;font-size:11px;line-height:22px;padding:0 6px;overflow:hidden;white-space:nowrap;cursor:grab;box-sizing:border-box' });
+    b.addEventListener('pointerdown', (ev) => blockDown(ev, c.id, b));
+    tlBlocks[c.id] = b; inner.append(b);
+  }
+  inner.append(el('div', { id: 'tlHead', style: `position:absolute;top:0;bottom:0;width:2px;background:#e5484d;pointer-events:none` }));
+  inner.addEventListener('pointerdown', (ev) => { if (ev.target.closest('[data-id]')) return; const r = inner.getBoundingClientRect(); seekTo((ev.clientX - r.left) / tlPps); });
+  scroller.append(inner);
+  scroller.addEventListener('keydown', tlKey);
+  host.replaceChildren(el('div', { style: 'display:flex;gap:8px;align-items:center;margin-bottom:6px' }, el('span', { class: 'muted', style: 'font-size:12px', text: 'Zoom' }), zoom, el('span', { class: 'hint', style: 'margin:0', text: 'Pfeiltasten: Block um 1 Bild verschieben (Umschalt: 5 Bilder).' })), scroller);
+  paintTimeline(); movePlayhead(); paintSel();
+}
+function lanesFor(list) {
+  const ends = []; const out = {};
+  for (const c of [...list].sort((a, b) => a.start_s - b.start_s)) {
+    let l = ends.findIndex((e) => e <= c.start_s + 1e-6); if (l < 0) { l = ends.length; ends.push(0); }
+    ends[l] = c.end_s; out[c.id] = Math.min(l, 2);
+  }
+  return out;
+}
+function paintTimeline() {
+  if (!$('tlInner')) return;
+  const cur = capsList.map(capCur), lanes = lanesFor(cur);
+  for (const c of cur) {
+    const b = tlBlocks[c.id]; if (!b) continue;
+    const edited = !!pendingCaps[c.id], gold = c.kind === 'gold' || c.kind === 'cta';
+    b.style.left = (c.start_s * tlPps) + 'px'; b.style.width = Math.max(8, (c.end_s - c.start_s) * tlPps) + 'px'; b.style.top = (TL_WAVE_H + lanes[c.id] * TL_LANE_H) + 'px';
+    b.style.background = gold ? '#f5b53d' : 'var(--panel)'; b.style.color = gold ? '#222' : 'var(--ink)';
+    b.style.border = c.id === capSel ? '2px solid #3b82f6' : edited ? '2px solid #e5484d' : '1px solid var(--line)';
+    b.textContent = pendingCaps[c.id] && pendingCaps[c.id].text !== undefined ? pendingCaps[c.id].text : c.text;
+  }
+}
+function movePlayhead() {
+  const h = $('tlHead'), v = $('vid'); if (!h || !v) return;
+  h.style.left = (v.currentTime * tlPps) + 'px';
+  const sc = $('tlScroll'); if (sc && !v.paused) { const x = v.currentTime * tlPps; if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 30) sc.scrollLeft = Math.max(0, x - 40); }
+}
+function seekTo(t) { const v = $('vid'); v.pause(); v.currentTime = Math.max(0, Math.min(capDur, t)); movePlayhead(); }
+function selectCap(id, seek) {
+  capSel = id; paintTimeline(); paintSel();
+  const c = capsList.find((x) => x.id === id);
+  if (seek && c) seekTo(capCur(c).start_s + 0.02);
+}
+function blockDown(ev, id, b) {
+  ev.preventDefault(); b.setPointerCapture(ev.pointerId);
+  const c = capsList.find((x) => x.id === id), start = capCur(c), r = b.getBoundingClientRect(), x0 = ev.clientX;
+  const edge = 7, mode = ev.clientX - r.left < edge ? 'l' : r.right - ev.clientX < edge ? 'r' : 'm';
+  const minDur = 2 / capFps; let moved = false;
+  selectCap(id, false);
+  const move = (e) => {
+    const dt = (e.clientX - x0) / tlPps; if (Math.abs(e.clientX - x0) > 2) moved = true; if (!moved) return;
+    let s = start.start_s, en = start.end_s;
+    if (mode === 'm') { const len = en - s; s = Math.max(0, Math.min(capDur - len, q(s + dt))); en = s + len; }
+    else if (mode === 'l') s = Math.max(0, Math.min(en - minDur, q(s + dt)));
+    else en = Math.min(capDur, Math.max(s + minDur, q(en + dt)));
+    setPending(id, { start_s: q(s), end_s: q(en) });
+    seekTo(mode === 'r' ? en - 1 / capFps : s + 0.02); paintSel();
+  };
+  const up = () => { b.removeEventListener('pointermove', move); b.removeEventListener('pointerup', up); b.removeEventListener('pointercancel', up); if (!moved) seekTo(capCur(c).start_s + 0.02); $('tlScroll') && $('tlScroll').focus({ preventScroll: true }); };
+  b.addEventListener('pointermove', move); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+}
+function nudge(id, frames, which) {
+  const c = capCur(capsList.find((x) => x.id === id)), d = frames / capFps;
+  let s = c.start_s, en = c.end_s;
+  if (which === 'start') s = Math.min(en - 2 / capFps, Math.max(0, s + d)); else if (which === 'end') en = Math.min(capDur, Math.max(s + 2 / capFps, en + d)); else { const len = en - s; s = Math.max(0, Math.min(capDur - len, s + d)); en = s + len; }
+  setPending(id, { start_s: q(s), end_s: q(en) }); seekTo(which === 'end' ? en - 1 / capFps : s + 0.02); paintSel();
+}
+function tlKey(e) {
+  if (capSel === null || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+  e.preventDefault(); nudge(capSel, (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1), 'move');
+}
+function paintSel() {
+  const host = $('capSelBox'); if (!host) return;
+  if (capSel === null) { host.replaceChildren(); return; }
+  const c = capsList.find((x) => x.id === capSel), cur = capCur(c), v = $('vid');
+  const btn = (text, fn) => el('button', { style: 'margin:0 4px 0 0;padding:4px 8px;font-size:12px', text, onclick: fn });
+  host.replaceChildren(el('div', { style: 'display:flex;gap:6px;align-items:center;flex-wrap:wrap' },
+    el('span', { class: 'muted', style: 'font-size:12px;min-width:150px', text: `${cur.start_s.toFixed(2)} – ${cur.end_s.toFixed(2)} s (${(cur.end_s - cur.start_s).toFixed(2)} s)` }),
+    capField(c),
+    btn('◀ 1 Bild', () => nudge(c.id, -1, 'move')), btn('1 Bild ▶', () => nudge(c.id, 1, 'move')),
+    btn('Start = Abspielposition', () => { const t = q(v.currentTime); setPending(c.id, { start_s: Math.min(t, capCur(c).end_s - 2 / capFps), end_s: capCur(c).end_s }); paintSel(); }),
+    btn('Ende = Abspielposition', () => { const t = q(v.currentTime); setPending(c.id, { start_s: capCur(c).start_s, end_s: Math.max(t, capCur(c).start_s + 2 / capFps) }); paintSel(); }),
+    btn('Zurücksetzen', () => { delete pendingCaps[c.id]; if (capPrev) capPrev.setEdit(c.id, null); capCount(); paintTimeline(); paintSel(); paintCapNow($('vid').currentTime, false); })));
+}
 function capField(c) {
-  const inp = el('input', { type: 'text', value: pendingCaps[c.id] ?? c.text, style: 'flex:1' });
-  inp.addEventListener('input', () => { if (inp.value.trim() === c.text) delete pendingCaps[c.id]; else pendingCaps[c.id] = inp.value; if (capPrev) capPrev.setText(c.id, inp.value.trim() === c.text || !inp.value.trim() ? null : inp.value); capCount(); });
+  const cur = capCur(c);
+  const inp = el('input', { type: 'text', value: cur.text !== undefined && pendingCaps[c.id] && pendingCaps[c.id].text !== undefined ? pendingCaps[c.id].text : c.text, style: 'flex:1;min-width:120px' });
+  inp.addEventListener('input', () => setPending(c.id, { text: inp.value }));
+  inp.addEventListener('focus', () => { if (capSel !== c.id) { capSel = c.id; paintTimeline(); } });
   return inp;
 }
 function paintCapNow(t, focus) {
   const host = $('capNow'); if (!host) return;
-  const act = capsList.filter((c) => c.start_s <= t + 0.02 && t < c.end_s);
+  const act = capsList.map(capCur).filter((c) => c.start_s <= t + 0.02 && t < c.end_s);
   const key = act.map((c) => c.id).join(',');
   if (key === capShown && !focus) return;
   if (key === capShown && focus) { const f = host.querySelector('input'); if (f) f.focus(); return; }
   if (!focus && $('vid').paused && host.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;
   capShown = key;
-  host.replaceChildren(...(act.length ? act.map((c) => el('div', { class: 'row', style: 'align-items:center;margin-bottom:4px' }, el('span', { class: 'muted', style: 'width:52px', text: mmss(c.start_s) }), capField(c))) : [el('span', { class: 'muted', text: `Bei ${mmss(t)} steht kein Untertitel.` })]));
+  host.replaceChildren(...(act.length ? act.map((c) => el('div', { class: 'row', style: 'align-items:center;margin-bottom:4px' }, el('span', { class: 'muted', style: 'width:52px', text: mmss(c.start_s) }), capField(capsList.find((x) => x.id === c.id)))) : [el('span', { class: 'muted', text: `Bei ${mmss(t)} steht kein Untertitel.` })]));
   if (focus) { const f = host.querySelector('input'); if (f) f.focus(); }
 }
 function paintCapAll() {
   const host = $('capAll'); if (!host) return;
   host.replaceChildren(...capsList.map((c) => el('div', { class: 'row', style: 'align-items:center;margin-bottom:3px' },
-    el('button', { class: 't', style: 'width:52px;margin:0', text: mmss(c.start_s), onclick: () => { const v = $('vid'); v.currentTime = c.start_s + 0.02; v.pause(); } }), capField(c))));
+    el('button', { class: 't', style: 'width:52px;margin:0', text: mmss(c.start_s), onclick: () => { selectCap(c.id, true); } }), capField(c))));
 }
 function capCount() {
   const n = Object.keys(pendingCaps).length;
   const b = $('capGo'); if (!b) return;
   b.disabled = !n; b.textContent = n ? `${n} Änderung${n > 1 ? 'en' : ''} übernehmen und neu rendern` : 'Änderungen übernehmen und neu rendern';
 }
+function resetCaps() {
+  for (const id of Object.keys(pendingCaps)) if (capPrev) capPrev.setEdit(Number(id), null);
+  pendingCaps = {}; capShown = ''; capCount(); paintTimeline(); paintSel(); paintCapAll(); paintCapNow($('vid').currentTime, false);
+}
 async function sendCaps() {
-  const edits = Object.entries(pendingCaps).map(([id, text]) => ({ id: Number(id), text }));
+  const edits = Object.entries(pendingCaps).map(([id, p]) => ({ id: Number(id), ...(p.text !== undefined && p.text.trim() ? { text: p.text } : {}), ...(p.start_s !== undefined ? { start_s: p.start_s } : {}), ...(p.end_s !== undefined ? { end_s: p.end_s } : {}) }));
   $('capMsg').textContent = 'Prüfe …';
   try {
     const r = await api(`/api/runs/${current}/captions`, { method: 'POST', body: JSON.stringify({ edits }) });

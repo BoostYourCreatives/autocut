@@ -26,7 +26,7 @@ export interface RenderOptions {
    * Nur die Text-Ebene neu rendern (Bild und Ton bleiben aus dem letzten Lauf: render/base.mp4).
    * ids = geänderte Untertitel; null = alle Texte neu.
    */
-  captionsPatch?: { ids: number[] | null };
+  captionsPatch?: { ids: number[] | null; /** zusätzliche alte Zeitbereiche in Sekunden (verschobene Untertitel) */ extraRangesS?: [number, number][] };
 }
 
 /** Ordner mit den Text-Einzelbildern (PNG mit Transparenz), eines pro Videobild */
@@ -35,12 +35,13 @@ export const baseVideoFile = (runDir: string) => path.join(runDir, "render", "ba
 export const hasLayeredRender = (runDir: string) => fs.existsSync(baseVideoFile(runDir)) && fs.existsSync(captionFramesDir(runDir)) && fs.existsSync(path.join(runDir, "render", "render-info.json"));
 
 /** Bildbereiche (inklusive), in denen sich die Texte der geänderten Untertitel (und ihrer Gruppe) ändern können */
-export function captionFrameRanges(plan: Plan, ids: number[] | null, fps: number, totalFrames: number): [number, number][] {
+export function captionFrameRanges(plan: Plan, ids: number[] | null, fps: number, totalFrames: number, extraRangesS: [number, number][] = []): [number, number][] {
   if (ids === null) return [[0, totalFrames - 1]];
   const groups = new Set(plan.captions.filter((c) => ids.includes(c.id) && c.group).map((c) => c.group));
   const hit = plan.captions.filter((c) => ids.includes(c.id) || (c.group && groups.has(c.group)));
   const r: [number, number][] = hit
     .map((c) => [Math.max(0, Math.round(c.start_s * fps) - 1), Math.min(totalFrames - 1, Math.round(c.end_s * fps) + 1)] as [number, number])
+    .concat(extraRangesS.map(([a, b]) => [Math.max(0, Math.round(a * fps) - 1), Math.min(totalFrames - 1, Math.round(b * fps) + 1)] as [number, number]))
     .sort((a, b) => a[0] - b[0]);
   const merged: [number, number][] = [];
   for (const x of r) {
@@ -258,7 +259,7 @@ export async function renderPlan(cfg: Config, style: Style, planFile: string, op
   // ---- Texte (eigene Ebene, PNG mit Transparenz) ----
   const capProps = { ...props, layer: "captions" } as unknown as Record<string, unknown>;
   const capComp = await selectComposition({ serveUrl, id: "Reel", inputProps: capProps, browserExecutable });
-  const ranges = captionFrameRanges(plan, patch ? patch.ids : null, fps, capComp.durationInFrames);
+  const ranges = captionFrameRanges(plan, patch ? patch.ids : null, fps, capComp.durationInFrames, patch?.extraRangesS);
   if (!patch) fs.rmSync(capDir, { recursive: true, force: true });
   ensureDir(capDir);
   await timed(runLike, "render-texte", undefined, async () => {
