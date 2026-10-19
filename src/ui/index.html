@@ -146,6 +146,14 @@
   .tl-head h3 { margin: 0; font-size: 14px; font-weight: 650; }
   .legend { display: flex; gap: 12px; font-size: 12px; color: var(--muted); align-items: center; }
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 5px; vertical-align: -2px; border: 1px solid var(--line); }
+  .btn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .flip svg { transform: scaleX(-1); }
+  #tlSnap { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--gold); pointer-events: none; z-index: 6; display: none; }
+  #tlHead { cursor: ew-resize; }
+  .keys { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .keys td { padding: 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .keys td:first-child { white-space: nowrap; padding-right: 16px; }
+  .keys kbd { font: 600 12px/1 ui-monospace, monospace; padding: 3px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: var(--bg); }
   .zoom { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
   .zoom input { width: 130px; accent-color: var(--ink); }
   #tlScroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
@@ -266,6 +274,10 @@
   </div>
 </dialog>
 
+<dialog id="keysDlg" aria-labelledby="keysTitle">
+  <div class="dlg-head"><h2 id="keysTitle">Tastenkürzel</h2><button class="btn icon ghost" type="button" id="keysClose" aria-label="Schließen"></button></div>
+  <div class="dlg-body"><table class="keys" id="keysTbl"></table></div>
+</dialog>
 <dialog id="sysDlg" aria-labelledby="sysTitle">
   <div class="dlg-head"><h2 id="sysTitle">System und Dateien</h2><button class="btn icon ghost" type="button" id="sysClose" aria-label="Schließen"></button></div>
   <div class="dlg-body">
@@ -474,6 +486,27 @@ function render(d) {
 // Datenmodell: origin = Stand vom Server, lanes = geänderte Felder je Element, adds = neue Elemente, dels = entfernte Elemente
 let origin = { cap: [], sfx: [], broll: [], zoom: [] }, lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }, adds = { sfx: [], broll: [], zoom: [] }, dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
 let capPrev = null, capSeq = 0, capFps = 25, capDur = 0, sel = null, capWave = null, capZoom = 1, rafId = 0, libs = { sfx: [], broll: [] }, zoomValues = [1.1, 1.12, 1.15], newSeq = 1;
+// Rückgängig/Wiederholen: Schnappschüsse des Bearbeitungsstands (lanes, adds, dels, Hook)
+let undoStack = [], redoStack = [], lastPush = 0, gesture = false, snapOn = true, clipboard = null;
+const stateStr = () => JSON.stringify({ lanes, adds, dels: { sfx: [...dels.sfx], broll: [...dels.broll], zoom: [...dels.zoom] }, hook: pendingHook, newSeq });
+function pushHist(force) {
+  if (gesture && !force) return;
+  const now = Date.now(); if (!force && now - lastPush < 700) return; lastPush = now;
+  const st = stateStr(); if (undoStack[undoStack.length - 1] === st) return;
+  undoStack.push(st); if (undoStack.length > 100) undoStack.shift(); redoStack = []; paintHistBtns();
+}
+function restoreState(str) {
+  const o = JSON.parse(str);
+  for (const id of Object.keys(lanes.cap)) if (capPrev) capPrev.setEdit(Number(id), null);
+  lanes = o.lanes; adds = o.adds; dels = { sfx: new Set(o.dels.sfx), broll: new Set(o.dels.broll), zoom: new Set(o.dels.zoom) }; pendingHook = o.hook; newSeq = Math.max(newSeq, o.newSeq || 1);
+  if (capPrev) { for (const [id, p] of Object.entries(lanes.cap)) capPrev.setEdit(Number(id), { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s }); capPrev.setHook(pendingHook); }
+  if ($('hookA') && planHookLines) { const h = pendingHook || curData.hook.lines; $('hookA').value = h[0]; $('hookB').value = h[1]; }
+  if (sel && !getItem(sel.type, sel.key)) sel = null;
+  capCount(); paintTimeline(); paintSel();
+}
+function undo() { if (!undoStack.length) return; redoStack.push(stateStr()); restoreState(undoStack.pop()); lastPush = 0; paintHistBtns(); }
+function redo() { if (!redoStack.length) return; undoStack.push(stateStr()); restoreState(redoStack.pop()); lastPush = 0; paintHistBtns(); }
+function paintHistBtns() { const u = $('undoBtn'), r = $('redoBtn'); if (u) u.disabled = !undoStack.length; if (r) r.disabled = !redoStack.length; }
 const LANE_NAME = { cap: 'Untertitel', sfx: 'Sound', broll: 'B-Roll', zoom: 'Zoom' };
 // Länge und Lautstärkeverlauf der Sounds: so sieht man, wo ein Sound wirklich zu hören ist (ein Riser steigt langsam an)
 const sfxInfo = {};
@@ -500,6 +533,7 @@ function items(type) {
 const getItem = (t, k) => items(t).find((x) => x.key === k);
 const endOf = (t, x) => (t === 'sfx' || t === 'zoom' ? x.at_s ?? x.start_s : x.end_s);
 function patchItem(type, key, patch) {
+  pushHist();
   const add = adds[type] && adds[type].find((x) => x.key === key);
   if (add) Object.assign(add, patch);
   else {
@@ -526,7 +560,7 @@ function studio(d, running) {
   origin = { cap: d.captions || [], sfx: d.sfx || [], broll: d.broll || [], zoom: d.zooms || [] };
   lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }; adds = { sfx: [], broll: [], zoom: [] }; dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
   for (const s of origin.sfx) loadSfxInfo(s.file);
-  pendingHook = null; sel = null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
+  undoStack = []; redoStack = []; lastPush = 0; gesture = false; pendingHook = null; sel = null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
   planHookLines = d.hook ? d.hook.lines.map((l) => l.toUpperCase()) : null;
   if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
   cancelAnimationFrame(rafId);
@@ -565,21 +599,25 @@ function studio(d, running) {
   const timeline = layered ? el('section', { class: 'tl-card' },
     el('div', { class: 'tl-head' }, el('h3', { text: 'Zeitleiste' }),
       el('div', { class: 'tl-add', id: 'tlAdd' }),
+      btn('sm ghost', 'undo', '', undo, { id: 'undoBtn', title: 'Rückgängig (Strg+Z)', 'aria-label': 'Rückgängig', disabled: '' }),
+      btn('sm ghost flip', 'undo', '', redo, { id: 'redoBtn', title: 'Wiederholen (Strg+Umschalt+Z)', 'aria-label': 'Wiederholen', disabled: '' }),
+      btn(`sm${snapOn ? ' on' : ''}`, null, 'Magnet', (e) => { snapOn = !snapOn; e.currentTarget.classList.toggle('on', snapOn); }, { id: 'snapBtn', title: 'Einrasten an Rändern und Abspielposition (N)' }),
+      btn('sm ghost', 'info', 'Tastenkürzel', showKeys, { title: 'Alle Tastenkürzel (?)' }),
       el('label', { class: 'zoom' }, 'Zoom', el('input', { type: 'range', id: 'zoomR', min: '1', max: '10', step: '0.5', value: String(capZoom) }))),
     el('div', { id: 'tlBox' }),
-    el('div', { class: 'hint', text: 'Klicken zum Auswählen, ziehen zum Verschieben, Rand ziehen für Start oder Ende. Pfeiltasten: ein Bild (Umschalt: fünf). Entf löscht Sounds, B-Rolls und Zooms.' })) : null;
+    el('div', { class: 'hint', text: 'Ziehen verschiebt, die Ränder ziehen ändert Start oder Ende. Oben in der Leiste ziehen = durchs Video scrubben. Leertaste spielt ab, Pfeile gehen Bild für Bild, Strg+Z macht rückgängig. Alle Kürzel: Taste ?.' })) : null;
 
   const node = el('div', { class: 'studio' }, stage,
     el('div', { class: 'right' }, panels, timeline),
     el('div', { id: 'applybar', class: 'applybar', role: 'status', style: 'grid-column:1 / -1' },
       el('div', { class: 'msg' }, el('span', { id: 'capCountTxt', text: '' }), el('small', { id: 'capSmall', text: '' }), el('span', { id: 'capMsg', class: 'bad' })),
-      btn('ghost', 'undo', 'Verwerfen', resetAll),
+      btn('ghost', 'undo', 'Verwerfen', () => { pushHist(true); resetAll(); }),
       btn('primary', 'check', 'Übernehmen', sendEdits, { id: 'capGo' })));
 
   const mount = () => {
     const v = $('vid'); if (!v) return;
     paintSel();
-    const zr = $('zoomR'); if (zr) zr.addEventListener('input', () => { capZoom = parseFloat(zr.value); buildTimeline(); });
+    const zr = $('zoomR'); if (zr) zr.addEventListener('input', () => setTlZoom(parseFloat(zr.value)));
     for (const ev of ['timeupdate', 'seeked', 'loadedmetadata']) v.addEventListener(ev, onTime);
     v.addEventListener('seeked', () => autoSelect(v.currentTime));
     v.addEventListener('play', () => { setPlayIcon(); tickLoop(); });
@@ -605,11 +643,6 @@ function togglePlay() { const v = $('vid'); if (!v) return; if (v.paused) v.play
 function stepFrame(n) { const v = $('vid'); if (!v) return; v.pause(); seekTo(v.currentTime + n / capFps); }
 function tickLoop() { const v = $('vid'); if (!v || v.paused) return; onTime(); rafId = requestAnimationFrame(tickLoop); }
 function onTime() { movePlayhead(); const v = $('vid'), l = $('timeLbl'); if (v && l) l.textContent = `${clock(v.currentTime)} / ${clock(capDur || v.duration || 0)}`; }
-document.addEventListener('keydown', (e) => {
-  if (!$('playBtn') || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
-  if (e.code === 'Space' && !/^(BUTTON|SUMMARY)$/.test(document.activeElement.tagName)) { e.preventDefault(); togglePlay(); }
-  if ((e.key === 'Delete' || e.key === 'Backspace') && sel && sel.type !== 'cap') { e.preventDefault(); removeSel(); }
-});
 async function mountPreview(name, seq) {
   try {
     const data = await api(`/api/runs/${name}/preview-data`);
@@ -626,14 +659,16 @@ async function mountPreview(name, seq) {
 }
 
 // ---------- Hinzufügen und Entfernen ----------
-function addSfx(file) { loadSfxInfo(file); const v = $('vid'); const key = `n${newSeq++}`; adds.sfx.push({ key, role: 'sonstiges', file, at_s: r3(v.currentTime), gain_db: -18, locked: false }); selectItem('sfx', key); playSound(file); afterChange(); }
+function addSfx(file) { pushHist(true); loadSfxInfo(file); const v = $('vid'); const key = `n${newSeq++}`; adds.sfx.push({ key, role: 'sonstiges', file, at_s: r3(v.currentTime), gain_db: -18, locked: false }); selectItem('sfx', key); playSound(file); afterChange(); }
 function addBroll() {
+  pushHist(true);
   const v = $('vid'), s = q(v.currentTime), end = Math.min(capDur, q(s + 3)); const key = `n${newSeq++}`;
   adds.broll.push({ key, start_s: s, end_s: end, motif: 'B-Roll', source: 'offen', info: null }); selectItem('broll', key); afterChange();
 }
-function addZoom(scale) { const v = $('vid'); const key = `n${newSeq++}`; adds.zoom.push({ key, start_s: q(v.currentTime), to_scale: scale }); selectItem('zoom', key); afterChange(); }
+function addZoom(scale) { pushHist(true); const v = $('vid'); const key = `n${newSeq++}`; adds.zoom.push({ key, start_s: q(v.currentTime), to_scale: scale }); selectItem('zoom', key); afterChange(); }
 function removeSel() {
   if (!sel || sel.type === 'cap') return;
+  pushHist(true);
   const t = sel.type, k = sel.key, a = adds[t].findIndex((x) => x.key === k);
   if (a >= 0) adds[t].splice(a, 1); else { dels[t].add(k); delete lanes[t][k]; }
   sel = null; afterChange(); paintSel();
@@ -762,8 +797,20 @@ function buildTimeline() {
   if (curData.hookRange) inner.append(el('div', { style: `position:absolute;left:${curData.hookRange[0] * tlPps}px;width:${(curData.hookRange[1] - curData.hookRange[0]) * tlPps}px;top:0;height:3px;background:var(--gold);border-radius:2px;pointer-events:none`, title: 'Hook' }));
   tlBlocks = {};
   inner.append(el('div', { id: 'tlHead', style: 'position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--playhead);pointer-events:none;border-radius:2px;z-index:5' }));
-  inner.addEventListener('pointerdown', (ev) => { if (ev.target.closest('[data-k]')) return; seekTo((ev.clientX - inner.getBoundingClientRect().left) / tlPps); });
-  scroller.append(inner); scroller.addEventListener('keydown', tlKey);
+  inner.append(el('div', { id: 'tlSnap' }));
+  const scrub = (ev) => seekTo((ev.clientX - $('tlInner').getBoundingClientRect().left) / tlPps);
+  inner.addEventListener('pointerdown', (ev) => {
+    if (ev.target.closest('[data-k]')) return;
+    ev.preventDefault(); scrub(ev);
+    const mv = (e) => scrub(e), up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  });
+  scroller.addEventListener('wheel', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault(); const r = scroller.getBoundingClientRect(), t = (scroller.scrollLeft + e.clientX - r.left) / tlPps, off = e.clientX - r.left;
+    setTlZoom(capZoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); const sc = $('tlScroll'); if (sc) sc.scrollLeft = Math.max(0, t * tlPps - off);
+  }, { passive: false });
+  scroller.append(inner);
   const labels = el('div', { class: 'tl-labels', style: `width:${gutter}px;height:${TL_H}px` },
     ...[['Ton', 0, H.wave], ['Untertitel', Y.cap, 3 * 34], ['Sound', Y.sfx - 3, 89], ['B-Roll', Y.broll - 3, H.row], ['Zoom', Y.zoom - 2, H.zoom]].map(([t, y, h]) => el('div', { style: `top:${y}px;height:${h}px`, text: t })));
   host.replaceChildren(el('div', { style: 'display:flex' }, labels, scroller));
@@ -833,25 +880,83 @@ function blockDown(ev, type, key, b) {
   if (locked) return;
   const move = (e) => {
     const px = e.clientX - x0 + (sc.scrollLeft - sl0); if (Math.abs(e.clientX - x0) > 2) moved = true; if (!moved) return;
-    const dt = px / tlPps;
-    if (type === 'sfx') { patchItem('sfx', key, { at_s: r3(Math.max(0, Math.min(capDur, start.at_s + dt))) }); seekTo(getItem('sfx', key).at_s); return; }
-    if (type === 'zoom') { const s = Math.max(0, Math.min(capDur, q(start.start_s + dt))); patchItem('zoom', key, { start_s: s }); seekTo(s + 0.02); return; }
+    if (!gesture) { pushHist(true); gesture = true; }
+    const free = e.altKey; let dt = px / tlPps;
+    if (type === 'sfx') { const t0 = start.at_s + dt, sn = free ? null : snapT([t0], type, key); const t = sn ? t0 + sn.d : t0; showSnap(sn); patchItem('sfx', key, { at_s: r3(Math.max(0, Math.min(capDur, t))) }); seekTo(getItem('sfx', key).at_s); return; }
+    if (type === 'zoom') { const t0 = start.start_s + dt, sn = free ? null : snapT([t0], type, key); showSnap(sn); const s = Math.max(0, Math.min(capDur, q(sn ? t0 + sn.d : t0))); patchItem('zoom', key, { start_s: s }); seekTo(s + 0.02); return; }
     let s = start.start_s, en = start.end_s;
-    if (mode === 'm') { const len = en - s; s = Math.max(0, Math.min(capDur - len, q(s + dt))); en = s + len; }
-    else if (mode === 'l') s = Math.max(0, Math.min(en - minDur(), q(s + dt)));
-    else en = Math.min(capDur, Math.max(s + minDur(), q(en + dt)));
+    if (mode === 'm') { const len = en - s, sn = free ? null : snapT([s + dt, en + dt], type, key); if (sn) dt += sn.d; showSnap(sn); s = Math.max(0, Math.min(capDur - len, q(s + dt))); en = s + len; }
+    else if (mode === 'l') { const sn = free ? null : snapT([s + dt], type, key); if (sn) dt += sn.d; showSnap(sn); s = Math.max(0, Math.min(en - minDur(), q(s + dt))); }
+    else { const sn = free ? null : snapT([en + dt], type, key); if (sn) dt += sn.d; showSnap(sn); en = Math.min(capDur, Math.max(s + minDur(), q(en + dt))); }
     patchItem(type, key, { start_s: q(s), end_s: q(en) });
     seekTo(mode === 'r' ? en - 1 / capFps : s + 0.02);
   };
-  const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); if (!moved && type !== 'sfx') { const x = getItem(type, key); if (x) seekTo((x.start_s ?? x.at_s) + 0.02); } const s2 = $('tlScroll'); if (s2) s2.focus({ preventScroll: true }); };
+  const up = () => { gesture = false; showSnap(null); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); if (!moved && type !== 'sfx') { const x = getItem(type, key); if (x) seekTo((x.start_s ?? x.at_s) + 0.02); } const s2 = $('tlScroll'); if (s2) s2.focus({ preventScroll: true }); };
   window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
 }
-function tlKey(e) {
-  if (!sel || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-  e.preventDefault(); const f = (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1);
-  if (sel.type === 'sfx') { if (!getItem('sfx', sel.key).locked) nudgeSfx(sel.key, f / capFps); return; }
-  nudge(sel.type, sel.key, 'move', f);
+function setTlZoom(z) { capZoom = Math.max(1, Math.min(10, z)); const zr = $('zoomR'); if (zr) zr.value = String(capZoom); buildTimeline(); }
+// Einrasten: Abspielposition, Anfang/Ende und Ränder aller anderen Elemente
+function snapPoints(exType, exKey) {
+  const v = $('vid'), pts = [0, capDur, v ? v.currentTime : 0];
+  for (const t of ['cap', 'sfx', 'broll', 'zoom']) for (const x of items(t)) {
+    if (t === exType && x.key === exKey) continue;
+    if (t === 'sfx') { const e = sfxExtent(x); pts.push(e.from, e.to); } else if (t === 'zoom') pts.push(x.start_s); else pts.push(x.start_s, x.end_s);
+  }
+  return pts;
 }
+function snapT(cands, exType, exKey) {
+  if (!snapOn) return null;
+  const pts = snapPoints(exType, exKey), lim = 8 / tlPps; let best = null;
+  for (const c of cands) for (const p of pts) { const d = p - c; if (Math.abs(d) <= lim && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, at: p }; }
+  return best;
+}
+function showSnap(sn) { const l = $('tlSnap'); if (!l) return; if (!sn) { l.style.display = 'none'; return; } l.style.display = 'block'; l.style.left = sn.at * tlPps + 'px'; }
+function editPoints() { const v = $('vid'); return [...new Set(snapPoints(null, null).map((t) => Math.round(t * 1000) / 1000))].sort((a, b) => a - b).filter((t) => t >= 0 && t <= (capDur || v.duration || 0)); }
+function jumpEdit(dir) { const v = $('vid'); if (!v) return; const t = v.currentTime, pts = editPoints(); const n = dir > 0 ? pts.find((p) => p > t + 0.01) : [...pts].reverse().find((p) => p < t - 0.01); if (n !== undefined) seekTo(n); }
+function copySel() { if (!sel || sel.type === 'cap') return false; const x = getItem(sel.type, sel.key); if (!x) return false; clipboard = { type: sel.type, x: JSON.parse(JSON.stringify(x)) }; return true; }
+function pasteAt(t) {
+  if (!clipboard) return; const { type, x } = clipboard; pushHist(true); const key = `n${newSeq++}`;
+  if (type === 'sfx') { loadSfxInfo(x.file); adds.sfx.push({ key, role: 'sonstiges', file: x.file, at_s: r3(Math.min(capDur, t)), gain_db: x.gain_db, locked: false }); }
+  else if (type === 'broll') { const len = x.end_s - x.start_s, s = q(Math.min(t, Math.max(0, capDur - len))); adds.broll.push({ key, start_s: s, end_s: q(s + len), motif: x.motif, source: x.source, info: x.info, pick: x.pick }); }
+  else adds.zoom.push({ key, start_s: q(Math.min(t, capDur)), to_scale: x.to_scale });
+  selectItem(type, key); afterChange();
+}
+function dupSel() { if (!copySel()) return; const x = clipboard.x, e = clipboard.type === 'sfx' ? sfxExtent(x).to : clipboard.type === 'zoom' ? x.start_s + 1 : x.end_s; pasteAt(e); }
+function showKeys() {
+  const rows = [['Leertaste', 'Abspielen / anhalten'], ['← →', 'Ein Bild zurück / vor (Umschalt: fünf Bilder)'], ['J  L', 'Eine Sekunde zurück / vor'], ['↑ ↓', 'Zum vorherigen / nächsten Rand eines Blocks springen'],
+    ['Pos1  Ende', 'Zum Anfang / Ende des Videos'], ['Alt + ← →', 'Ausgewählten Block ein Bild verschieben (Umschalt: fünf)'], ['Entf', 'Ausgewählten Sound, B-Roll oder Zoom löschen'],
+    ['Strg + Z', 'Rückgängig'], ['Strg + Umschalt + Z  oder  Strg + Y', 'Wiederholen'], ['Strg + C  /  Strg + V', 'Block kopieren / an der Abspielposition einfügen'], ['Strg + D', 'Block duplizieren'],
+    ['N', 'Magnet an / aus (Einrasten an Rändern)'], ['Alt beim Ziehen', 'Einrasten kurz abschalten'], ['+  −  oder  Strg + Mausrad', 'Zeitleiste zoomen'], ['Oben in der Leiste ziehen', 'Durchs Video scrubben'], ['Esc', 'Auswahl aufheben'], ['?', 'Diese Übersicht']];
+  $('keysTbl').replaceChildren(...rows.map(([k, d]) => el('tr', {}, el('td', {}, ...k.split(/\s{2,}/).flatMap((g, i) => [i ? ' · ' : '', el('kbd', { text: g })])), el('td', { text: d }))));
+  $('keysDlg').showModal();
+}
+document.addEventListener('keydown', (e) => {
+  if (!$('playBtn') || document.querySelector('dialog[open]') && e.key !== '?') return;
+  const tag = document.activeElement.tagName; if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+  const v = $('vid'); if (!v) return; const mod = e.ctrlKey || e.metaKey, k = e.key;
+  const stop = () => e.preventDefault();
+  if (mod && k.toLowerCase() === 'z') { stop(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && k.toLowerCase() === 'y') { stop(); redo(); return; }
+  if (mod && k.toLowerCase() === 'c') { if (copySel()) stop(); return; }
+  if (mod && k.toLowerCase() === 'v') { if (clipboard) { stop(); pasteAt(v.currentTime); } return; }
+  if (mod && k.toLowerCase() === 'd') { stop(); dupSel(); return; }
+  if (mod || (e.altKey && !k.startsWith('Arrow'))) return;
+  if ((e.code === 'Space' || k === 'Enter') && /^(BUTTON|SUMMARY|A)$/.test(tag)) return;
+  if (e.code === 'Space' || k === 'k' || k === 'K') { stop(); togglePlay(); }
+  else if (k === 'ArrowLeft' || k === 'ArrowRight') {
+    stop(); const f = (k === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1);
+    if (e.altKey) { if (!sel) return; if (sel.type === 'sfx') { if (!getItem('sfx', sel.key).locked) nudgeSfx(sel.key, f / capFps); } else nudge(sel.type, sel.key, 'move', f); }
+    else stepFrame(f);
+  }
+  else if (k === 'ArrowUp') { stop(); jumpEdit(-1); } else if (k === 'ArrowDown') { stop(); jumpEdit(1); }
+  else if (k === 'j' || k === 'J') seekTo(v.currentTime - 1); else if (k === 'l' || k === 'L') seekTo(v.currentTime + 1);
+  else if (k === 'Home') { stop(); seekTo(0); } else if (k === 'End') { stop(); seekTo(capDur); }
+  else if ((k === 'Delete' || k === 'Backspace') && sel && sel.type !== 'cap') { stop(); removeSel(); }
+  else if (k === 'n' || k === 'N') { snapOn = !snapOn; const b = $('snapBtn'); if (b) b.classList.toggle('on', snapOn); }
+  else if (k === '+' || k === '=') setTlZoom(capZoom * 1.25); else if (k === '-' || k === '_') setTlZoom(capZoom / 1.25);
+  else if (k === 'Escape' && sel) { sel = null; paintTimeline(); paintSel(); }
+  else if (k === '?') { document.querySelector('dialog[open]') ? $('keysDlg').close() : showKeys(); }
+});
 
 // ---------- Übernehmen ----------
 function capCount() {
@@ -965,8 +1070,8 @@ $('fontFiles').addEventListener('change', (e) => uploadAssets('fonts', e.target)
 
 $('newBtn').append(ico('plus'), el('span', { text: 'Neues Reel' })); $('newBtn').addEventListener('click', openNew);
 $('sysBtn').append(ico('gear')); $('sysBtn').addEventListener('click', () => { loadHealth(); loadAssets(); $('sysDlg').showModal(); });
-for (const [btnId, dlg] of [['newClose', 'newDlg'], ['sysClose', 'sysDlg']]) { $(btnId).append(ico('close')); $(btnId).addEventListener('click', () => $(dlg).close()); }
-for (const id of ['newDlg', 'sysDlg']) $(id).addEventListener('click', (e) => { if (e.target === $(id)) $(id).close(); });
+for (const [btnId, dlg] of [['newClose', 'newDlg'], ['sysClose', 'sysDlg'], ['keysClose', 'keysDlg']]) { $(btnId).append(ico('close')); $(btnId).addEventListener('click', () => $(dlg).close()); }
+for (const id of ['newDlg', 'sysDlg', 'keysDlg']) $(id).addEventListener('click', (e) => { if (e.target === $(id)) $(id).close(); });
 document.addEventListener('click', (e) => { const m = $('runMenu'); if (m.open && !m.contains(e.target)) m.open = false; });
 loadHealth(); loadRuns(); loadAssets(); setInterval(() => { loadRuns(); loadHealth(); }, 8000);
 </script>
