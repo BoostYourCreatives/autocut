@@ -227,6 +227,11 @@
   .blk-broll.nosrc { border-style: dashed; color: var(--muted); }
   .blk-zoom { height: 24px; line-height: 22px; background: color-mix(in srgb, var(--warn) 18%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
   .blk.edited { box-shadow: 0 0 0 2px var(--edit); }
+  .blk-cap::before, .blk-cap::after, .blk-broll::before, .blk-broll::after { content: ''; position: absolute; top: 0; bottom: 0; width: 6px; opacity: 0; background: color-mix(in srgb, var(--ink) 35%, transparent); transition: opacity .12s; cursor: ew-resize; }
+  .blk-cap::before, .blk-broll::before { left: 0; border-radius: 7px 0 0 7px; } .blk-cap::after, .blk-broll::after { right: 0; border-radius: 0 7px 7px 0; }
+  .blk-cap:hover::before, .blk-cap:hover::after, .blk-broll:hover::before, .blk-broll:hover::after, .blk.sel::before, .blk.sel::after { opacity: 1; }
+  .tl-add [draggable=true], .menu .pop [draggable=true] { cursor: grab; }
+  #tlInner.drop { outline: 2px dashed var(--run); outline-offset: -2px; }
   .blk.sel { box-shadow: 0 0 0 2px var(--run); }
   .blk.sel.edited { box-shadow: 0 0 0 2px var(--run), 0 0 0 4px var(--edit); }
   .panel select { font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
@@ -487,7 +492,7 @@ function render(d) {
 let origin = { cap: [], sfx: [], broll: [], zoom: [] }, lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }, adds = { sfx: [], broll: [], zoom: [] }, dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
 let capPrev = null, capSeq = 0, capFps = 25, capDur = 0, sel = null, capWave = null, capZoom = 1, rafId = 0, libs = { sfx: [], broll: [] }, zoomValues = [1.1, 1.12, 1.15], newSeq = 1;
 // Rückgängig/Wiederholen: Schnappschüsse des Bearbeitungsstands (lanes, adds, dels, Hook)
-let undoStack = [], redoStack = [], lastPush = 0, gesture = false, snapOn = true, clipboard = null;
+let msel = [], undoStack = [], redoStack = [], lastPush = 0, gesture = false, snapOn = true, clipboard = null;
 const stateStr = () => JSON.stringify({ lanes, adds, dels: { sfx: [...dels.sfx], broll: [...dels.broll], zoom: [...dels.zoom] }, hook: pendingHook, newSeq });
 function pushHist(force) {
   if (gesture && !force) return;
@@ -502,6 +507,7 @@ function restoreState(str) {
   if (capPrev) { for (const [id, p] of Object.entries(lanes.cap)) capPrev.setEdit(Number(id), { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s }); capPrev.setHook(pendingHook); }
   if ($('hookA') && planHookLines) { const h = pendingHook || curData.hook.lines; $('hookA').value = h[0]; $('hookB').value = h[1]; }
   if (sel && !getItem(sel.type, sel.key)) sel = null;
+  msel = msel.filter((m) => getItem(m.type, m.key));
   capCount(); paintTimeline(); paintSel();
 }
 function undo() { if (!undoStack.length) return; redoStack.push(stateStr()); restoreState(undoStack.pop()); lastPush = 0; paintHistBtns(); }
@@ -560,7 +566,7 @@ function studio(d, running) {
   origin = { cap: d.captions || [], sfx: d.sfx || [], broll: d.broll || [], zoom: d.zooms || [] };
   lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }; adds = { sfx: [], broll: [], zoom: [] }; dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
   for (const s of origin.sfx) loadSfxInfo(s.file);
-  undoStack = []; redoStack = []; lastPush = 0; gesture = false; pendingHook = null; sel = null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
+  msel = []; undoStack = []; redoStack = []; lastPush = 0; gesture = false; pendingHook = null; sel = null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
   planHookLines = d.hook ? d.hook.lines.map((l) => l.toUpperCase()) : null;
   if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
   cancelAnimationFrame(rafId);
@@ -595,7 +601,7 @@ function studio(d, running) {
   panels.append(el('section', { class: 'panel', id: 'selPanel' }));
 
   const addMenu = (label, items2, onPick, id) => el('details', { class: 'menu', id }, el('summary', { class: 'btn sm' }, ico('plus', 15), el('span', { text: label })),
-    el('div', { class: 'pop' }, ...(items2.length ? items2.map((it) => el('button', { type: 'button', onclick: (e) => { e.currentTarget.closest('details').open = false; onPick(it); } }, el('span', { text: it.label }))) : [el('div', { class: 'muted', style: 'padding:8px 10px', text: 'Nichts in der Library.' })])));
+    el('div', { class: 'pop' }, ...(items2.length ? items2.map((it) => el('button', { type: 'button', draggable: 'true', ondragstart: (e) => { e.dataTransfer.setData('text/plain', JSON.stringify(it.drag || {})); e.dataTransfer.effectAllowed = 'copy'; }, onclick: (e) => { e.currentTarget.closest('details').open = false; onPick(it); } }, el('span', { text: it.label }))) : [el('div', { class: 'muted', style: 'padding:8px 10px', text: 'Nichts in der Library.' })])));
   const timeline = layered ? el('section', { class: 'tl-card' },
     el('div', { class: 'tl-head' }, el('h3', { text: 'Zeitleiste' }),
       el('div', { class: 'tl-add', id: 'tlAdd' }),
@@ -605,7 +611,7 @@ function studio(d, running) {
       btn('sm ghost', 'info', 'Tastenkürzel', showKeys, { title: 'Alle Tastenkürzel (?)' }),
       el('label', { class: 'zoom' }, 'Zoom', el('input', { type: 'range', id: 'zoomR', min: '1', max: '10', step: '0.5', value: String(capZoom) }))),
     el('div', { id: 'tlBox' }),
-    el('div', { class: 'hint', text: 'Ziehen verschiebt, die Ränder ziehen ändert Start oder Ende. Oben in der Leiste ziehen = durchs Video scrubben. Leertaste spielt ab, Pfeile gehen Bild für Bild, Strg+Z macht rückgängig. Alle Kürzel: Taste ?.' })) : null;
+    el('div', { class: 'hint', text: 'Ziehen verschiebt, die Ränder ziehen ändert Start oder Ende, Umschalt + Klick wählt mehrere aus, Sounds und Zooms kannst du aus den Listen direkt auf die Zeitleiste ziehen. Oben in der Leiste ziehen = durchs Video scrubben. Leertaste spielt ab, Pfeile gehen Bild für Bild, Strg+Z macht rückgängig. Alle Kürzel: Taste ?.' })) : null;
 
   const node = el('div', { class: 'studio' }, stage,
     el('div', { class: 'right' }, panels, timeline),
@@ -629,9 +635,9 @@ function studio(d, running) {
         libs = { sfx: a.sfx.map((x) => x.file), broll: a.broll.map((x) => x.file) };
         const host = $('tlAdd'); if (!host) return;
         host.replaceChildren(
-          addMenu('Sound', libs.sfx.map((f) => ({ file: f, label: baseName(f) })), (it) => addSfx(it.file), 'addSfx'),
-          btn('sm', 'plus', 'B-Roll', addBroll),
-          addMenu('Zoom', zoomValues.map((z) => ({ v: z, label: `${Math.round(z * 100)} %` })), (it) => addZoom(it.v), 'addZoom'));
+          addMenu('Sound', libs.sfx.map((f) => ({ file: f, label: baseName(f), drag: { kind: 'sfx', file: f } })), (it) => addSfx(it.file), 'addSfx'),
+          btn('sm', 'plus', 'B-Roll', () => addBroll(), { draggable: 'true', ondragstart: (e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'broll' })); e.dataTransfer.effectAllowed = 'copy'; }, title: 'Klicken oder auf die Zeitleiste ziehen' }),
+          addMenu('Zoom', zoomValues.map((z) => ({ v: z, label: `${Math.round(z * 100)} %`, drag: { kind: 'zoom', v: z } })), (it) => addZoom(it.v), 'addZoom'));
       }).catch(() => {});
     } else v.addEventListener('pause', () => autoSelect(v.currentTime));
     if (running) { const g = $('capGo'); if (g) g.disabled = true; }
@@ -659,19 +665,19 @@ async function mountPreview(name, seq) {
 }
 
 // ---------- Hinzufügen und Entfernen ----------
-function addSfx(file) { pushHist(true); loadSfxInfo(file); const v = $('vid'); const key = `n${newSeq++}`; adds.sfx.push({ key, role: 'sonstiges', file, at_s: r3(v.currentTime), gain_db: -18, locked: false }); selectItem('sfx', key); playSound(file); afterChange(); }
-function addBroll() {
+function addSfx(file, at) { pushHist(true); loadSfxInfo(file); const v = $('vid'); const key = `n${newSeq++}`; adds.sfx.push({ key, role: 'sonstiges', file, at_s: r3(at ?? v.currentTime), gain_db: -18, locked: false }); selectItem('sfx', key); playSound(file); afterChange(); }
+function addBroll(at) {
   pushHist(true);
-  const v = $('vid'), s = q(v.currentTime), end = Math.min(capDur, q(s + 3)); const key = `n${newSeq++}`;
+  const v = $('vid'), s = q(Math.min(at ?? v.currentTime, Math.max(0, capDur - 0.5))), end = Math.min(capDur, q(s + 3)); const key = `n${newSeq++}`;
   adds.broll.push({ key, start_s: s, end_s: end, motif: 'B-Roll', source: 'offen', info: null }); selectItem('broll', key); afterChange();
 }
-function addZoom(scale) { pushHist(true); const v = $('vid'); const key = `n${newSeq++}`; adds.zoom.push({ key, start_s: q(v.currentTime), to_scale: scale }); selectItem('zoom', key); afterChange(); }
+function addZoom(scale, at) { pushHist(true); const v = $('vid'); const key = `n${newSeq++}`; adds.zoom.push({ key, start_s: q(at ?? v.currentTime), to_scale: scale }); selectItem('zoom', key); afterChange(); }
+function selList() { return msel.length > 1 ? msel.filter((m) => m.type !== 'cap') : sel && sel.type !== 'cap' ? [sel] : []; }
 function removeSel() {
-  if (!sel || sel.type === 'cap') return;
+  const list = selList(); if (!list.length) return;
   pushHist(true);
-  const t = sel.type, k = sel.key, a = adds[t].findIndex((x) => x.key === k);
-  if (a >= 0) adds[t].splice(a, 1); else { dels[t].add(k); delete lanes[t][k]; }
-  sel = null; afterChange(); paintSel();
+  for (const { type: t, key: k } of list) { const a = adds[t].findIndex((x) => x.key === k); if (a >= 0) adds[t].splice(a, 1); else { dels[t].add(k); delete lanes[t][k]; } }
+  sel = null; msel = []; afterChange(); paintSel();
 }
 
 // ---------- Auswahl ----------
@@ -683,7 +689,7 @@ function autoSelect(t) {
   paintSel();
 }
 function selectItem(type, key, seek) {
-  sel = { type, key }; paintTimeline(); paintSel();
+  msel = []; sel = { type, key }; paintTimeline(); paintSel();
   if (seek) { const x = getItem(type, key); if (x) seekTo((x.start_s ?? x.at_s) + 0.02); }
 }
 const playSound = (file) => { try { const a = new Audio(`/api/sfx?file=${encodeURIComponent(file)}`); a.volume = .8; a.play().catch(() => {}); } catch (e) {} };
@@ -798,6 +804,16 @@ function buildTimeline() {
   tlBlocks = {};
   inner.append(el('div', { id: 'tlHead', style: 'position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--playhead);pointer-events:none;border-radius:2px;z-index:5' }));
   inner.append(el('div', { id: 'tlSnap' }));
+  const dropT = (ev) => { const sn = snapT([(ev.clientX - inner.getBoundingClientRect().left) / tlPps], null, null); return { t: (ev.clientX - inner.getBoundingClientRect().left) / tlPps + (sn ? sn.d : 0), sn }; };
+  inner.addEventListener('dragover', (ev) => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; inner.classList.add('drop'); showSnap({ at: Math.max(0, dropT(ev).t) }); });
+  inner.addEventListener('dragleave', (ev) => { if (ev.target === inner) { inner.classList.remove('drop'); showSnap(null); } });
+  inner.addEventListener('drop', (ev) => {
+    ev.preventDefault(); inner.classList.remove('drop'); showSnap(null);
+    let d; try { d = JSON.parse(ev.dataTransfer.getData('text/plain')); } catch (e) { return; }
+    const t = Math.max(0, Math.min(capDur, dropT(ev).t));
+    if (d.kind === 'sfx') addSfx(d.file, t); else if (d.kind === 'broll') addBroll(q(t)); else if (d.kind === 'zoom') addZoom(d.v, q(t));
+    seekTo(t);
+  });
   const scrub = (ev) => seekTo((ev.clientX - $('tlInner').getBoundingClientRect().left) / tlPps);
   inner.addEventListener('pointerdown', (ev) => {
     if (ev.target.closest('[data-k]')) return;
@@ -834,7 +850,7 @@ function paintTimeline() {
   const seen = new Set();
   const place = (type, x, left, width, top, text, extra) => {
     const b = ensureBlock(type, x.key); seen.add(keyOf(type, x.key));
-    const selected = sel && sel.type === type && sel.key === x.key;
+    const selected = (sel && sel.type === type && sel.key === x.key) || msel.some((m) => m.type === type && m.key === x.key);
     b.style.left = left + 'px'; b.style.width = Math.max(12, width) + 'px'; b.style.top = top + 'px';
     b.classList.toggle('sel', !!selected); b.classList.toggle('edited', !!x.changed); b.classList.toggle('locked', !!x.locked);
     b.style.zIndex = selected ? '4' : '2'; b.title = text; if (type === 'sfx') { let lb = b.querySelector('span'); if (!lb) { lb = el('span', { class: 'sfx-l' }); b.append(lb); } lb.textContent = text; } else b.textContent = text; if (extra) extra(b);
@@ -875,13 +891,32 @@ function blockDown(ev, type, key, b) {
   const start = { ...getItem(type, key) }, r = b.getBoundingClientRect(), x0 = ev.clientX, sc = $('tlScroll'), sl0 = sc.scrollLeft;
   const resizable = type === 'cap' || type === 'broll', locked = type === 'sfx' && start.locked;
   const mode = resizable && ev.clientX - r.left < 7 ? 'l' : resizable && r.right - ev.clientX < 7 ? 'r' : 'm'; let moved = false;
-  selectItem(type, key, false);
-  if (type === 'sfx') playSound(start.file);
+  if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
+    // Mehrfachauswahl wie in CapCut: Umschalt/Strg + Klick fügt hinzu oder nimmt heraus
+    if (!msel.length && sel) msel = [{ ...sel }];
+    const i = msel.findIndex((m) => m.type === type && m.key === key);
+    if (i >= 0) msel.splice(i, 1); else msel.push({ type, key });
+    sel = msel.length ? { ...msel[msel.length - 1] } : null; paintTimeline(); paintSel(); return;
+  }
+  const inMulti = mode === 'm' && msel.length > 1 && msel.some((m) => m.type === type && m.key === key);
+  const group = inMulti ? msel.map((m) => ({ ...m, it: { ...getItem(m.type, m.key) } })).filter((g) => g.it && !(g.type === 'sfx' && g.it.locked)) : null;
+  if (!inMulti) selectItem(type, key, false);
+  if (type === 'sfx' && !inMulti) playSound(start.file);
   if (locked) return;
   const move = (e) => {
     const px = e.clientX - x0 + (sc.scrollLeft - sl0); if (Math.abs(e.clientX - x0) > 2) moved = true; if (!moved) return;
     if (!gesture) { pushHist(true); gesture = true; }
     const free = e.altKey; let dt = px / tlPps;
+    if (group) {
+      const lo = Math.min(...group.map((g) => (g.type === 'sfx' ? g.it.at_s : g.it.start_s))), hi = Math.max(...group.map((g) => (g.type === 'sfx' ? g.it.at_s : g.type === 'zoom' ? g.it.start_s : g.it.end_s)));
+      dt = Math.max(-lo, Math.min(capDur - hi, dt));
+      for (const g of group) {
+        if (g.type === 'sfx') patchItem('sfx', g.key, { at_s: r3(g.it.at_s + dt) });
+        else if (g.type === 'zoom') patchItem('zoom', g.key, { start_s: q(g.it.start_s + dt) });
+        else patchItem(g.type, g.key, { start_s: q(g.it.start_s + dt), end_s: q(g.it.end_s + dt) });
+      }
+      return;
+    }
     if (type === 'sfx') { const t0 = start.at_s + dt, sn = free ? null : snapT([t0], type, key); const t = sn ? t0 + sn.d : t0; showSnap(sn); patchItem('sfx', key, { at_s: r3(Math.max(0, Math.min(capDur, t))) }); seekTo(getItem('sfx', key).at_s); return; }
     if (type === 'zoom') { const t0 = start.start_s + dt, sn = free ? null : snapT([t0], type, key); showSnap(sn); const s = Math.max(0, Math.min(capDur, q(sn ? t0 + sn.d : t0))); patchItem('zoom', key, { start_s: s }); seekTo(s + 0.02); return; }
     let s = start.start_s, en = start.end_s;
@@ -913,18 +948,28 @@ function snapT(cands, exType, exKey) {
 function showSnap(sn) { const l = $('tlSnap'); if (!l) return; if (!sn) { l.style.display = 'none'; return; } l.style.display = 'block'; l.style.left = sn.at * tlPps + 'px'; }
 function editPoints() { const v = $('vid'); return [...new Set(snapPoints(null, null).map((t) => Math.round(t * 1000) / 1000))].sort((a, b) => a - b).filter((t) => t >= 0 && t <= (capDur || v.duration || 0)); }
 function jumpEdit(dir) { const v = $('vid'); if (!v) return; const t = v.currentTime, pts = editPoints(); const n = dir > 0 ? pts.find((p) => p > t + 0.01) : [...pts].reverse().find((p) => p < t - 0.01); if (n !== undefined) seekTo(n); }
-function copySel() { if (!sel || sel.type === 'cap') return false; const x = getItem(sel.type, sel.key); if (!x) return false; clipboard = { type: sel.type, x: JSON.parse(JSON.stringify(x)) }; return true; }
-function pasteAt(t) {
-  if (!clipboard) return; const { type, x } = clipboard; pushHist(true); const key = `n${newSeq++}`;
-  if (type === 'sfx') { loadSfxInfo(x.file); adds.sfx.push({ key, role: 'sonstiges', file: x.file, at_s: r3(Math.min(capDur, t)), gain_db: x.gain_db, locked: false }); }
-  else if (type === 'broll') { const len = x.end_s - x.start_s, s = q(Math.min(t, Math.max(0, capDur - len))); adds.broll.push({ key, start_s: s, end_s: q(s + len), motif: x.motif, source: x.source, info: x.info, pick: x.pick }); }
-  else adds.zoom.push({ key, start_s: q(Math.min(t, capDur)), to_scale: x.to_scale });
-  selectItem(type, key); afterChange();
+function copySel() {
+  const list = selList(); if (!list.length) return false;
+  const xs = list.map((m) => ({ type: m.type, x: JSON.parse(JSON.stringify(getItem(m.type, m.key) || null)) })).filter((c) => c.x);
+  if (!xs.length) return false; clipboard = xs; return true;
 }
-function dupSel() { if (!copySel()) return; const x = clipboard.x, e = clipboard.type === 'sfx' ? sfxExtent(x).to : clipboard.type === 'zoom' ? x.start_s + 1 : x.end_s; pasteAt(e); }
+const clipStart = (c) => (c.type === 'sfx' ? c.x.at_s : c.x.start_s);
+const clipEnd = (c) => (c.type === 'sfx' ? sfxExtent(c.x).to : c.type === 'zoom' ? c.x.start_s + 1 : c.x.end_s);
+function pasteAt(t) {
+  if (!clipboard || !clipboard.length) return; pushHist(true);
+  const t0 = Math.min(...clipboard.map(clipStart)), span = Math.max(...clipboard.map(clipEnd)) - t0, shift = Math.max(0, Math.min(t, Math.max(0, capDur - span))) - t0, made = [];
+  for (const { type, x } of clipboard) {
+    const key = `n${newSeq++}`; made.push({ type, key });
+    if (type === 'sfx') { loadSfxInfo(x.file); adds.sfx.push({ key, role: 'sonstiges', file: x.file, at_s: r3(Math.max(0, x.at_s + shift)), gain_db: x.gain_db, locked: false }); }
+    else if (type === 'broll') adds.broll.push({ key, start_s: q(x.start_s + shift), end_s: q(x.end_s + shift), motif: x.motif, source: x.source, info: x.info, pick: x.pick });
+    else adds.zoom.push({ key, start_s: q(x.start_s + shift), to_scale: x.to_scale });
+  }
+  sel = { ...made[made.length - 1] }; msel = made.length > 1 ? made : []; afterChange(); paintSel();
+}
+function dupSel() { if (!copySel()) return; pasteAt(Math.max(...clipboard.map(clipEnd))); }
 function showKeys() {
   const rows = [['Leertaste', 'Abspielen / anhalten'], ['← →', 'Ein Bild zurück / vor (Umschalt: fünf Bilder)'], ['J  L', 'Eine Sekunde zurück / vor'], ['↑ ↓', 'Zum vorherigen / nächsten Rand eines Blocks springen'],
-    ['Pos1  Ende', 'Zum Anfang / Ende des Videos'], ['Alt + ← →', 'Ausgewählten Block ein Bild verschieben (Umschalt: fünf)'], ['Entf', 'Ausgewählten Sound, B-Roll oder Zoom löschen'],
+    ['Pos1  Ende', 'Zum Anfang / Ende des Videos'], ['Alt + ← →', 'Ausgewählten Block ein Bild verschieben (Umschalt: fünf)'], ['Entf', 'Ausgewählte Sounds, B-Rolls oder Zooms löschen'], ['Umschalt + Klick', 'Mehrere Blöcke auswählen, dann zusammen ziehen, kopieren oder löschen'], ['Aus der Liste ziehen', 'Sound, B-Roll oder Zoom direkt an die richtige Stelle der Zeitleiste ziehen'],
     ['Strg + Z', 'Rückgängig'], ['Strg + Umschalt + Z  oder  Strg + Y', 'Wiederholen'], ['Strg + C  /  Strg + V', 'Block kopieren / an der Abspielposition einfügen'], ['Strg + D', 'Block duplizieren'],
     ['N', 'Magnet an / aus (Einrasten an Rändern)'], ['Alt beim Ziehen', 'Einrasten kurz abschalten'], ['+  −  oder  Strg + Mausrad', 'Zeitleiste zoomen'], ['Oben in der Leiste ziehen', 'Durchs Video scrubben'], ['Esc', 'Auswahl aufheben'], ['?', 'Diese Übersicht']];
   $('keysTbl').replaceChildren(...rows.map(([k, d]) => el('tr', {}, el('td', {}, ...k.split(/\s{2,}/).flatMap((g, i) => [i ? ' · ' : '', el('kbd', { text: g })])), el('td', { text: d }))));
