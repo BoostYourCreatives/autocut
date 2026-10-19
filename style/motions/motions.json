@@ -1,6 +1,7 @@
 {
   "_hinweis": "Zahlen für die Render-Engine 'motions' (Untertitel, Hintergrund, Platzierung des Sprechers).",
   "engine": "motions",
+  "modell": "claude-opus-5-5",
   "akzent": "#fab926",
   "untertitel_y": 1330,
   "hintergruende": [

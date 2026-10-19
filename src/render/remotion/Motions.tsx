@@ -39,7 +39,17 @@ function useFonts(fonts: MotionsProps["fonts"]) {
 
 const SANS_SIZE = 60;
 const SERIF_MAX = 200;
-const SERIF_MIN = 120;
+/** Nutzbare Breite für Text (links und rechts je 90 px Rand), damit nie etwas über den Bildrand läuft */
+const MAX_W = 900;
+let ctx: CanvasRenderingContext2D | null = null;
+/** Schriftgröße, bei der der Text wirklich in MAX_W passt (gemessen mit der geladenen Schrift) */
+function fit(text: string, font: string, size: number): number {
+  ctx ??= document.createElement("canvas").getContext("2d");
+  if (!ctx) return size;
+  ctx.font = `${font.replace("{s}", String(size))}`;
+  const w = ctx.measureText(text).width;
+  return w > MAX_W ? Math.floor((size * MAX_W) / w) : size;
+}
 
 const ChunkView: React.FC<{ c: MotionsChunk; y: number; accent: string }> = ({ c, y, accent }) => {
   const frame = useCurrentFrame();
@@ -56,7 +66,8 @@ const ChunkView: React.FC<{ c: MotionsChunk; y: number; accent: string }> = ({ c
     if (w.emph && !emph) emph = w;
     else (emph ? post : pre).push(w);
   }
-  const serifSize = emph ? Math.max(SERIF_MIN, Math.min(SERIF_MAX, Math.floor(880 / (emph.text.length * 0.5)))) : 0;
+  const serifSize = emph ? fit(emph.text, `italic 700 {s}px ${SERIF}`, SERIF_MAX) : 0;
+  const sansSize = (ws: MotionsWord[]) => fit(ws.map((w) => w.text).join(" "), `800 {s}px ${SANS}`, SANS_SIZE);
   const ease = Easing.out(Easing.cubic);
   const wordStyle = (i: number): React.CSSProperties => {
     const r = rel - i * 2;
@@ -65,7 +76,7 @@ const ChunkView: React.FC<{ c: MotionsChunk; y: number; accent: string }> = ({ c
   };
   const sans = (ws: MotionsWord[], off: number) =>
     ws.length ? (
-      <div style={{ fontFamily: `${SANS}, sans-serif`, fontWeight: 800, fontSize: SANS_SIZE, color: "#fff", lineHeight: 1.1, textShadow: "0 4px 18px rgba(0,0,0,0.35)", whiteSpace: "pre" }}>
+      <div style={{ fontFamily: `${SANS}, sans-serif`, fontWeight: 800, fontSize: sansSize(ws), color: "#fff", lineHeight: 1.1, textShadow: "0 4px 18px rgba(0,0,0,0.35)", whiteSpace: "pre" }}>
         {ws.map((w, i) => (
           <span key={i} style={{ display: "inline-block", marginRight: i < ws.length - 1 ? 16 : 0, ...wordStyle(off + i) }}>{w.text}</span>
         ))}

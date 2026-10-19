@@ -20,6 +20,17 @@ export interface MotionsPlan {
   chunks: MotionsChunk[];
 }
 
+/** Eigenes Modell für diesen Stil (style/motions/motions.json, Feld "modell"); sonst das der Config */
+export function motionsModel(cfg: Config): string {
+  try {
+    const f = path.join(cfg.stylePath, "..", "motions", "motions.json");
+    const m = (readJson<{ modell?: string }>(f).modell ?? "").trim();
+    return m || cfg.llm.planModel;
+  } catch {
+    return cfg.llm.planModel;
+  }
+}
+
 export const motionsPlanFile = (runDir: string) => path.join(runDir, "motions-plan.json");
 
 const strip = (w: string) => w.replace(/^[\s"„“(]+|[\s"“”).,;:!?…]+$/g, "");
@@ -96,7 +107,7 @@ export async function planMotions(cfg: Config, runName: string, opts: { llm?: Ll
   let picks: { chunk: number; word: number }[] = [];
   try {
     const llm = opts.llm ?? new AnthropicLlm();
-    const model = cfg.llm.planModel;
+    const model = motionsModel(cfg);
     const list = chunks.map((c, i) => `${i}: ${c.words.map((w) => w.text).join(" ")}`).join("\n");
     const turn = await timed(run, "plan", clip.id, async () => {
       const t = await llm.complete({ model, system: SYSTEM, messages: [{ role: "user", content: `Gruppen:\n${list}` }], schema: toApiSchema(Emphasis), effort: "low", maxTokens: 8000 });
