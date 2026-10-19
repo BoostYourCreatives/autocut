@@ -227,9 +227,11 @@
   .blk-broll.nosrc { border-style: dashed; color: var(--muted); }
   .blk-zoom { height: 24px; line-height: 22px; background: color-mix(in srgb, var(--warn) 18%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
   .blk.edited { box-shadow: 0 0 0 2px var(--edit); }
-  .blk-cap::before, .blk-cap::after, .blk-broll::before, .blk-broll::after { content: ''; position: absolute; top: 0; bottom: 0; width: 6px; opacity: 0; background: color-mix(in srgb, var(--ink) 35%, transparent); transition: opacity .12s; cursor: ew-resize; }
-  .blk-cap::before, .blk-broll::before { left: 0; border-radius: 7px 0 0 7px; } .blk-cap::after, .blk-broll::after { right: 0; border-radius: 0 7px 7px 0; }
-  .blk-cap:hover::before, .blk-cap:hover::after, .blk-broll:hover::before, .blk-broll:hover::after, .blk.sel::before, .blk.sel::after { opacity: 1; }
+  .hd { position: absolute; top: 0; bottom: 0; width: min(10px, 38%); cursor: ew-resize; z-index: 3; display: flex; align-items: center; justify-content: center; touch-action: none; }
+  .hd.l { left: 0; } .hd.r { right: 0; }
+  .hd::after { content: ''; width: 3px; height: 14px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 45%, transparent); opacity: 0; transition: opacity .12s; }
+  .blk:hover .hd::after, .blk.sel .hd::after { opacity: 1; }
+  .hd:hover::after { background: var(--ink); }
   .tl-add [draggable=true], .menu .pop [draggable=true] { cursor: grab; }
   #tlInner.drop { outline: 2px dashed var(--run); outline-offset: -2px; }
   .blk.sel { box-shadow: 0 0 0 2px var(--run); }
@@ -841,6 +843,7 @@ function ensureBlock(type, key) {
   const id = keyOf(type, key); let b = tlBlocks[id];
   if (!b) {
     b = el('div', { 'data-k': id, class: `blk blk-${type}` }); b.addEventListener('pointerdown', (ev) => blockDown(ev, type, key, b));
+    if (type === 'cap' || type === 'broll') for (const side of ['l', 'r']) { const h = el('div', { class: `hd ${side}`, title: 'Ziehen: Länge ändern' }); h.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); blockDown(ev, type, key, b, side); }); b.append(h); }
     $('tlInner').append(b); tlBlocks[id] = b;
   }
   return b;
@@ -853,7 +856,7 @@ function paintTimeline() {
     const selected = (sel && sel.type === type && sel.key === x.key) || msel.some((m) => m.type === type && m.key === x.key);
     b.style.left = left + 'px'; b.style.width = Math.max(12, width) + 'px'; b.style.top = top + 'px';
     b.classList.toggle('sel', !!selected); b.classList.toggle('edited', !!x.changed); b.classList.toggle('locked', !!x.locked);
-    b.style.zIndex = selected ? '4' : '2'; b.title = text; if (type === 'sfx') { let lb = b.querySelector('span'); if (!lb) { lb = el('span', { class: 'sfx-l' }); b.append(lb); } lb.textContent = text; } else b.textContent = text; if (extra) extra(b);
+    b.style.zIndex = selected ? '4' : '2'; b.title = text; if (type === 'sfx') { let lb = b.querySelector('span'); if (!lb) { lb = el('span', { class: 'sfx-l' }); b.append(lb); } lb.textContent = text; } else { let lb = b.querySelector('.lbl'); if (!lb) { lb = el('span', { class: 'lbl' }); b.prepend(lb); } lb.textContent = text; } if (extra) extra(b);
   };
   const caps = items('cap'), ln = lanesFor(caps);
   for (const c of caps) place('cap', c, c.start_s * tlPps, (c.end_s - c.start_s) * tlPps - 1, Y.cap + ln[c.key] * 34, c.text, (b) => b.classList.toggle('gold', c.kind === 'gold' || c.kind === 'cta'));
@@ -886,11 +889,11 @@ function movePlayhead() {
   const sc = $('tlScroll'); if (sc && !v.paused) { const x = v.currentTime * tlPps; if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 40) sc.scrollLeft = Math.max(0, x - 60); }
 }
 function seekTo(t) { const v = $('vid'); if (!v) return; v.pause(); v.currentTime = Math.max(0, Math.min(capDur || v.duration || 0, t)); onTime(); }
-function blockDown(ev, type, key, b) {
+function blockDown(ev, type, key, b, forceMode) {
   ev.preventDefault();
   const start = { ...getItem(type, key) }, r = b.getBoundingClientRect(), x0 = ev.clientX, sc = $('tlScroll'), sl0 = sc.scrollLeft;
   const resizable = type === 'cap' || type === 'broll', locked = type === 'sfx' && start.locked;
-  const mode = resizable && ev.clientX - r.left < 7 ? 'l' : resizable && r.right - ev.clientX < 7 ? 'r' : 'm'; let moved = false;
+  const mode = forceMode || (resizable && ev.clientX - r.left < 7 ? 'l' : resizable && r.right - ev.clientX < 7 ? 'r' : 'm'); let moved = false;
   if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
     // Mehrfachauswahl wie in CapCut: Umschalt/Strg + Klick fügt hinzu oder nimmt heraus
     if (!msel.length && sel) msel = [{ ...sel }];
