@@ -203,13 +203,15 @@
   #sysBtn.warn::after { content: ""; position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
   #sysBtn { position: relative; }
   /* Bühne und Bedienfelder in einem Bild: Video links, rechts Texte und Zeitleiste */
-  .studio { grid-template-columns: max-content minmax(0, 1fr); gap: 20px; }
+  .studio { grid-template-columns: max-content minmax(0, 1fr); grid-template-areas: 'stage tl' 'panels panels' 'bar bar'; gap: 18px 20px; align-items: stretch; }
+  .studio > .stage { grid-area: stage; } .studio > .tl-card { grid-area: tl; align-self: start; } .studio > .panels { grid-area: panels; } .studio > .applybar { grid-area: bar; }
   .stage { width: max-content; max-width: 100%; position: static; }
-  .stage-frame { width: auto; height: min(calc(100vh - 250px), 760px); min-height: 380px; max-height: none; margin: 0; }
+  .stage-frame { width: auto; height: clamp(340px, calc(100vh - 330px), 560px); min-height: 0; max-height: none; margin: 0; }
   .stage-frame video { object-fit: cover; }
   .right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  .panels { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 1.5fr); gap: 14px; align-items: start; }
-  @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; } .stage { width: 100%; } .stage-frame { width: 100%; height: auto; min-height: 0; max-height: min(70vh, 640px); } .panels { grid-template-columns: 1fr; } }
+  .panels { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+  .blk-hook { background: color-mix(in srgb, var(--gold) 22%, var(--panel)); border-color: color-mix(in srgb, var(--gold) 70%, var(--line)); cursor: pointer; font-weight: 650; }
+  @media (max-width: 1000px) { .studio { grid-template-columns: 1fr; grid-template-areas: 'stage' 'tl' 'panels' 'bar'; } .stage { width: 100%; } .stage-frame { width: 100%; height: auto; min-height: 0; max-height: min(70vh, 640px); } .panels { grid-template-columns: 1fr; } }
   .hook-col { display: flex; flex-direction: column; gap: 8px; }
 
   /* ---------- Zeitleiste: Zeilen und Blöcke ---------- */
@@ -507,7 +509,7 @@ function restoreState(str) {
   for (const id of Object.keys(lanes.cap)) if (capPrev) capPrev.setEdit(Number(id), null);
   lanes = o.lanes; adds = o.adds; dels = { sfx: new Set(o.dels.sfx), broll: new Set(o.dels.broll), zoom: new Set(o.dels.zoom) }; pendingHook = o.hook; newSeq = Math.max(newSeq, o.newSeq || 1);
   if (capPrev) { for (const [id, p] of Object.entries(lanes.cap)) capPrev.setEdit(Number(id), { text: p.text && p.text.trim() ? p.text : undefined, start_s: p.start_s, end_s: p.end_s }); capPrev.setHook(pendingHook); }
-  if ($('hookA') && planHookLines) { const h = pendingHook || curData.hook.lines; $('hookA').value = h[0]; $('hookB').value = h[1]; }
+  if ($('hookA') && planHookLines) { const h = pendingHook || planHookLines; $('hookA').value = h[0]; $('hookB').value = h[1]; }
   if (sel && !getItem(sel.type, sel.key)) sel = null;
   msel = msel.filter((m) => getItem(m.type, m.key));
   capCount(); paintTimeline(); paintSel();
@@ -533,7 +535,13 @@ const baseName = (f) => (f || '').split('/').pop().replace(/\.[^.]+$/, '');
 const q = (t) => Math.round(t * capFps) / capFps;
 const r3 = (t) => Math.round(t * 1000) / 1000;
 
+function hookItems() {
+  if (!curData || !curData.hook || !curData.hookRange) return [];
+  const lines = pendingHook || planHookLines;
+  return [{ key: 'h', start_s: 0, end_s: curData.hookRange[1], lines, text: lines.join(' / '), changed: !!pendingHook, locked: true }];
+}
 function items(type) {
+  if (type === 'hook') return hookItems();
   const idOf = (x) => (type === 'cap' ? x.id : type === 'sfx' || type === 'zoom' ? x.index : x.id);
   const base = origin[type].filter((x) => !(dels[type] && dels[type].has(idOf(x)))).map((x) => ({ ...x, key: idOf(x), ...(lanes[type][idOf(x)] || {}), changed: !!lanes[type][idOf(x)] }));
   return type === 'cap' ? base : [...base, ...adds[type].map((x) => ({ ...x, isNew: true, changed: true }))];
@@ -568,7 +576,7 @@ function studio(d, running) {
   origin = { cap: d.captions || [], sfx: d.sfx || [], broll: d.broll || [], zoom: d.zooms || [] };
   lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }; adds = { sfx: [], broll: [], zoom: [] }; dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
   for (const s of origin.sfx) loadSfxInfo(s.file);
-  msel = []; undoStack = []; redoStack = []; lastPush = 0; gesture = false; pendingHook = null; sel = null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
+  msel = []; undoStack = []; redoStack = []; lastPush = 0; gesture = false; pendingHook = null; sel = d.hook && d.hookRange ? { type: 'hook', key: 'h' } : null; capWave = null; zoomValues = d.zoomValues || zoomValues; capDur = d.duration_s || 0; curData = d;
   planHookLines = d.hook ? d.hook.lines.map((l) => l.toUpperCase()) : null;
   if (capPrev) { try { capPrev.destroy(); } catch (e) {} capPrev = null; }
   cancelAnimationFrame(rafId);
@@ -588,18 +596,6 @@ function studio(d, running) {
   }
 
   const panels = el('div', { class: 'panels' });
-  if (d.hook) {
-    const h1 = el('input', { type: 'text', id: 'hookA', value: d.hook.lines[0], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 1' });
-    const h2 = el('input', { type: 'text', id: 'hookB', value: d.hook.lines[1], autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Hook-Text, Zeile 2' });
-    const onHook = () => {
-      const cur = [h1.value, h2.value], same = cur[0].trim().toUpperCase() === planHookLines[0] && cur[1].trim().toUpperCase() === planHookLines[1];
-      pendingHook = same || !cur[0].trim() || !cur[1].trim() ? null : cur;
-      if (capPrev) capPrev.setHook(pendingHook);
-      capCount();
-    };
-    h1.addEventListener('input', onHook); h2.addEventListener('input', onHook);
-    panels.append(el('section', { class: 'panel' }, el('h3', { text: 'Hook-Text' }), el('div', { class: 'hook-col' }, h1, h2)));
-  }
   panels.append(el('section', { class: 'panel', id: 'selPanel' }));
 
   const addMenu = (label, items2, onPick, id) => el('details', { class: 'menu', id }, el('summary', { class: 'btn sm' }, ico('plus', 15), el('span', { text: label })),
@@ -615,8 +611,7 @@ function studio(d, running) {
     el('div', { id: 'tlBox' }),
     el('div', { class: 'hint', text: 'Ziehen verschiebt, die Ränder ziehen ändert Start oder Ende, Umschalt + Klick wählt mehrere aus, Sounds und Zooms kannst du aus den Listen direkt auf die Zeitleiste ziehen. Oben in der Leiste ziehen = durchs Video scrubben. Leertaste spielt ab, Pfeile gehen Bild für Bild, Strg+Z macht rückgängig. Alle Kürzel: Taste ?.' })) : null;
 
-  const node = el('div', { class: 'studio' }, stage,
-    el('div', { class: 'right' }, panels, timeline),
+  const node = el('div', { class: 'studio' }, stage, timeline, panels,
     el('div', { id: 'applybar', class: 'applybar', role: 'status', style: 'grid-column:1 / -1' },
       el('div', { class: 'msg' }, el('span', { id: 'capCountTxt', text: '' }), el('small', { id: 'capSmall', text: '' }), el('span', { id: 'capMsg', class: 'bad' })),
       btn('ghost', 'undo', 'Verwerfen', () => { pushHist(true); resetAll(); }),
@@ -674,7 +669,7 @@ function addBroll(at) {
   adds.broll.push({ key, start_s: s, end_s: end, motif: 'B-Roll', source: 'offen', info: null }); selectItem('broll', key); afterChange();
 }
 function addZoom(scale, at) { pushHist(true); const v = $('vid'); const key = `n${newSeq++}`; adds.zoom.push({ key, start_s: q(at ?? v.currentTime), to_scale: scale }); selectItem('zoom', key); afterChange(); }
-function selList() { return msel.length > 1 ? msel.filter((m) => m.type !== 'cap') : sel && sel.type !== 'cap' ? [sel] : []; }
+function selList() { const ok = (m) => m.type !== 'cap' && m.type !== 'hook'; return msel.length > 1 ? msel.filter(ok) : sel && ok(sel) ? [sel] : []; }
 function removeSel() {
   const list = selList(); if (!list.length) return;
   pushHist(true);
@@ -684,9 +679,10 @@ function removeSel() {
 
 // ---------- Auswahl ----------
 function autoSelect(t) {
-  if (!origin.cap.length || (sel && sel.type !== 'cap') || (document.activeElement && document.activeElement.closest && document.activeElement.closest('#selPanel') && document.activeElement.tagName === 'INPUT')) return;
+  if (!origin.cap.length || (sel && sel.type !== 'cap' && sel.type !== 'hook') || (document.activeElement && document.activeElement.closest && document.activeElement.closest('#selPanel') && document.activeElement.tagName === 'INPUT')) return;
   const act = items('cap').filter((c) => c.start_s <= t + 0.02 && t < c.end_s).sort((a, b) => Math.abs(a.start_s - t) - Math.abs(b.start_s - t));
-  const next = act.length ? { type: 'cap', key: act[0].key } : sel;
+  const hk = curData && curData.hookRange && t < curData.hookRange[1] && !act.length && (!sel || sel.type === 'hook') ? { type: 'hook', key: 'h' } : null;
+  const next = act.length ? { type: 'cap', key: act[0].key } : hk || sel;
   if (!sel || !next || sel.key !== next.key || sel.type !== next.type) { sel = next; paintTimeline(); }
   paintSel();
 }
@@ -702,6 +698,13 @@ function nudgeBox(label, valueId, onMinus, onPlus, onNow, step) {
     el('div', { class: 'tb' }, btn('', null, `−${step}`, onMinus, { title: 'Früher' }), btn('', null, `+${step}`, onPlus, { title: 'Später' }), btn('', 'target', 'Jetzt', onNow, { title: 'Auf die aktuelle Position setzen' })));
 }
 const put = (host, ...kids) => host.replaceChildren(...kids.filter((x) => x != null && x !== false));
+function setHook(lines) {
+  pushHist();
+  const same = lines[0].trim().toUpperCase() === planHookLines[0] && lines[1].trim().toUpperCase() === planHookLines[1];
+  pendingHook = same || !lines[0].trim() || !lines[1].trim() ? null : lines;
+  if (capPrev) capPrev.setHook(pendingHook);
+  capCount(); paintTimeline();
+}
 function paintSel() {
   const host = $('selPanel'); if (!host) return;
   if (!sel || !getItem(sel.type, sel.key)) { host.replaceChildren(el('h3', { text: 'Auswahl' }), el('div', { class: 'empty-sel', text: $('tlBox') ? 'Klicke einen Block in der Zeitleiste oder halte das Video an der Stelle an.' : 'Halte das Video an der Stelle an, die du ändern willst.' })); return; }
@@ -710,6 +713,13 @@ function paintSel() {
   const reset = () => el('button', { class: 'btn ghost sm', type: 'button', style: 'margin-left:auto', onclick: () => { delete lanes[type][key]; if (type === 'cap' && capPrev) capPrev.setEdit(key, null); afterChange(); paintSel(); } }, ico('undo', 15), el('span', { text: 'Zurücksetzen' }));
   const del = () => el('button', { class: 'btn ghost sm', type: 'button', onclick: removeSel }, ico('trash', 15), el('span', { text: 'Entfernen' }));
   const note = (t) => el('div', { class: 'hint', text: t });
+  if (type === 'hook') {
+    const mk = (id, i, lbl) => { const inp = el('input', { type: 'text', id, class: 'big', value: x.lines[i], autocomplete: 'off', spellcheck: 'false', 'aria-label': lbl }); inp.addEventListener('input', () => setHook([$('hookA').value, $('hookB').value])); return inp; };
+    put(host, head('Hook-Text', pendingHook ? el('button', { class: 'btn ghost sm', type: 'button', style: 'margin-left:auto', onclick: () => { pushHist(true); pendingHook = null; if (capPrev) capPrev.setHook(null); capCount(); paintTimeline(); paintSel(); } }, ico('undo', 15), el('span', { text: 'Zurücksetzen' })) : null),
+      el('label', { class: 'field-label', for: 'hookA', text: 'Zeile 1' }), mk('hookA', 0, 'Hook-Text, Zeile 1'), el('label', { class: 'field-label', for: 'hookB', text: 'Zeile 2' }), mk('hookB', 1, 'Hook-Text, Zeile 2'),
+      note('Die Hook-Box steht vom Anfang bis zum Ende des Hooks und wird immer in Großbuchstaben gesetzt. Ihre Länge folgt dem Schnitt und lässt sich nicht ziehen.'));
+    syncSel(); return;
+  }
   if (type === 'cap') {
     const inp = el('input', { type: 'text', id: 'selText', class: 'big', autocomplete: 'off', 'aria-label': 'Text des Untertitels' });
     inp.addEventListener('input', () => patchItem('cap', key, { text: inp.value }));
@@ -782,8 +792,9 @@ function nudge(type, key, field, frames) {
 function nudgeSfx(key, dt) { const x = getItem('sfx', key); patchItem('sfx', key, { at_s: r3(Math.max(0, x.at_s + dt)) }); seekTo(x.at_s + dt); }
 
 // ---------- Zeitleiste ----------
-const H = { wave: 92, cap: 34, capN: 3, row: 34, zoom: 30, gap: 6 };
-const Y = { cap: H.wave + 4, sfx: H.wave + 4 + 3 * 34 + 6, broll: H.wave + 4 + 3 * 34 + 6 + 91, zoom: H.wave + 4 + 3 * 34 + 6 + 91 + 34 };
+const H = { wave: 92, hook: 32, cap: 34, capN: 3, row: 34, zoom: 30, gap: 6 };
+const HK = H.wave + 4, CP = HK + H.hook + 6;
+const Y = { hook: HK, cap: CP, sfx: CP + 3 * 34 + 6, broll: CP + 3 * 34 + 6 + 91, zoom: CP + 3 * 34 + 6 + 91 + 34 };
 const TL_H = Y.zoom + H.zoom + 8;
 let tlPps = 40, tlBlocks = {};
 function buildTimeline() {
@@ -830,7 +841,7 @@ function buildTimeline() {
   }, { passive: false });
   scroller.append(inner);
   const labels = el('div', { class: 'tl-labels', style: `width:${gutter}px;height:${TL_H}px` },
-    ...[['Ton', 0, H.wave], ['Untertitel', Y.cap, 3 * 34], ['Sound', Y.sfx - 3, 89], ['B-Roll', Y.broll - 3, H.row], ['Zoom', Y.zoom - 2, H.zoom]].map(([t, y, h]) => el('div', { style: `top:${y}px;height:${h}px`, text: t })));
+    ...[['Ton', 0, H.wave], ...(curData && curData.hook ? [['Hook', Y.hook, H.hook]] : []), ['Untertitel', Y.cap, 3 * 34], ['Sound', Y.sfx - 3, 89], ['B-Roll', Y.broll - 3, H.row], ['Zoom', Y.zoom - 2, H.zoom]].map(([t, y, h]) => el('div', { style: `top:${y}px;height:${h}px`, text: t })));
   host.replaceChildren(el('div', { style: 'display:flex' }, labels, scroller));
   paintTimeline(); movePlayhead();
 }
@@ -858,6 +869,7 @@ function paintTimeline() {
     b.classList.toggle('sel', !!selected); b.classList.toggle('edited', !!x.changed); b.classList.toggle('locked', !!x.locked);
     b.style.zIndex = selected ? '4' : '2'; b.title = text; if (type === 'sfx') { let lb = b.querySelector('span'); if (!lb) { lb = el('span', { class: 'sfx-l' }); b.append(lb); } lb.textContent = text; } else { let lb = b.querySelector('.lbl'); if (!lb) { lb = el('span', { class: 'lbl' }); b.prepend(lb); } lb.textContent = text; } if (extra) extra(b);
   };
+  for (const h of items('hook')) place('hook', h, 0, h.end_s * tlPps - 1, Y.hook, h.text, (b) => { b.style.height = H.hook - 4 + 'px'; b.style.lineHeight = H.hook - 6 + 'px'; });
   const caps = items('cap'), ln = lanesFor(caps);
   for (const c of caps) place('cap', c, c.start_s * tlPps, (c.end_s - c.start_s) * tlPps - 1, Y.cap + ln[c.key] * 34, c.text, (b) => b.classList.toggle('gold', c.kind === 'gold' || c.kind === 'cta'));
   const sf = items('sfx').map((s) => ({ ...s, ext: sfxExtent(s) }));
@@ -891,6 +903,7 @@ function movePlayhead() {
 function seekTo(t) { const v = $('vid'); if (!v) return; v.pause(); v.currentTime = Math.max(0, Math.min(capDur || v.duration || 0, t)); onTime(); }
 function blockDown(ev, type, key, b, forceMode) {
   ev.preventDefault();
+  if (type === 'hook') { selectItem('hook', 'h', false); const sc0 = $('tlScroll'); if (sc0) sc0.focus({ preventScroll: true }); return; }
   const start = { ...getItem(type, key) }, r = b.getBoundingClientRect(), x0 = ev.clientX, sc = $('tlScroll'), sl0 = sc.scrollLeft;
   const resizable = type === 'cap' || type === 'broll', locked = type === 'sfx' && start.locked;
   const mode = forceMode || (resizable && ev.clientX - r.left < 7 ? 'l' : resizable && r.right - ev.clientX < 7 ? 'r' : 'm'); let moved = false;
@@ -1017,7 +1030,7 @@ function capCount() {
 function resetAll() {
   for (const id of Object.keys(lanes.cap)) if (capPrev) capPrev.setEdit(Number(id), null);
   lanes = { cap: {}, sfx: {}, broll: {}, zoom: {} }; adds = { sfx: [], broll: [], zoom: [] }; dels = { sfx: new Set(), broll: new Set(), zoom: new Set() };
-  if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hookA') && planHookLines) { $('hookA').value = curData.hook.lines[0]; $('hookB').value = curData.hook.lines[1]; } }
+  if (pendingHook) { pendingHook = null; if (capPrev) capPrev.setHook(null); if ($('hookA') && planHookLines) { $('hookA').value = planHookLines[0]; $('hookB').value = planHookLines[1]; } }
   if (sel && !getItem(sel.type, sel.key)) sel = null;
   capCount(); paintTimeline(); paintSel();
 }
