@@ -437,7 +437,7 @@ async function refresh() {
   if (d.job && d.job.status === 'running') pollTimer = setTimeout(refresh, 2500);
 }
 
-const STEP_NAMES = { ingest: 'Einlesen', transcribe: 'Text erkennen', analyze: 'Analysieren', chin: 'Gesicht messen', plan: 'Schnittplan', broll: 'B-Rolls', render: 'Video bauen' };
+const STEP_NAMES = { cutout: 'Sprecher freistellen', images: 'Bilder erzeugen', ingest: 'Einlesen', transcribe: 'Text erkennen', analyze: 'Analysieren', chin: 'Gesicht messen', plan: 'Schnittplan', broll: 'B-Rolls', render: 'Video bauen' };
 function banner(kind, title, text, icon) {
   return el('div', { class: `banner ${kind}` }, ico(icon || (kind === 'bad' ? 'alert' : kind === 'ok' ? 'check' : 'info'), 20), el('div', {}, el('b', { text: title }), text ? el('span', { text }) : null));
 }

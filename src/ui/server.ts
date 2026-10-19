@@ -32,6 +32,7 @@ const STEP_LABEL: Record<string, string> = {
   plan: "Schnittplan",
   render: "Video bauen",
   cutout: "Freistellen",
+  images: "Bilder",
 };
 
 const slug = (s: string) => s.toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "reel";

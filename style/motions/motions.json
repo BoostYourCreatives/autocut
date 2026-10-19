@@ -3,7 +3,7 @@
   "engine": "motions",
   "modell": "claude-opus-5-5",
   "akzent": "#fab926",
-  "untertitel_y": 1330,
+  "untertitel_y": 1430,
   "hintergruende": [
     ["#d6ece4", "#c4d6ec"],
     ["#c9dcf2", "#dcd0f0"],

@@ -1,15 +1,16 @@
+import fs from "node:fs";
 import path from "node:path";
-import { z } from "zod";
 import type { Config } from "../config.ts";
 import { AnthropicLlm, costUsd, type LlmClient } from "../llm/client.ts";
 import { toApiSchema } from "../plan/draft.ts";
+import { MotionsDraft, buildScenes } from "./scenes.ts";
 import { Transcript } from "../schema/transcript.ts";
 import { extractJson } from "../steps/plan.ts";
 import { readJson, readJsonSchema, writeJson } from "../util/files.ts";
 import { log } from "../util/log.ts";
 import { loadManifest, runPaths } from "../util/run.ts";
 import { timed } from "../util/runlog.ts";
-import type { MotionsChunk } from "../render/remotion/Motions.tsx";
+import type { MotionsChunk, MotionsScene } from "../render/remotion/Motions.tsx";
 
 export interface MotionsPlan {
   style: "motions";
@@ -18,6 +19,8 @@ export interface MotionsPlan {
   fps: number;
   duration_s: number;
   chunks: MotionsChunk[];
+  /** Bilder, Karten, Glas-Felder, Zwischenschnitte (leer = nur Untertitel). Bildfelder verweisen auf Dateien in <run>/scene-images */
+  scenes: MotionsScene[];
 }
 
 /** Eigenes Modell für diesen Stil (style/motions/motions.json, Feld "modell"); sonst das der Config */
@@ -67,8 +70,6 @@ export function chunkWords(words: { word: string; start_s: number; end_s: number
   return out.filter((c) => c.words.some((w) => w.text));
 }
 
-const Emphasis = z.object({ emphasis: z.array(z.object({ chunk: z.number().int(), word: z.number().int() })) });
-
 /** Heuristik, falls Claude nicht erreichbar ist: jedes dritte Stück sein längstes Wort. */
 function heuristicEmphasis(chunks: MotionsChunk[]): { chunk: number; word: number }[] {
   const res: { chunk: number; word: number }[] = [];
@@ -83,17 +84,26 @@ function heuristicEmphasis(chunks: MotionsChunk[]): { chunk: number; word: numbe
   return res;
 }
 
-const SYSTEM = `Du setzt Untertitel im Stil "motions" (Instagram-Reels mit freigestelltem Sprecher).
-Die Untertitel erscheinen in kurzen Gruppen von 1 bis 3 Wörtern. In manchen Gruppen steht EIN Wort groß, kursiv und golden (Betonung), alle anderen Wörter klein, fett und weiß.
-Deine Aufgabe: Wähle die Wörter, die betont werden.
-Regeln:
-- Betone nur Wörter, die Bedeutung tragen: Kernbegriffe, Zahlen, Gegensätze, Ergebnisse, emotionale Schlüsselwörter. Niemals Artikel, Präpositionen, Hilfsverben.
-- Höchstens ein betontes Wort pro Gruppe, und höchstens jede dritte Gruppe bekommt eines. Im Zweifel weniger. Direkt aufeinanderfolgende Gruppen werden nicht beide betont.
-- Das betonte Wort muss mindestens 4 Buchstaben haben.
-- "chunk" ist der Index der Gruppe (ab 0), "word" der Index des Wortes in der Gruppe (ab 0).
-Antworte nur mit dem JSON-Objekt.`;
+function systemPrompt(stylePath: string): string {
+  let regeln = "";
+  try {
+    regeln = fs.readFileSync(path.join(stylePath, "regeln.md"), "utf8");
+  } catch {
+    /* ohne Regeltext */
+  }
+  return `Du bist Editor im Stil "motions" (Instagram-Reels, freigestellter Sprecher, Glas-Optik). Du bekommst das Transkript eines Talking-Head-Videos als nummerierte Untertitel-Gruppen mit Zeiten. Du entscheidest zwei Dinge:
 
-export async function planMotions(cfg: Config, runName: string, opts: { llm?: LlmClient; video?: string } = {}): Promise<MotionsPlan> {
+1. emphasis: Welche Wörter in den Untertiteln groß, kursiv und golden betont werden. "chunk" = Index der Gruppe (ab 0), "word" = Index des Wortes in der Gruppe (ab 0). Höchstens ein Wort pro Gruppe, höchstens jede dritte Gruppe, nur Bedeutungsträger (Kernbegriffe, Zahlen, Gegensätze, Ergebnisse), mindestens 4 Buchstaben. Nie zwei Gruppen direkt hintereinander.
+2. scenes: Welche Bildbausteine das Gesagte visuell tragen. Zeiten in Sekunden aus dem Transkript. Halte dich genau an die Regeln unten, besonders an Dichte und Überlappungen. Wähle die Bausteine nach Inhalt: Orte und Dinge → Zwischenschnitt oder Bildkarte, Aufzählung → Bilder-Reihe oder Nummern, Kernbegriff → Glas-Feld. Variiere die Bausteine, wiederhole nicht dreimal denselben.
+
+Regeln des Stils:
+
+${regeln}
+
+Antworte nur mit dem JSON-Objekt.`;
+}
+
+export async function planMotions(cfg: Config, runName: string, opts: { llm?: LlmClient; video?: string; stylePath?: string } = {}): Promise<MotionsPlan> {
   const run = runPaths(cfg, runName);
   const manifest = loadManifest(run);
   const clip = manifest.clips.find((c) => c.role === "reel");
@@ -105,15 +115,20 @@ export async function planMotions(cfg: Config, runName: string, opts: { llm?: Ll
   log.info(`motions-plan: ${chunks.length} Untertitel-Gruppen`);
 
   let picks: { chunk: number; word: number }[] = [];
+  let sceneList: MotionsScene[] = [];
   try {
     const llm = opts.llm ?? new AnthropicLlm();
     const model = motionsModel(cfg);
     const list = chunks.map((c, i) => `${i}: ${c.words.map((w) => w.text).join(" ")}`).join("\n");
     const turn = await timed(run, "plan", clip.id, async () => {
-      const t = await llm.complete({ model, system: SYSTEM, messages: [{ role: "user", content: `Gruppen:\n${list}` }], schema: toApiSchema(Emphasis), effort: "low", maxTokens: 8000 });
+      const t = await llm.complete({ model, system: systemPrompt(opts.stylePath ?? path.join(cfg.stylePath, "..", "motions")), messages: [{ role: "user", content: `Dauer: ${meta.duration_s.toFixed(1)} s\nGruppen:\n${list}` }], schema: toApiSchema(MotionsDraft), effort: "high", maxTokens: 24000 });
       return { value: t, api: { provider: "anthropic", model, input_tokens: t.usage.input_tokens, output_tokens: t.usage.output_tokens, cache_read_tokens: t.usage.cache_read_tokens, cache_write_tokens: t.usage.cache_write_tokens, est_cost_usd: costUsd(cfg, model, t.usage) } };
     });
-    picks = Emphasis.parse(extractJson(turn.text)).emphasis;
+    const draft = MotionsDraft.parse(extractJson(turn.text));
+    picks = draft.emphasis;
+    const built = buildScenes(draft.scenes, meta.duration_s);
+    sceneList = built.scenes;
+    for (const d of built.dropped) log.warn(`motions-plan: Szene verworfen (${d})`);
   } catch (e) {
     log.warn(`motions-plan: Claude nicht nutzbar (${e instanceof Error ? e.message.split("\n")[0] : e}), einfache Auswahl der Betonungen`);
     picks = heuristicEmphasis(chunks);
@@ -126,7 +141,8 @@ export async function planMotions(cfg: Config, runName: string, opts: { llm?: Ll
     used++;
   }
   log.info(`motions-plan: ${used} betonte Wörter`);
-  const plan: MotionsPlan = { style: "motions", video: opts.video ?? `Reel_${runName}`, clip: clip.id, fps: meta.fps, duration_s: meta.duration_s, chunks };
+  const plan: MotionsPlan = { style: "motions", video: opts.video ?? `Reel_${runName}`, clip: clip.id, fps: meta.fps, duration_s: meta.duration_s, chunks, scenes: sceneList };
+  log.info(`motions-plan: ${sceneList.length} Szenen (${sceneList.map((x) => x.type).join(", ") || "keine"})`);
   writeJson(motionsPlanFile(run.dir), plan);
   return plan;
 }

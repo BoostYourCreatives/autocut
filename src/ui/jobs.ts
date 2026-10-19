@@ -18,7 +18,10 @@ import { exec } from "../util/exec.ts";
 import { writeJson } from "../util/files.ts";
 import { cutout } from "../motions/cutout.ts";
 import { planMotions } from "../motions/plan.ts";
-import { renderMotions } from "../motions/render.ts";
+import { renderMotions, sceneImagesDir } from "../motions/render.ts";
+import { generateSceneImages } from "../motions/images.ts";
+import { motionsPlanFile, type MotionsPlan } from "../motions/plan.ts";
+import { readJson } from "../util/files.ts";
 
 export interface JobOptions {
   hookLines?: [string, string];
@@ -67,7 +70,7 @@ export interface Job {
 }
 
 export const STEP_ORDER = ["ingest", "transcribe", "analyze", "chin", "plan", "broll", "render"] as const;
-export const MOTIONS_STEP_ORDER = ["ingest", "transcribe", "cutout", "plan", "render"] as const;
+export const MOTIONS_STEP_ORDER = ["ingest", "transcribe", "cutout", "plan", "images", "render"] as const;
 
 export class JobRunner {
   jobs = new Map<string, Job>();
@@ -114,6 +117,13 @@ export class JobRunner {
       await step("cutout", () => cutout(cfg, job.run));
     }
     if (job.kind === "pipeline" || job.kind === "replan") await step("plan", () => planMotions(cfg, job.run, { llm: this.llm, video: opts.video }));
+    await step("images", async () => {
+      const pf = motionsPlanFile(runPaths(cfg, job.run).dir);
+      const plan = readJson<MotionsPlan>(pf);
+      const r = await generateSceneImages(plan.scenes ?? [], sceneImagesDir(runPaths(cfg, job.run).dir));
+      for (const w of r.warnings) log.warn(`bilder: ${w}`);
+      writeJson(pf, { ...plan, scenes: r.scenes });
+    });
     await step("render", () => renderMotions(cfg, runPaths(cfg, job.run), path.resolve(ROOT, cfg.styleDir, "motions")));
   }
 
